@@ -1,9 +1,6 @@
 source "https://rubygems.org"
 
-# Force the use of public_suffix version 5.1.1
-gem "public_suffix", "5.1.1"
-
-# Use the github-pages gem to manage all Jekyll dependencies
+# Let GitHub Pages manage Jekyll and its plugins, including public_suffix.
 gem "github-pages", group: :jekyll_plugins
 
 # For Windows (if needed)
