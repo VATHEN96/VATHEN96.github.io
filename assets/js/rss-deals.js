@@ -1,23 +1,25 @@
 const rssUrl = 'https://www.amazon.com/gp/rss/bestsellers';
-async function getAmazonRSS() {
-  const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
-  const data = await response.json();
-  displayDeals(data.items);
+const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
+
+async function getAmazonDeals() {
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    let output = '';
+    data.items.forEach(item => {
+      output += `
+        <div class="deal-item">
+          <img src="${item.thumbnail}" alt="${item.title}">
+          <h3>${item.title}</h3>
+          <p>${item.content}</p>
+          <a href="${item.link}" target="_blank">Xem ngay trên Amazon</a>
+        </div>
+      `;
+    });
+    document.getElementById("deals-container").innerHTML = output;
+  } catch (error) {
+    console.error('Error fetching Amazon Deals:', error);
+  }
 }
 
-function displayDeals(items) {
-  let output = '';
-  items.forEach(item => {
-    output += `
-      <div class="deal-item">
-        <h3>${item.title}</h3>
-        <img src="${item.thumbnail}" alt="${item.title}">
-        <p>${item.content}</p>
-        <a href="${item.link}" target="_blank">Xem ngay trên Amazon</a>
-      </div>
-    `;
-  });
-  document.getElementById("deals-container").innerHTML = output;
-}
-
-getAmazonRSS();
+getAmazonDeals();
