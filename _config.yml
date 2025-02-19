@@ -1,17 +1,14 @@
-# Site settings
 title: "Flash Deals Amazon"
 email: imvjerry96@gmail.com
 description: "Cập nhật Flash Deals, Hot Deals mới nhất từ Amazon"
-baseurl: "/"  # The subpath of your site (use "/" for the root)
+baseurl: "/"   # Use "/" for the root
 url: "http://wowzarush.com"
 twitter_username: VietAthen
 github_username: VATHEN96
 
-# Build settings
 theme: minima
 paginate: 10
 
-# Exclude from processing
 exclude:
   - .sass-cache/
   - .jekyll-cache/
