@@ -1,0 +1,31 @@
+#deals-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.deal-item {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  margin: 10px;
+  width: 250px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.deal-item img {
+  max-width: 100%;
+  border-radius: 5px;
+}
+.deal-item h3 {
+  font-size: 16px;
+  color: #333;
+}
+.deal-item a {
+  display: block;
+  background: #ff9900;
+  color: #fff;
+  padding: 5px;
+  border-radius: 3px;
+  text-decoration: none;
+  margin-top: 10px;
+}
