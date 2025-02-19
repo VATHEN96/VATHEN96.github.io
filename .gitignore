@@ -1,0 +1,5 @@
+# Exclude generated site files
+_site/
+
+# Exclude Sass cache files
+.sass-cache/
