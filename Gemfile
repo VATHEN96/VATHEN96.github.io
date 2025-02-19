@@ -1,13 +1,7 @@
 source "https://rubygems.org"
 
-# Dùng GitHub Pages để tự động cài plugin tương thích
-gem "github-pages", group: :jekyll_plugins
-
-# Khai báo các plugin cần dùng
-group :jekyll_plugins do
-  gem "jekyll-feed"
-  gem "jekyll-sitemap"
-end
+# Sử dụng github-pages để tự động quản lý phiên bản Jekyll và các plugin
+gem "github-pages", "~> 255", group: :jekyll_plugins
 
 # Các cấu hình cho Windows (nếu dùng Windows)
 platforms :mingw, :x64_mingw, :mswin, :jruby do
