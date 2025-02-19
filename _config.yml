@@ -1,24 +1,23 @@
-# Welcome to Jekyll!
-
 # Site settings
-title: wowzarush
+title: "Flash Deals Amazon"
 email: imvjerry96@gmail.com
-description: >- 
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
-baseurl: ""  # the subpath of your site, e.g. /blog
+description: "Cập nhật Flash Deals, Hot Deals mới nhất từ Amazon"
+baseurl: "/"  # The subpath of your site (use "/" for the root)
 url: "http://wowzarush.com"
 twitter_username: VietAthen
 github_username: VATHEN96
 
 # Build settings
 theme: minima
+paginate: 10
+
+# Plugins
 plugins:
   - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
 
-# Exclude from processing.
-# These items will not be processed by default.
+# Exclude from processing
 exclude:
   - .sass-cache/
   - .jekyll-cache/
