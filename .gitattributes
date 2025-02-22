@@ -1,4 +1,4 @@
-# Enforce LF line endings for all text files
+# Ensure consistent LF line endings
 * text=auto
 *.ts text eol=lf
 *.tsx text eol=lf
@@ -10,5 +10,5 @@
 *.html text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
-# Ignore Visual Studio settings
-.vs/
+*.gitignore text eol=lf
+.gitattributes text eol=lf
