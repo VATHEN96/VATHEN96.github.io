@@ -6,7 +6,6 @@ import React, {
     useState,
     ReactNode,
     useCallback,
-    useEffect,
 } from "react";
 import { ethers } from "ethers";
 import type {
@@ -31,10 +30,10 @@ const defaultContextValue: wowzarushContextType = {
     completeMilestone: async () => { },
     updateMilestone: async () => { },
     connectWallet: async () => { },
-    disconnectWallet: async () => { },
+    disconnectWallet: async () => Promise.resolve(),
     fetchCampaigns: async () => [],
     getCampaignById: async () => null,
-    getCampaign: () => undefined, // ✅ Default implementation added here
+    getCampaign: () => undefined,
     getUserContributions: async () => [],
 };
 
@@ -81,8 +80,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     /**
- * Disconnects the user's wallet
- */
+     * Disconnects the user's wallet
+     */
     const disconnectWallet = useCallback(async (): Promise<void> => {
         setConnectedAccount(null);
         setIsConnected(false);
@@ -185,7 +184,16 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }, [checkNetwork]);
 
     /**
-     * Get a specific campaign by ID from the current state
+     * Get a specific campaign by ID from the smart contract
+     */
+    const getCampaignById = useCallback(async (id: string) => {
+        const allCampaigns = await fetchCampaigns();
+        const campaign = allCampaigns.find(camp => camp.id === id);
+        return campaign || null;
+    }, [fetchCampaigns]);
+
+    /**
+     * Get a specific campaign from state by ID
      */
     const getCampaign = useCallback((id: string) => {
         return campaigns.find(campaign => campaign.id === id) || null;
@@ -207,8 +215,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 connectWallet,
                 disconnectWallet,
                 fetchCampaigns,
-                getCampaignById,
-                getCampaign, // ✅ Include getCampaign here
+                getCampaignById, // ✅ Now included
+                getCampaign,  // ✅ Now included
             }}
         >
             {children}
