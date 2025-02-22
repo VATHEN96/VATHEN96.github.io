@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
-import { useWowzarush } from '@/context/GoalZillaContext'
+import { useWowzarush } from '@/context/wowzarushContext'
 import Link from 'next/link'
 import Navbar from '@/components/navbar'
 
