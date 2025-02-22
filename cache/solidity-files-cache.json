@@ -1,0 +1,41 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "/home/manov/Desktop/code/projects/zugrama-initial/contracts/GoalZilla.sol": {
+      "lastModificationDate": 1734764736759,
+      "contentHash": "c747c3b1e2d49fadd7313b3dcf5158ff",
+      "sourceName": "contracts/GoalZilla.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.28"
+      ],
+      "artifacts": [
+        "GoalZilla"
+      ]
+    }
+  }
+}
