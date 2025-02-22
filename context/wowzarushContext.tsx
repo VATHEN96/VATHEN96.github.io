@@ -80,14 +80,12 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     /**
-  * Disconnects the user's wallet
-  */
+     * Disconnects the user's wallet
+     */
     const disconnectWallet = useCallback(async (): Promise<void> => {
         setConnectedAccount(null);
         setIsConnected(false);
         setAccountBalance(0);
-
-        // Return a resolved promise to satisfy the type requirement
         return Promise.resolve();
     }, []);
 
@@ -199,7 +197,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
      * Get a specific campaign from state by ID
      */
     const getCampaign = useCallback((id: string) => {
-        return campaigns.find(campaign => campaign.id === id) || null;
+        return campaigns.find(campaign => campaign.id === id);
     }, [campaigns]);
 
     /**
@@ -215,11 +213,17 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 userCampaigns,
                 loading,
                 error,
+                createCampaign: async () => { },
+                contributeToCampaign: async () => { },
+                withdrawFromCampaign: async () => { },
+                completeMilestone: async () => { },
+                updateMilestone: async () => { },
                 connectWallet,
                 disconnectWallet,
                 fetchCampaigns,
-                getCampaignById, // ✅ Now included
-                getCampaign,  // ✅ Now included
+                getCampaignById,
+                getCampaign,
+                getUserContributions: async () => [],
             }}
         >
             {children}
