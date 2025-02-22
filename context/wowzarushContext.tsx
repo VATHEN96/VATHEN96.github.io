@@ -80,12 +80,15 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     /**
-     * Disconnects the user's wallet
-     */
+  * Disconnects the user's wallet
+  */
     const disconnectWallet = useCallback(async (): Promise<void> => {
         setConnectedAccount(null);
         setIsConnected(false);
         setAccountBalance(0);
+
+        // Return a resolved promise to satisfy the type requirement
+        return Promise.resolve();
     }, []);
 
     /**
