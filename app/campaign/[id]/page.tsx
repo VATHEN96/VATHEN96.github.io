@@ -24,7 +24,7 @@ export default function CampaignDetailPage() {
     const campaignId = params?.id as string
 
     const router = useRouter()
-    const { getCampaignById } = useGoalZilla()
+    const { getCampaignById } = useWowzarush()
 
     useEffect(() => {
         if (!campaignId) return
