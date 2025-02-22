@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import Navbar from '@/components/navbar'
-import { useGoalZilla } from '@/context/GoalZillaContext'
+import { useWowzarush } from '@/context/wowzarushContext'
 
 export default function CreateCampaign() {
-    const { loading, createCampaign } = useGoalZilla();
+    const { loading, createCampaign } = useWowzarush();
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -430,3 +430,4 @@ export default function CreateCampaign() {
         </div>
     );
 }
+

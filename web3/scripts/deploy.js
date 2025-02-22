@@ -2,7 +2,7 @@ const { ethers } = require('hardhat');
 
 async function main() {
   try {
-    console.log('\n🚀 Initializing GoalZilla contract deployment...\n');
+    console.log('\n🚀 Initializing wowzarush contract deployment...\n');
 
     // Get the deployer's signer
     const [deployer] = await ethers.getSigners();
@@ -22,16 +22,16 @@ async function main() {
 
     // Get the contract factory
     console.log('\n📄 Retrieving contract factory...');
-    const GoalZilla = await ethers.getContractFactory("GoalZilla");
+    const wowzarush = await ethers.getContractFactory("wowzarush");
     console.log('✅ Contract factory retrieved successfully\n');
 
     // Deploy the contract
     console.log('📦 Deploying contract...');
-    const goalZilla = await GoalZilla.deploy();
+    const wowzarush = await wowzarush.deploy();
     console.log('\n⏳ Waiting for deployment confirmation...');
-    await goalZilla.waitForDeployment();
+    await wowzarush.waitForDeployment();
 
-    const contractAddress = await goalZilla.getAddress();
+    const contractAddress = await wowzarush.getAddress();
     console.log('\n✨ Contract deployed successfully!');
     console.log('📍 Contract Address:', contractAddress);
 
@@ -78,3 +78,4 @@ main()
     console.error('\n💥 Fatal error:', error);
     process.exit(1);
   });
+

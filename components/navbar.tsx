@@ -1,13 +1,19 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Wallet } from 'lucide-react'
-import { useGoalZilla } from "@/context/GoalZillaContext"
+import { useState } from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Wallet } from "lucide-react";
+import { useWowzarush } from "@/context/wowzarushContext";  // Fixed import
 
 export default function Navbar() {
-    const { connectWallet, connectedAccount, loading, isConnected } = useGoalZilla();
+    // Using the hook in PascalCase
+    const {
+        connectWallet,
+        connectedAccount,
+        loading,
+        isConnected
+    } = useWowzarush();
 
     return (
         <header className="fixed top-0 left-0 right-0 z-50 bg-[#FFFDF6] border-b-4 border-black">
@@ -15,9 +21,9 @@ export default function Navbar() {
                 <div className="flex items-center justify-between text-gray-600 h-16">
                     <Link
                         href="/"
-                        className="text-2xl  font-bold bg-yellow-400 px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                        className="text-2xl font-bold bg-yellow-400 px-4 py-2 border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                     >
-                        GoalZilla
+                        wowzarush
                     </Link>
 
                     <nav className="hidden md:flex items-center space-x-6">
@@ -40,9 +46,7 @@ export default function Navbar() {
 
                     <div className="flex items-center gap-4">
                         <Link href="/create-campaign">
-                            <Button
-                                className="bg-green-500 hover:bg-green-600 text-black font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-md"
-                            >
+                            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-md">
                                 Create Campaign
                             </Button>
                         </Link>
@@ -51,11 +55,13 @@ export default function Navbar() {
                             className="bg-[#10c7e3] hover:bg-[#00a9dd] text-black font-bold border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-md flex items-center gap-2"
                         >
                             <Wallet size={20} />
-                            {isConnected ? `${connectedAccount!.slice(0, 6)}...${connectedAccount!.slice(-4)}` : "Connect Wallet"}
+                            {isConnected
+                                ? `${connectedAccount!.slice(0, 6)}...${connectedAccount!.slice(-4)}`
+                                : "Connect Wallet"}
                         </Button>
                     </div>
                 </div>
             </div>
         </header>
-    )
+    );
 }

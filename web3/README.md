@@ -1,6 +1,6 @@
 ## Smart Contract Overview
 
-The GoalZilla smart contract is implemented in Solidity and uses Ethereum’s blockchain to handle campaign creation, funding, and milestone validation.
+The wowzarush smart contract is implemented in Solidity and uses Ethereum’s blockchain to handle campaign creation, funding, and milestone validation.
 
 ### Key Components
 
@@ -68,7 +68,7 @@ string memory proofOfWork = "Blueprint and proposal document.";
 string memory beneficiaries = "Neighborhood community";
 string[] memory media = ["ipfs://image1", "ipfs://image2"];
 
-uint256 campaignId = goalZilla.createCampaign(
+uint256 campaignId = wowzarush.createCampaign(
     title,
     description,
     category,
@@ -88,7 +88,7 @@ uint256 campaignId = 0; // Replace with actual campaign ID
 uint256 milestoneIndex = 0; // Replace with the milestone index
 uint256 fundingAmount = 4 ether; // Replace with the milestone target amount
 
-goalZilla.fundMilestone{ value: fundingAmount }(campaignId, milestoneIndex);
+wowzarush.fundMilestone{ value: fundingAmount }(campaignId, milestoneIndex);
 ```
 
 ### Completing a Milestone
@@ -97,7 +97,7 @@ uint256 campaignId = 0; // Replace with actual campaign ID
 uint256 milestoneIndex = 0; // Replace with the milestone index
 string memory proofOfCompletion = "ipfs://proof_of_completion";
 
-goalZilla.completeMilestone(campaignId, milestoneIndex, proofOfCompletion);
+wowzarush.completeMilestone(campaignId, milestoneIndex, proofOfCompletion);
 ```
 
 ### Voting on a Milestone
@@ -107,15 +107,15 @@ uint256 milestoneIndex = 0; // Replace with the milestone index
 bool isUpvote = true; // true for upvote, false for downvote
 string memory message = "Great progress!";
 
-goalZilla.submitVote(campaignId, milestoneIndex, isUpvote, message);
+wowzarush.submitVote(campaignId, milestoneIndex, isUpvote, message);
 ```
 
 ## Installation and Deployment
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/GoalZilla.git
-   cd GoalZilla
+   git clone https://github.com/your-repo/wowzarush.git
+   cd wowzarush
    cd web3
    ```
 

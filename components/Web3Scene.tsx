@@ -57,3 +57,4 @@ export default function Web3Scene() {
         </Canvas>
     )
 }
+

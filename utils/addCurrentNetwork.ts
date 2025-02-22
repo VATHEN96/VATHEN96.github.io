@@ -38,3 +38,4 @@ const addNetwork = async (chainId: string) => {
         console.error("Error adding network:", addError);
     }
 };
+

@@ -1,10 +1,10 @@
-# GoalZilla 🚀🐲  
+# wowzarush 🚀🐲  
 
-Welcome to **GoalZilla** — the ultimate milestone-based crowdfunding platform on **Telos Chain**! 🎯 Whether you're funding creative projects, community initiatives, or bold ideas, GoalZilla ensures **transparency, accountability, and efficiency** with the power of **Telos blockchain technology**. Let’s bring your goals to life! 🎉  
+Welcome to **wowzarush** — the ultimate milestone-based crowdfunding platform on **Telos Chain**! 🎯 Whether you're funding creative projects, community initiatives, or bold ideas, wowzarush ensures **transparency, accountability, and efficiency** with the power of **Telos blockchain technology**. Let’s bring your goals to life! 🎉  
 
 ---  
 
-## 🏆 Why Choose GoalZilla on Telos?  
+## 🏆 Why Choose wowzarush on Telos?  
 
 💰 **Milestone-Based Funding**: Funds are released in phases, ensuring accountability at every step.  
 🔒 **Telos Security**: Enjoy fast, feeless transactions and robust security features with Telos blockchain.  
@@ -43,11 +43,11 @@ Welcome to **GoalZilla** — the ultimate milestone-based crowdfunding platform 
 
 1. **Clone the Repository**:  
    ```bash  
-   git clone https://github.com/Debanjannnn/GoalZilla
+   git clone https://github.com/Debanjannnn/wowzarush
    ```  
 2. **Navigate to the Project Directory**:  
    ```bash  
-   cd GoalZilla  
+   cd wowzarush  
    ```  
 3. **Install Dependencies**:  
    ```bash  
@@ -58,13 +58,13 @@ Welcome to **GoalZilla** — the ultimate milestone-based crowdfunding platform 
    npm run dev  
    ```  
 5. **Open in Browser**:  
-   Navigate to `http://localhost:3000` to explore GoalZilla.  
+   Navigate to `http://localhost:3000` to explore wowzarush.  
 6. **Deploy**: Follow the deployment instructions in the repository to go live.  
 7. **Smart Contract on Telos Testnet**: [View on Teloscan](https://testnet.teloscan.io/address/0x7144Da8697ec83F9f820460C6498DcA90fF20901)  
 
 ---  
 
-## 🌟 Join the GoalZilla Movement  
+## 🌟 Join the wowzarush Movement  
 
-Let’s shape the future of crowdfunding with **Telos Chain**! Whether you’re a creator with a vision or a donor looking to make an impact, GoalZilla provides the tools to make it happen. 🐲💫
+Let’s shape the future of crowdfunding with **Telos Chain**! Whether you’re a creator with a vision or a donor looking to make an impact, wowzarush provides the tools to make it happen. 🐲💫
 

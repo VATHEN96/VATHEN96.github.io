@@ -27,7 +27,7 @@ export interface Milestone {
     dueDate?: Date;
 }
 
-export interface GoalZillaContextType {
+export interface wowzarushContextType {
     // Wallet
     isConnected: boolean;
     connectedAccount: string | null;
@@ -61,6 +61,7 @@ export interface GoalZillaContextType {
     fetchCampaigns: () => Promise<Campaign[]>;
 }
 
-export interface GoalZillaProviderProps {
+export interface wowzarushProviderProps {
     children: ReactNode;
 }
+

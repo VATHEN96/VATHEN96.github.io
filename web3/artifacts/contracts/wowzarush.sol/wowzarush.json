@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "GoalZilla",
-  "sourceName": "contracts/GoalZilla.sol",
+  "contractName": "wowzarush",
+  "sourceName": "contracts/wowzarush.sol",
   "abi": [
     {
       "anonymous": false,
@@ -481,7 +481,7 @@
               "type": "string[]"
             }
           ],
-          "internalType": "struct GoalZilla.CampaignDetails",
+          "internalType": "struct wowzarush.CampaignDetails",
           "name": "",
           "type": "tuple"
         }
@@ -547,7 +547,7 @@
               "type": "uint256"
             }
           ],
-          "internalType": "struct GoalZilla.CampaignMetadata",
+          "internalType": "struct wowzarush.CampaignMetadata",
           "name": "",
           "type": "tuple"
         }
@@ -670,7 +670,7 @@
               "type": "bool"
             }
           ],
-          "internalType": "struct GoalZilla.MilestoneMetadata",
+          "internalType": "struct wowzarush.MilestoneMetadata",
           "name": "",
           "type": "tuple"
         }

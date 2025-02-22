@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
-contract GoalZilla {
+contract wowzarush {
     // Keep all existing structs
     struct Milestone {
         string name;
@@ -86,23 +86,23 @@ contract GoalZilla {
 
     // Keep all existing modifiers
     modifier campaignExists(uint256 _campaignId) {
-        require(_campaignId < campaignCounter, "GoalZilla: Campaign does not exist");
+        require(_campaignId < campaignCounter, "wowzarush: Campaign does not exist");
         _;
     }
 
     modifier onlyCampaignCreator(uint256 _campaignId) {
-        require(campaigns[_campaignId].creator == msg.sender, "GoalZilla: Not campaign creator");
+        require(campaigns[_campaignId].creator == msg.sender, "wowzarush: Not campaign creator");
         _;
     }
 
     modifier campaignActive(uint256 _campaignId) {
-        require(campaigns[_campaignId].isActive, "GoalZilla: Campaign is not active");
-        require(block.timestamp < campaigns[_campaignId].createdAt + campaigns[_campaignId].duration * 1 days, "GoalZilla: Campaign has ended");
+        require(campaigns[_campaignId].isActive, "wowzarush: Campaign is not active");
+        require(block.timestamp < campaigns[_campaignId].createdAt + campaigns[_campaignId].duration * 1 days, "wowzarush: Campaign has ended");
         _;
     }
 
     modifier validMilestone(uint256 _campaignId, uint256 _milestoneIndex) {
-        require(_milestoneIndex < campaigns[_campaignId].milestones.length, "GoalZilla: Invalid milestone index");
+        require(_milestoneIndex < campaigns[_campaignId].milestones.length, "wowzarush: Invalid milestone index");
         _;
     }
 
@@ -115,7 +115,7 @@ contract GoalZilla {
                 break;
             }
         }
-        require(isValid, "GoalZilla: Not a stakeholder");
+        require(isValid, "wowzarush: Not a stakeholder");
         _;
     }
 
@@ -132,10 +132,10 @@ contract GoalZilla {
         string memory _beneficiaries,
         string[] memory _media
     ) external payable returns (uint256) {
-        require(_goalAmount > 0, "GoalZilla: Goal amount must be greater than 0");
-        require(_duration > 0 && _duration <= 365, "GoalZilla: Duration must be between 1 and 365 days");
-        require(_milestoneNames.length == _milestoneTargets.length, "GoalZilla: Milestone arrays length mismatch");
-        require(_milestoneNames.length > 0, "GoalZilla: At least one milestone required");
+        require(_goalAmount > 0, "wowzarush: Goal amount must be greater than 0");
+        require(_duration > 0 && _duration <= 365, "wowzarush: Duration must be between 1 and 365 days");
+        require(_milestoneNames.length == _milestoneTargets.length, "wowzarush: Milestone arrays length mismatch");
+        require(_milestoneNames.length > 0, "wowzarush: At least one milestone required");
 
         uint256 campaignId = campaignCounter++;
         Campaign storage campaign = campaigns[campaignId];
@@ -182,8 +182,8 @@ contract GoalZilla {
         Campaign storage campaign = campaigns[_campaignId];
         Milestone storage milestone = campaign.milestones[_milestoneIndex];
 
-        require(!milestone.isFunded, "GoalZilla: Milestone already funded");
-        require(msg.value == milestone.targetAmount, "GoalZilla: Incorrect funding amount");
+        require(!milestone.isFunded, "wowzarush: Milestone already funded");
+        require(msg.value == milestone.targetAmount, "wowzarush: Incorrect funding amount");
 
         milestone.isFunded = true;
         campaign.totalFunded += msg.value;
@@ -210,8 +210,8 @@ contract GoalZilla {
         Campaign storage campaign = campaigns[_campaignId];
         Milestone storage milestone = campaign.milestones[_milestoneIndex];
 
-        require(milestone.isFunded, "GoalZilla: Milestone not funded");
-        require(!milestone.isCompleted, "GoalZilla: Milestone already completed");
+        require(milestone.isFunded, "wowzarush: Milestone not funded");
+        require(!milestone.isCompleted, "wowzarush: Milestone already completed");
 
         milestone.isCompleted = true;
         milestone.proofOfCompletion = _proofOfCompletion;
@@ -369,7 +369,7 @@ contract GoalZilla {
         view
         returns (uint256[] memory)
     {
-        require(_end >= _start, "GoalZilla: Invalid range");
+        require(_end >= _start, "wowzarush: Invalid range");
         uint256 length = _end - _start + 1;
         uint256[] memory result = new uint256[](length);
         for (uint256 i = 0; i < length && (_start + i) < campaignCounter; i++) {

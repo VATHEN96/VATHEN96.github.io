@@ -22,7 +22,7 @@ export default function Footer() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-3xl font-bold mb-4">GoalZilla</h3>
+              <h3 className="text-3xl font-bold mb-4">wowzarush</h3>
               <p className="text-gray-400 mb-6 max-w-sm">
                 Empowering innovation through transparent, milestone-based crowdfunding on the blockchain.
               </p>
@@ -64,10 +64,11 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
-          <p>© 2024 GoalZilla. All rights reserved.</p>
+          <p>© 2024 wowzarush. All rights reserved.</p>
         </div>
       </div>
     </footer>
   )
 }
+
 

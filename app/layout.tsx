@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { GoalZillaProvider } from "@/context/GoalZillaContext";
+import { WowzarushProvider } from "@/context/wowzarushContext";
 
 
 const geistSans = Geist({
@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GoalZilla",
+  title: "wowzarush",
   description: "Empowering innovation through transparent, milestone-based crowdfunding on the blockchain.",
 };
 
@@ -28,16 +28,17 @@ export default function RootLayout({
  
      <html lang="en">
      
-      <GoalZillaProvider>
+      <WowzarushProvider>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>
-      </GoalZillaProvider>
+      </WowzarushProvider>
      
     </html>
 
    
   );
 }
+

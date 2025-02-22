@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import Navbar from '@/components/navbar'
 import { Search, ArrowRight } from 'lucide-react'
-import { useGoalZilla } from '@/context/GoalZillaContext'
+import { useWowzarush } from '@/context/wowzarushContext'
 
 // Helper function to calculate days left
 const calculateDaysLeft = (deadline: Date | string): number => {
@@ -19,7 +19,7 @@ const calculateDaysLeft = (deadline: Date | string): number => {
 // The CampaignsPage component fetches data from the blockchain contract
 export default function CampaignsPage() {
     const [searchTerm, setSearchTerm] = useState('');
-    const { fetchCampaigns, campaigns } = useGoalZilla(); // Using GoalZillaContext for fetching campaigns
+    const { fetchCampaigns, campaigns } = useWowzarush(); // Using wowzarushContext for fetching campaigns
 
     // Fetch campaigns when the component mounts
     useEffect(() => {
@@ -99,3 +99,4 @@ export default function CampaignsPage() {
         </div>
     );
 }
+

@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             // Assuming the file is sent as a base64 string in the request body
             const { file } = req.body;
             const result = await cloudinary.uploader.upload(file, {
-                folder: 'goalzilla_campaigns',
+                folder: 'wowzarush_campaigns',
             });
             res.status(200).json({ url: result.secure_url });
         } catch (error) {
@@ -20,3 +20,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         res.status(405).end(`Method ${req.method} Not Allowed`);
     }
 }
+

@@ -85,7 +85,7 @@ export default function LandingPage() {
                             <div className="relative z-10">
                                 <Image
                                     // Use a Cloudinary URL instead of a local image path.
-                                    src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_400,c_fill/goalzilla/placeholder.svg`}
+                                    src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_400,c_fill/wowzarush/placeholder.svg`}
                                     alt="Hero illustration"
                                     width={400}
                                     height={400}
@@ -171,7 +171,7 @@ function FeaturesSection() {
                         className="relative"
                     >
                         <Image
-                            src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_400,c_fill/goalzilla/placeholder.svg`}
+                            src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_400,c_fill/wowzarush/placeholder.svg`}
                             alt="3D Blockchain illustration"
                             width={400}
                             height={400}
@@ -273,7 +273,7 @@ function CaseStudiesSection() {
                             </Link>
                             <div className="mt-4 overflow-hidden rounded-lg">
                                 <Image
-                                    src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_300,h_200,c_fill/goalzilla/placeholder.svg`}
+                                    src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_300,h_200,c_fill/wowzarush/placeholder.svg`}
                                     alt="Case study"
                                     width={300}
                                     height={200}
@@ -303,7 +303,7 @@ function IntegrationSection() {
                         className="relative"
                     >
                         <Image
-                            src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_400,c_fill/goalzilla/placeholder.svg`}
+                            src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_400,h_400,c_fill/wowzarush/placeholder.svg`}
                             alt="3D Integration illustration"
                             width={400}
                             height={400}
@@ -334,3 +334,4 @@ function IntegrationSection() {
         </section>
     )
 }
+
