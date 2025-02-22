@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, {
     createContext,
@@ -34,6 +34,7 @@ const defaultContextValue: wowzarushContextType = {
     disconnectWallet: async () => { },
     fetchCampaigns: async () => [],
     getCampaignById: async () => null,
+    getCampaign: () => undefined, // ✅ Default implementation added here
     getUserContributions: async () => [],
 };
 
@@ -184,18 +185,11 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }, [checkNetwork]);
 
     /**
-     * Fetch a specific campaign by ID
+     * Get a specific campaign by ID from the current state
      */
-    const getCampaignById = useCallback(async (id: string) => {
-        try {
-            const allCampaigns = await fetchCampaigns();
-            const campaign = allCampaigns.find(camp => camp.id === id);
-            return campaign || null;
-        } catch (error) {
-            setError("Failed to get campaign by ID.");
-            return null;
-        }
-    }, [fetchCampaigns]);
+    const getCampaign = useCallback((id: string) => {
+        return campaigns.find(campaign => campaign.id === id) || null;
+    }, [campaigns]);
 
     /**
      * Global Context Value
@@ -214,6 +208,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 disconnectWallet,
                 fetchCampaigns,
                 getCampaignById,
+                getCampaign, // ✅ Include getCampaign here
             }}
         >
             {children}
