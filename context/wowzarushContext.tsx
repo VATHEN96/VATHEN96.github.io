@@ -48,7 +48,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Helper function to get provider and signer
+  // Helper: Get provider and signer
   const getProviderAndSigner = useCallback(async () => {
     if (typeof window === "undefined" || !window.ethereum) {
       throw new Error("No Ethereum provider found. Please install MetaMask.");
@@ -59,7 +59,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     return { provider, signer };
   }, []);
 
-  // Helper function to get contract instance
+  // Helper: Get contract instance
   const getContract = useCallback(async () => {
     const { signer } = await getProviderAndSigner();
     return new ethers.Contract(contractAddress, contractABI, signer);
@@ -69,19 +69,14 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     try {
       const { provider } = await getProviderAndSigner();
       const accounts = await provider.listAccounts();
-
       if (accounts.length === 0) {
         throw new Error("No accounts found. Please connect your wallet.");
       }
-
       const account = accounts[0];
       setConnectedAccount(account);
       setIsConnected(true);
-
       const balance = await provider.getBalance(account);
       setAccountBalance(Number(ethers.utils.formatEther(balance)));
-
-      // Fetch user's campaigns after connecting
       await fetchCampaigns();
     } catch (error: any) {
       setError(error.message || "Failed to connect wallet");
@@ -105,7 +100,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
       const { provider } = await getProviderAndSigner();
       const network = await provider.getNetwork();
       const expectedChainId = "0x1";
-
       if (network.chainId !== parseInt(expectedChainId, 16)) {
         await window.ethereum?.request({
           method: "wallet_switchEthereumChain",
@@ -148,27 +142,21 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   const fetchCampaigns = useCallback(async (): Promise<Campaign[]> => {
     setLoading(true);
     setError(null);
-
     try {
       const contract = await getContract();
       await checkNetwork();
-
       const campaignCounter = await contract.campaignCounter();
       if (Number(campaignCounter) === 0) {
         setCampaigns([]);
         return [];
       }
-
       const campaignPromises = Array.from(
         { length: Number(campaignCounter) },
         (_, i) => contract.getCampaignMetadata(i)
       );
-
       const rawCampaigns = await Promise.all(campaignPromises);
       const parsedCampaigns = rawCampaigns.map(parseCampaign);
-
       setCampaigns(parsedCampaigns);
-
       if (connectedAccount) {
         const userCamps = parsedCampaigns.filter(
           (camp) =>
@@ -176,7 +164,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         );
         setUserCampaigns(userCamps);
       }
-
       return parsedCampaigns;
     } catch (err: any) {
       const errorMessage =
@@ -203,11 +190,10 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         }
       }
     };
-
     checkConnection();
   }, [connectWallet, getProviderAndSigner]);
 
-  // Listen for account changes
+  // Listen for account and chain changes using optional chaining
   useEffect(() => {
     if (typeof window !== "undefined" && window.ethereum) {
       const eth = window.ethereum;
@@ -224,7 +210,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
 
       return () => {
         eth?.removeListener("accountsChanged", handleAccountsChanged);
-        // Use a named function for removal to avoid creating a new function instance
         const reloadHandler = () => window.location.reload();
         eth?.removeListener("chainChanged", reloadHandler);
       };
