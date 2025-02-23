@@ -48,22 +48,23 @@ export default function FileUpload({
                 const formData = new FormData();
                 formData.append('file', file);
 
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+
+                const data = await response.json();
+                return data.url;
+            }).map(async (promise) => {
                 try {
-                    const response = await fetch('/api/upload', {
-                        method: 'POST',
-                        body: formData,
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.message || `Upload failed with status: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-                    setProgress((prev) => Math.min(prev + (100 / files.length), 99));
-                    return data.url;
+                    return await promise;
                 } catch (uploadError) {
-                    throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+                    const error = uploadError as Error;
+                    throw new Error(`Failed to upload file: ${error.message}`);
                 }
             });
 
