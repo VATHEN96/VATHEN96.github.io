@@ -191,6 +191,25 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [connectedAccount, connectWallet, disconnectWallet]);
 
+  const getCampaignById = useCallback(async (id: string): Promise<Campaign | null> => {
+    try {
+      setLoading(true);
+      setError(null);
+      const contract = await getContract();
+      const campaignData = await contract.getCampaign(id);
+      return parseCampaign(campaignData);
+    } catch (error: any) {
+      setError(error.message || "Failed to fetch campaign");
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, [getContract, parseCampaign]);
+
+  const getCampaign = useCallback((id: string): Campaign | undefined => {
+    return campaigns.find(campaign => campaign.id === id);
+  }, [campaigns]);
+
   return (
     <WowzarushContext.Provider
       value={{
@@ -209,8 +228,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         connectWallet,
         disconnectWallet,
         fetchCampaigns,
-        getCampaignById: async () => null,
-        getCampaign: () => undefined,
+        getCampaignById,
+        getCampaign,
         getUserContributions: async () => [],
       }}
     >
