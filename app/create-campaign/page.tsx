@@ -11,6 +11,7 @@ import Navbar from '@/components/navbar'
 import { useWowzarush } from '@/context/wowzarushContext'
 import { v4 as uuidv4 } from 'uuid'
 import { Campaign as CampaignInterface } from "../../utils/contextInterfaces"
+import FileUpload from '@/components/FileUpload';
 
 export default function CreateCampaign() {
     const { loading, createCampaign } = useWowzarush();
@@ -175,6 +176,13 @@ export default function CreateCampaign() {
         );
 
         return Math.round((filledFields + (hasValidMilestones ? 1 : 0)) / (requiredFields.length + 1) * 100);
+    };
+
+    const handleFileUpload = (urls: string | string[]) => {
+        setFormData(prevState => ({
+            ...prevState,
+            multimedia: Array.isArray(urls) ? urls.join(',') : urls
+        }));
     };
 
     return (
@@ -406,17 +414,13 @@ export default function CreateCampaign() {
 
                         {/* Multimedia */}
                         <div>
-                            <label htmlFor="multimedia" className="block text-sm font-medium text-gray-700 mb-1">
-                                Multimedia Link (URL)
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Campaign Media
                             </label>
-                            <Input
-                                type="text"
-                                id="multimedia"
-                                name="multimedia"
-                                value={formData.multimedia}
-                                onChange={handleChange}
-                                placeholder="Enter a URL for multimedia (e.g., YouTube, Vimeo, etc.)"
-                                className="w-full border-2 border-black"
+                            <FileUpload
+                                onUploadComplete={handleFileUpload}
+                                maxFiles={5}
+                                acceptedFileTypes={['image/*', 'video/*', 'application/pdf', '.doc,.docx,.txt']}
                             />
                         </div>
 
