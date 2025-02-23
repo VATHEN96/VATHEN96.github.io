@@ -1,14 +1,34 @@
 import { blockScannerUrl, currency, rpcUrl } from "./constants";
 
+/**
+ * Safely checks if `window.ethereum` is available.
+ * This prevents errors in non-Ethereum browsers or server-side rendering.
+ */
+const getEthereumObject = () => {
+    if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
+        return window.ethereum;
+    }
+    console.error("No Ethereum provider found. Please install MetaMask.");
+    return null;
+};
+
+/**
+ * Switches the user's wallet to the specified chain ID.
+ * If the network doesn't exist, it will attempt to add the network.
+ */
 export const switchNetwork = async (chainId: string) => {
+    const ethereum = getEthereumObject();
+    if (!ethereum) return;
+
     try {
-        await window.ethereum.request({
+        await ethereum.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId }],
         });
     } catch (switchError: any) {
+        // If the network doesn't exist, add it
         if (switchError.code === 4902) {
-            // If the network doesn't exist, add it
+            console.log("Network not found, adding it...");
             await addNetwork(chainId);
         } else {
             console.error("Error switching networks:", switchError);
@@ -16,9 +36,15 @@ export const switchNetwork = async (chainId: string) => {
     }
 };
 
+/**
+ * Adds a new network to the user's wallet.
+ */
 const addNetwork = async (chainId: string) => {
+    const ethereum = getEthereumObject();
+    if (!ethereum) return;
+
     try {
-        await window.ethereum.request({
+        await ethereum.request({
             method: "wallet_addEthereumChain",
             params: [
                 {
@@ -38,4 +64,3 @@ const addNetwork = async (chainId: string) => {
         console.error("Error adding network:", addError);
     }
 };
-
