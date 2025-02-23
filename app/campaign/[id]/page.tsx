@@ -26,7 +26,8 @@ export default function CampaignDetailPage() {
             }
             try {
                 setLoading(true)
-                const details = await getCampaignById(campaignId.toString())
+                const id = typeof campaignId === 'string' ? campaignId : campaignId.toString()
+                const details = await getCampaignById(id)
                 if (!details) {
                     throw new Error('Campaign not found')
                 }
