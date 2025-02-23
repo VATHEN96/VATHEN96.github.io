@@ -125,9 +125,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 name: ms.name,
                 target: Number(ethers.utils.formatEther(ms.target)),
                 completed: ms.completed,
-                dueDate: ms.dueDate
-                    ? new Date(ms.dueDate.toNumber() * 1000)
-                    : undefined,
+                dueDate: ms.dueDate ? new Date(ms.dueDate.toNumber() * 1000) : undefined,
             })) || [],
         category: campaign.category,
         beneficiaries: campaign.beneficiaries,
@@ -159,15 +157,13 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
             setCampaigns(parsedCampaigns);
             if (connectedAccount) {
                 const userCamps = parsedCampaigns.filter(
-                    (camp) =>
-                        camp.creator.toLowerCase() === connectedAccount.toLowerCase()
+                    (camp) => camp.creator.toLowerCase() === connectedAccount.toLowerCase()
                 );
                 setUserCampaigns(userCamps);
             }
             return parsedCampaigns;
         } catch (err: any) {
-            const errorMessage =
-                err.reason || err.message || "Failed to fetch campaigns";
+            const errorMessage = err.reason || err.message || "Failed to fetch campaigns";
             setError(errorMessage);
             return [];
         } finally {
@@ -193,7 +189,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         checkConnection();
     }, [connectWallet, getProviderAndSigner]);
 
-    // Listen for account and chain changes using non‑null assertion
+    // Listen for account and chain changes using non-null assertions & optional chaining
     useEffect(() => {
         if (typeof window !== "undefined" && window.ethereum) {
             const eth = window.ethereum as any;
@@ -204,12 +200,12 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                     await connectWallet();
                 }
             };
-            // Use optional chaining to ensure ethereum is defined
-            eth?.on("accountsChanged", handleAccountsChanged);
-            eth?.on("chainChanged", () => window.location.reload());
+            // Use optional chaining to safely invoke event listeners
+            eth.on?.("accountsChanged", handleAccountsChanged);
+            eth.on?.("chainChanged", () => window.location.reload());
             return () => {
-                eth?.removeListener("accountsChanged", handleAccountsChanged);
-                eth?.removeListener("chainChanged", () => window.location.reload());
+                eth.removeListener?.("accountsChanged", handleAccountsChanged);
+                eth.removeListener?.("chainChanged", () => window.location.reload());
             };
         }
     }, [connectedAccount, connectWallet, disconnectWallet]);
