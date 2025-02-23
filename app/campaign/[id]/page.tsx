@@ -6,54 +6,32 @@ import { useParams } from 'next/navigation'
 import { useWowzarush } from '@/context/wowzarushContext'
 import Link from 'next/link'
 import Navbar from '@/components/navbar'
-
-interface CampaignDetails {
-    title: string
-    description: string
-    proofOfWork: string
-    beneficiaries: string
-    media: string[]
-}
+import type { Campaign } from "@/utils/types"
 
 export default function CampaignDetailPage() {
-    const [campaignDetails, setCampaignDetails] = useState<CampaignDetails | null>(null)
-    const [loading, setLoading] = useState<boolean>(true)
-    const [error, setError] = useState<string | null>(null)
-
-    const params = useParams()
-    const campaignId = params?.id as string
+    const { id: campaignId } = useParams()
+    const { getCampaignById, loading, error } = useWowzarush()
+    const [campaign, setCampaign] = useState<Campaign | null>(null)
 
     const router = useRouter()
-    const { getCampaignById } = useWowzarush()
 
     useEffect(() => {
-        if (!campaignId) return
-
-        const fetchDetails = async () => {
+        const fetchCampaignDetails = async () => {
             try {
-                setLoading(true)
+                if (!campaignId || typeof campaignId !== 'string') {
+                    throw new Error('Invalid campaign ID')
+                }
                 const details = await getCampaignById(campaignId)
                 if (!details) {
                     throw new Error('Campaign not found')
                 }
-                // Manually construct the object so that all properties of CampaignDetails are provided.
-                const detailsWithMedia: CampaignDetails = {
-                    title: details.title,
-                    description: details.description,
-                    proofOfWork: details.proofOfWork,
-                    beneficiaries: details.beneficiaries,
-                    media: []  // Default value for media since details.media doesn't exist
-                }
-                setCampaignDetails(detailsWithMedia)
-            } catch (error: any) {
-                setError(error.message || 'Failed to fetch campaign details')
-                console.error('Error fetching campaign details:', error)
-            } finally {
-                setLoading(false)
+                setCampaign(details)
+            } catch (err) {
+                console.error('Error fetching campaign details:', err)
             }
         }
 
-        fetchDetails()
+        fetchCampaignDetails()
     }, [campaignId, getCampaignById])
 
     if (loading) {
@@ -80,7 +58,7 @@ export default function CampaignDetailPage() {
         )
     }
 
-    if (!campaignDetails) {
+    if (!campaign) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#90EE90]">
                 <p className="text-red-500 font-bold">Campaign not found</p>
@@ -95,68 +73,43 @@ export default function CampaignDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#F4F7F6]">
+        <div className="min-h-screen bg-[#FFFDF6]">
             <Navbar />
 
-            <main className="container mx-auto my-5 px-4 py-8 sm:px-6 lg:px-8">
-                <div className="bg-white border-4 my-8 border-black p-8 rounded-lg shadow-2xl max-w-4xl mx-auto">
-                    <h1 className="text-4xl font-bold text-center mb-8 border-b-4 border-black pb-4">
-                        {campaignDetails.title}
-                    </h1>
-
-                    <div className="space-y-8">
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                                <span className="bg-yellow-400 px-4 py-1 rounded-lg shadow-md">Description</span>
-                            </h2>
-                            <p className="text-lg text-gray-700 leading-relaxed">{campaignDetails.description}</p>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                                <span className="bg-yellow-400 px-4 py-1 rounded-lg shadow-md">Proof of Work</span>
-                            </h2>
-                            <p className="text-lg text-gray-700 leading-relaxed">{campaignDetails.proofOfWork}</p>
-                        </section>
-
-                        <section>
-                            <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                                <span className="bg-yellow-400 px-4 py-1 rounded-lg shadow-md">Beneficiaries</span>
-                            </h2>
-                            <p className="text-lg text-gray-700 leading-relaxed">{campaignDetails.beneficiaries}</p>
-                        </section>
-
-                        {campaignDetails.media && campaignDetails.media.length > 0 && (
-                            <section>
-                                <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                                    <span className="bg-yellow-400 px-4 py-1 rounded-lg shadow-md">Media</span>
-                                </h2>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {campaignDetails.media.map((mediaLink, index) => (
-                                        <div
-                                            key={index}
-                                            className="border-2 border-black rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
-                                        >
-                                            <img
-                                                src={mediaLink}
-                                                alt={`Campaign media ${index + 1}`}
-                                                className="w-full h-full object-cover hover:scale-105 transition-all duration-300"
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        <div className="flex justify-center mt-8">
-                            <Link href={`/fund-campaign/${campaignId}`}>
-                                <button
-                                    className="bg-[#ffff29] px-8 py-3 rounded-lg border-2 text-black border-black hover:bg-yellow-300 hover:-translate-y-1 transition-colors text-lg font-bold flex items-center gap-2"
-                                >
-                                    I want to fund this campaign <span role="img" aria-label="money">💶</span>
-                                </button>
-                            </Link>
+            <main className="container mx-auto px-4 pt-24 pb-12">
+                <h1 className="text-4xl font-bold mb-8">{campaign.title}</h1>
+                <div className="bg-white p-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                    <p className="text-gray-600 mb-4">{campaign.description}</p>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <h2 className="font-bold">Goal Amount</h2>
+                            <p>{campaign.goalAmount} TLOS</p>
                         </div>
+                        <div>
+                            <h2 className="font-bold">Total Funded</h2>
+                            <p>{campaign.totalFunded} TLOS</p>
+                        </div>
+                        <div>
+                            <h2 className="font-bold">Creator</h2>
+                            <p className="truncate">{campaign.creator}</p>
+                        </div>
+                        <div>
+                            <h2 className="font-bold">Category</h2>
+                            <p>{campaign.category}</p>
+                        </div>
+                    </div>
+                    <div className="mb-8">
+                        <h2 className="font-bold mb-4">Milestones</h2>
+                        {campaign.milestones.map((milestone) => (
+                            <div key={milestone.id} className="mb-4 p-4 border-2 border-black">
+                                <h3 className="font-bold">{milestone.name}</h3>
+                                <p>Target: {milestone.target} TLOS</p>
+                                <p>Status: {milestone.completed ? 'Completed' : 'In Progress'}</p>
+                                {milestone.dueDate && (
+                                    <p>Due: {milestone.dueDate.toLocaleDateString()}</p>
+                                )}
+                            </div>
+                        ))}
                     </div>
                 </div>
             </main>
