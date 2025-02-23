@@ -18,6 +18,9 @@
 /.cache/
 /.vscode/
 
+# Visual Studio (exclude .vs folder)
+.vs/
+
 # production
 /build
 /.vercel
