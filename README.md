@@ -37,30 +37,6 @@ Welcome to **wowzarush** — the ultimate milestone-based crowdfunding platform 
 2. **Launch Your Campaign**: Set your goals and milestones to begin fundraising.  
 3. **Engage the Community**: Gather feedback, showcase progress, and celebrate achievements.  
 
----  
-
-## 🛠️ How to Use  
-
-1. **Clone the Repository**:  
-   ```bash  
-   git clone https://github.com/Debanjannnn/wowzarush
-   ```  
-2. **Navigate to the Project Directory**:  
-   ```bash  
-   cd wowzarush  
-   ```  
-3. **Install Dependencies**:  
-   ```bash  
-   npm install  
-   ```  
-4. **Start the Development Server**:  
-   ```bash  
-   npm run dev  
-   ```  
-5. **Open in Browser**:  
-   Navigate to `http://localhost:3000` to explore wowzarush.  
-6. **Deploy**: Follow the deployment instructions in the repository to go live.  
-7. **Smart Contract on Telos Testnet**: [View on Teloscan](https://testnet.teloscan.io/address/0x7144Da8697ec83F9f820460C6498DcA90fF20901)  
 
 ---  
 
