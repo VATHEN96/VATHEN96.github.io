@@ -61,14 +61,30 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("No Ethereum provider found. Please install MetaMask or use Brave Browser.");
       }
 
-      // Check if using Brave Wallet
+      // Check if using Brave Wallet and handle provider initialization
       const isBraveWallet = ethereum.isBraveWallet;
-      console.log(`Using ${isBraveWallet ? 'Brave' : 'MetaMask'} wallet`);
+      if (isBraveWallet) {
+        console.log('Using Brave Wallet');
+        // Ensure Brave Wallet is properly initialized
+        await ethereum.request({ method: 'eth_requestAccounts' });
+      } else {
+        console.log('Using MetaMask wallet');
+      }
 
       // Ensure we're on the correct network
       const currentChainId = await ethereum.request({ method: "eth_chainId" });
       if (currentChainId !== chainIdHex) {
-        await switchNetwork(chainIdHex);
+        try {
+          await switchNetwork(chainIdHex);
+          // Verify the network switch was successful
+          const newChainId = await ethereum.request({ method: "eth_chainId" });
+          if (newChainId !== chainIdHex) {
+            throw new Error("Failed to switch to the Telos network. Please switch manually through your wallet.");
+          }
+        } catch (networkError: any) {
+          console.error("Network switching error:", networkError);
+          throw new Error(networkError.message || "Failed to switch to the Telos network");
+        }
       }
 
       const provider = new ethers.providers.Web3Provider(ethereum);
