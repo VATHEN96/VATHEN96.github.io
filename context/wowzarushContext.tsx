@@ -37,7 +37,9 @@ const defaultContextValue: wowzarushContextType = {
     getUserContributions: async () => [],
 };
 
-const WowzarushContext = createContext<wowzarushContextType>(defaultContextValue);
+const WowzarushContext = createContext<wowzarushContextType>(
+    defaultContextValue
+);
 
 export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     const [isConnected, setIsConnected] = useState(false);
@@ -116,22 +118,18 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     const fetchCampaigns = useCallback(async (): Promise<Campaign[]> => {
         setLoading(true);
         setError(null);
-
         try {
             const contract = await getContract();
             await checkNetwork();
-
             const campaignCounter = await contract.campaignCounter();
             if (Number(campaignCounter) === 0) {
                 setCampaigns([]);
                 return [];
             }
-
             const campaignPromises = Array.from(
                 { length: Number(campaignCounter) },
                 (_, i) => contract.getCampaignMetadata(i)
             );
-
             const rawCampaigns = await Promise.all(campaignPromises);
             const parsedCampaigns = rawCampaigns.map((campaign: any) => ({
                 id: campaign.id.toString(),
@@ -160,9 +158,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 createdAt: new Date(campaign.createdAt.toNumber() * 1000),
                 duration: Number(campaign.duration),
             }));
-
             setCampaigns(parsedCampaigns);
-
             if (connectedAccount) {
                 const userCamps = parsedCampaigns.filter(
                     (camp) =>
@@ -170,7 +166,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 );
                 setUserCampaigns(userCamps);
             }
-
             return parsedCampaigns;
         } catch (err: any) {
             setError(err.reason || err.message || "Failed to fetch campaigns");
@@ -180,11 +175,11 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [checkNetwork, getContract, connectedAccount]);
 
-    // Attach event listeners safely
+    // Attach event listeners safely using optional chaining.
     useEffect(() => {
-        if (typeof window !== "undefined" && window.ethereum) {
+        if (typeof window !== "undefined") {
             const eth = window.ethereum;
-            if (eth && typeof eth.on === "function") {
+            if (eth?.on) {
                 const handleAccountsChanged = (accounts: string[]) => {
                     if (accounts.length === 0) {
                         disconnectWallet();
@@ -192,15 +187,11 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                         setConnectedAccount(accounts[0]);
                     }
                 };
-
-                eth.on("accountsChanged", handleAccountsChanged);
-                eth.on("chainChanged", () => window.location.reload());
-
+                eth?.on("accountsChanged", handleAccountsChanged);
+                eth?.on("chainChanged", () => window.location.reload());
                 return () => {
-                    if (typeof eth.removeListener === "function") {
-                        eth.removeListener("accountsChanged", handleAccountsChanged);
-                        eth.removeListener("chainChanged", () => window.location.reload());
-                    }
+                    eth?.removeListener("accountsChanged", handleAccountsChanged);
+                    eth?.removeListener("chainChanged", () => window.location.reload());
                 };
             }
         }
@@ -240,15 +231,4 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 updateMilestone: async () => { },
                 connectWallet,
                 disconnectWallet,
-                fetchCampaigns,
-                getCampaignById: async () => null,
-                getCampaign: () => undefined,
-                getUserContributions: async () => [],
-            }}
-        >
-            {children}
-        </WowzarushContext.Provider>
-    );
-};
-
-export const useWowzarush = () => useContext(WowzarushContext);
+                fetchCampaign
