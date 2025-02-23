@@ -37,9 +37,7 @@ const defaultContextValue: wowzarushContextType = {
   getUserContributions: async () => [],
 };
 
-const WowzarushContext = createContext<wowzarushContextType>(
-  defaultContextValue
-);
+const WowzarushContext = createContext<wowzarushContextType>(defaultContextValue);
 
 export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   const [isConnected, setIsConnected] = useState(false);
@@ -88,7 +86,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
       setConnectedAccount(null);
       setAccountBalance(0);
     }
-  }, []);
+  }, [getProviderAndSigner]);
 
   const disconnectWallet = useCallback(async (): Promise<void> => {
     setConnectedAccount(null);
@@ -104,7 +102,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
       const { provider } = await getProviderAndSigner();
       const network = await provider.getNetwork();
       const expectedChainId = "0x1";
-
       if (network.chainId !== parseInt(expectedChainId, 16)) {
         await window.ethereum?.request({
           method: "wallet_switchEthereumChain",
@@ -185,8 +182,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const ethereum = window.ethereum;
-      if (ethereum) {
+      const eth = window.ethereum;
+      if (eth && eth.on) {
         const handleAccountsChanged = (accounts: string[]) => {
           if (accounts.length === 0) {
             disconnectWallet();
@@ -195,12 +192,14 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
           }
         };
 
-        ethereum.on("accountsChanged", handleAccountsChanged);
-        ethereum.on("chainChanged", () => window.location.reload());
+        eth.on("accountsChanged", handleAccountsChanged);
+        eth.on("chainChanged", () => window.location.reload());
 
         return () => {
-          ethereum.removeListener("accountsChanged", handleAccountsChanged);
-          ethereum.removeListener("chainChanged", () => window.location.reload());
+          if (eth.removeListener) {
+            eth.removeListener("accountsChanged", handleAccountsChanged);
+            eth.removeListener("chainChanged", () => window.location.reload());
+          }
         };
       }
     }
