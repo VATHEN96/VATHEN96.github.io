@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/navbar";
 import { Search, ArrowRight } from "lucide-react";
 import { useWowzarush } from "@/context/wowzarushContext";
+import type { Campaign } from "@/utils/types";
 
-// Helper function to calculate days left between now and deadline
+// Helper: Calculate the number of days left until a campaign's deadline
 const calculateDaysLeft = (deadline: Date | string): number => {
     const now = new Date();
     const endDate = new Date(deadline);
@@ -17,16 +18,16 @@ const calculateDaysLeft = (deadline: Date | string): number => {
 };
 
 export default function CampaignsPage() {
-    const [searchTerm, setSearchTerm] = useState("");
+    const [searchTerm, setSearchTerm] = useState<string>("");
     const { fetchCampaigns, campaigns, loading, error } = useWowzarush();
 
-    // Fetch campaigns when the component mounts
+    // Fetch campaigns on mount
     useEffect(() => {
         fetchCampaigns();
     }, [fetchCampaigns]);
 
-    // Filter campaigns based on search term (searching both title and category)
-    const filteredCampaigns = campaigns.filter((campaign) =>
+    // Filter campaigns based on search term (checks title and category)
+    const filteredCampaigns: Campaign[] = campaigns.filter((campaign) =>
         campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         campaign.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -88,7 +89,9 @@ export default function CampaignsPage() {
                                     <span className="font-bold">
                                         {campaign.totalFunded.toFixed(2)} TLOS raised
                                     </span>
-                                    <span className="text-gray-600">{campaign.goalAmount} TLOS goal</span>
+                                    <span className="text-gray-600">
+                                        {campaign.goalAmount} TLOS goal
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-gray-600">
