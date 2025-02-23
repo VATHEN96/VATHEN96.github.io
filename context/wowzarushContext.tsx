@@ -154,7 +154,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
             await checkNetwork();
 
             const campaignCounter = await contract.campaignCounter();
-
+            
             if (Number(campaignCounter) === 0) {
                 setCampaigns([]);
                 return [];
