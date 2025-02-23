@@ -6,6 +6,7 @@ import React, {
     useState,
     ReactNode,
     useCallback,
+    useEffect,
 } from "react";
 import { ethers } from "ethers";
 import type {
@@ -36,9 +37,7 @@ const defaultContextValue: wowzarushContextType = {
     getUserContributions: async () => [],
 };
 
-const WowzarushContext = createContext<wowzarushContextType>(
-    defaultContextValue
-);
+const WowzarushContext = createContext<wowzarushContextType>(defaultContextValue);
 
 export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     const [isConnected, setIsConnected] = useState(false);
@@ -49,27 +48,47 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Helper function to get provider and signer
+    const getProviderAndSigner = useCallback(async () => {
+        if (typeof window === "undefined" || !window.ethereum) {
+            throw new Error("No Ethereum provider found. Please install MetaMask.");
+        }
+
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const signer = provider.getSigner();
+        return { provider, signer };
+    }, []);
+
+    // Helper function to get contract instance
+    const getContract = useCallback(async () => {
+        const { signer } = await getProviderAndSigner();
+        return new ethers.Contract(contractAddress, contractABI, signer);
+    }, [getProviderAndSigner]);
+
     const connectWallet = useCallback(async () => {
-        if (typeof window !== "undefined" && window.ethereum) {
-            try {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                await window.ethereum.request({ method: "eth_requestAccounts" });
-                const accounts = await provider.listAccounts();
+        try {
+            const { provider } = await getProviderAndSigner();
+            const accounts = await provider.listAccounts();
 
-                if (accounts.length > 0) {
-                    setConnectedAccount(accounts[0]);
-                    setIsConnected(true);
-
-                    const balance = await provider.getBalance(accounts[0]);
-                    setAccountBalance(Number(ethers.utils.formatEther(balance)));
-                } else {
-                    setError("No accounts found. Please connect your wallet.");
-                }
-            } catch (error: any) {
-                setError(error.message || "Failed to connect wallet");
+            if (accounts.length === 0) {
+                throw new Error("No accounts found. Please connect your wallet.");
             }
-        } else {
-            setError("No Ethereum provider found. Please install MetaMask.");
+
+            const account = accounts[0];
+            setConnectedAccount(account);
+            setIsConnected(true);
+
+            const balance = await provider.getBalance(account);
+            setAccountBalance(Number(ethers.utils.formatEther(balance)));
+
+            // Fetch user's campaigns after connecting
+            await fetchCampaigns();
+        } catch (error: any) {
+            setError(error.message || "Failed to connect wallet");
+            setIsConnected(false);
+            setConnectedAccount(null);
+            setAccountBalance(0);
         }
     }, []);
 
@@ -77,101 +96,137 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         setConnectedAccount(null);
         setIsConnected(false);
         setAccountBalance(0);
+        setCampaigns([]);
+        setUserCampaigns([]);
         return Promise.resolve();
     }, []);
 
     const checkNetwork = useCallback(async () => {
-        if (typeof window !== "undefined" && window.ethereum) {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
+        try {
+            const { provider } = await getProviderAndSigner();
             const network = await provider.getNetwork();
             const expectedChainId = "0x1";
 
             if (network.chainId !== parseInt(expectedChainId, 16)) {
-                try {
-                    await window.ethereum.request({
-                        method: "wallet_switchEthereumChain",
-                        params: [{ chainId: expectedChainId }],
-                    });
-                } catch (switchError) {
-                    setError("Failed to switch network.");
-                }
+                await window.ethereum.request({
+                    method: "wallet_switchEthereumChain",
+                    params: [{ chainId: expectedChainId }],
+                });
             }
+        } catch (error: any) {
+            throw new Error("Failed to switch network: " + error.message);
         }
-    }, []);
+    }, [getProviderAndSigner]);
+
+    const parseCampaign = useCallback((campaign: any): Campaign => ({
+        id: campaign.id.toString(),
+        creator: campaign.creator,
+        title: campaign.title,
+        description: campaign.description,
+        goalAmount: Number(ethers.utils.formatEther(campaign.goalAmount)),
+        totalFunded: Number(ethers.utils.formatEther(campaign.totalFunded)),
+        deadline: new Date(campaign.deadline.toNumber() * 1000),
+        milestones: campaign.milestones?.map((ms: any, index: number): Milestone => ({
+            id: ms.id?.toString() || `milestone-${index}`,
+            name: ms.name,
+            target: Number(ethers.utils.formatEther(ms.target)),
+            completed: ms.completed,
+            dueDate: ms.dueDate
+                ? new Date(ms.dueDate.toNumber() * 1000)
+                : undefined,
+        })) || [],
+        category: campaign.category,
+        beneficiaries: campaign.beneficiaries,
+        proofOfWork: campaign.proofOfWork,
+        collateral: campaign.collateral,
+        multimedia: campaign.multimedia,
+        isActive: campaign.isActive,
+        createdAt: new Date(campaign.createdAt),
+        duration: Number(campaign.duration),
+    }), []);
 
     const fetchCampaigns = useCallback(async (): Promise<Campaign[]> => {
         setLoading(true);
+        setError(null);
+
         try {
-            if (typeof window !== "undefined" && window.ethereum) {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                await window.ethereum.request({ method: "eth_requestAccounts" });
+            const contract = await getContract();
+            await checkNetwork();
 
-                const signer = provider.getSigner();
-                const contract = new ethers.Contract(
-                    contractAddress,
-                    contractABI,
-                    signer
-                );
-
-                await checkNetwork();
-                const campaignCounter = await contract.campaignCounter();
-
-                if (Number(campaignCounter) === 0) {
-                    setCampaigns([]);
-                    return [];
-                }
-
-                const campaignPromises = [];
-                for (let i = 0; i < Number(campaignCounter); i++) {
-                    campaignPromises.push(contract.getCampaignMetadata(i));
-                }
-
-                const rawCampaigns = await Promise.all(campaignPromises);
-
-                const parsedCampaigns: Campaign[] = rawCampaigns.map(
-                    (campaign: any) => ({
-                        id: campaign.id.toString(),
-                        creator: campaign.creator,
-                        title: campaign.title,
-                        description: campaign.description,
-                        goalAmount: Number(ethers.utils.formatEther(campaign.goalAmount)),
-                        totalFunded: Number(ethers.utils.formatEther(campaign.totalFunded)),
-                        deadline: new Date(campaign.deadline.toNumber() * 1000),
-                        milestones: campaign.milestones && Array.isArray(campaign.milestones)
-                            ? campaign.milestones.map((ms: any, index: number): Milestone => ({
-                                id: ms.id ? ms.id.toString() : `milestone-${index}`,
-                                name: ms.name,
-                                target: Number(ethers.utils.formatEther(ms.target)),
-                                completed: ms.completed,
-                                dueDate: ms.dueDate
-                                    ? new Date(ms.dueDate.toNumber() * 1000)
-                                    : undefined,
-                            }))
-                            : [],
-                        category: campaign.category,
-                        beneficiaries: campaign.beneficiaries,
-                        proofOfWork: campaign.proofOfWork,
-                        collateral: campaign.collateral,
-                        multimedia: campaign.multimedia,
-                        isActive: campaign.isActive,
-                        createdAt: new Date(campaign.createdAt),
-                        duration: Number(campaign.duration),
-                    })
-                );
-
-                setCampaigns(parsedCampaigns);
-                return parsedCampaigns;
-            } else {
-                setError("No Ethereum provider found. Please install MetaMask.");
+            const campaignCounter = await contract.campaignCounter();
+            
+            if (Number(campaignCounter) === 0) {
+                setCampaigns([]);
                 return [];
             }
+
+            const campaignPromises = Array.from(
+                { length: Number(campaignCounter) },
+                (_, i) => contract.getCampaignMetadata(i)
+            );
+
+            const rawCampaigns = await Promise.all(campaignPromises);
+            const parsedCampaigns = rawCampaigns.map(parseCampaign);
+
+            setCampaigns(parsedCampaigns);
+
+            // Update user campaigns if wallet is connected
+            if (connectedAccount) {
+                const userCamps = parsedCampaigns.filter(
+                    camp => camp.creator.toLowerCase() === connectedAccount.toLowerCase()
+                );
+                setUserCampaigns(userCamps);
+            }
+
+            return parsedCampaigns;
         } catch (err: any) {
-            setError(err.reason || err.message || "Failed to fetch campaigns");
+            const errorMessage = err.reason || err.message || "Failed to fetch campaigns";
+            setError(errorMessage);
             return [];
         } finally {
             setLoading(false);
         }
-    }, [checkNetwork]);
+    }, [checkNetwork, getContract, parseCampaign, connectedAccount]);
+
+    // Auto-connect wallet if previously connected
+    useEffect(() => {
+        const checkConnection = async () => {
+            if (typeof window !== "undefined" && window.ethereum) {
+                try {
+                    const { provider } = await getProviderAndSigner();
+                    const accounts = await provider.listAccounts();
+                    if (accounts.length > 0) {
+                        await connectWallet();
+                    }
+                } catch (error) {
+                    console.error("Failed to auto-connect wallet:", error);
+                }
+            }
+        };
+
+        checkConnection();
+    }, [connectWallet, getProviderAndSigner]);
+
+    // Listen for account changes
+    useEffect(() => {
+        if (typeof window !== "undefined" && window.ethereum) {
+            const handleAccountsChanged = async (accounts: string[]) => {
+                if (accounts.length === 0) {
+                    await disconnectWallet();
+                } else if (accounts[0] !== connectedAccount) {
+                    await connectWallet();
+                }
+            };
+
+            window.ethereum.on("accountsChanged", handleAccountsChanged);
+            window.ethereum.on("chainChanged", () => window.location.reload());
+
+            return () => {
+                window.ethereum.removeListener("accountsChanged", handleAccountsChanged);
+                window.ethereum.removeListener("chainChanged", () => window.location.reload());
+            };
+        }
+    }, [connectedAccount, connectWallet, disconnectWallet]);
 
     return (
         <WowzarushContext.Provider
@@ -191,6 +246,9 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 connectWallet,
                 disconnectWallet,
                 fetchCampaigns,
+                getCampaignById: async () => null,
+                getCampaign: () => undefined,
+                getUserContributions: async () => [],
             }}
         >
             {children}
