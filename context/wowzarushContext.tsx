@@ -151,7 +151,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                         goalAmount: Number(ethers.utils.formatEther(campaign.goalAmount)),
                         totalFunded: Number(ethers.utils.formatEther(campaign.totalFunded)),
                         deadline: new Date(campaign.deadline.toNumber() * 1000),
-                        milestones: campaign.milestones
+                        milestones: Array.isArray(campaign.milestones)
                             ? campaign.milestones.map((ms: any, index: number): Milestone => ({
                                 id: ms.id ? ms.id.toString() : `milestone-${index}`,
                                 name: ms.name,
@@ -161,7 +161,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                                     ? new Date(ms.dueDate.toNumber() * 1000)
                                     : undefined,
                             }))
-                            : [], // Fix: Ensure milestones is always an array
+                            : [], // Ensure milestones is always an array
                         category: campaign.category,
                         beneficiaries: campaign.beneficiaries,
                         proofOfWork: campaign.proofOfWork,
