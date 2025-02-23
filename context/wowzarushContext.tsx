@@ -6,7 +6,6 @@ import React, {
     useState,
     ReactNode,
     useCallback,
-    useEffect,
 } from "react";
 import { ethers } from "ethers";
 import type {
@@ -16,7 +15,6 @@ import type {
 } from "@/utils/contextInterfaces";
 import { contractABI, contractAddress } from "@/utils/constants";
 
-// Default context value with empty implementations
 const defaultContextValue: wowzarushContextType = {
     isConnected: false,
     connectedAccount: null,
@@ -38,7 +36,6 @@ const defaultContextValue: wowzarushContextType = {
     getUserContributions: async () => [],
 };
 
-// Create Context
 const WowzarushContext = createContext<wowzarushContextType>(
     defaultContextValue
 );
@@ -52,9 +49,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
-    /**
-     * Connects the user's wallet using MetaMask
-     */
     const connectWallet = useCallback(async () => {
         if (typeof window !== "undefined" && window.ethereum) {
             try {
@@ -66,7 +60,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                     setConnectedAccount(accounts[0]);
                     setIsConnected(true);
 
-                    // Fetch Account Balance
                     const balance = await provider.getBalance(accounts[0]);
                     setAccountBalance(Number(ethers.utils.formatEther(balance)));
                 } else {
@@ -80,9 +73,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-    /**
-     * Disconnects the user's wallet
-     */
     const disconnectWallet = useCallback(async (): Promise<void> => {
         setConnectedAccount(null);
         setIsConnected(false);
@@ -90,14 +80,11 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         return Promise.resolve();
     }, []);
 
-    /**
-     * Network Check and Switcher
-     */
     const checkNetwork = useCallback(async () => {
         if (typeof window !== "undefined" && window.ethereum) {
             const provider = new ethers.providers.Web3Provider(window.ethereum);
             const network = await provider.getNetwork();
-            const expectedChainId = "0x1"; // Mainnet (Change this to your network's chain ID)
+            const expectedChainId = "0x1";
 
             if (network.chainId !== parseInt(expectedChainId, 16)) {
                 try {
@@ -112,9 +99,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-    /**
-     * Fetches all campaigns from the smart contract
-     */
     const fetchCampaigns = useCallback(async (): Promise<Campaign[]> => {
         setLoading(true);
         try {
@@ -143,6 +127,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 }
 
                 const rawCampaigns = await Promise.all(campaignPromises);
+
                 const parsedCampaigns: Campaign[] = rawCampaigns.map(
                     (campaign: any) => ({
                         id: campaign.id.toString(),
@@ -152,7 +137,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                         goalAmount: Number(ethers.utils.formatEther(campaign.goalAmount)),
                         totalFunded: Number(ethers.utils.formatEther(campaign.totalFunded)),
                         deadline: new Date(campaign.deadline.toNumber() * 1000),
-                        milestones: campaign.milestones?.length
+                        milestones: campaign.milestones && Array.isArray(campaign.milestones)
                             ? campaign.milestones.map((ms: any, index: number): Milestone => ({
                                 id: ms.id ? ms.id.toString() : `milestone-${index}`,
                                 name: ms.name,
@@ -173,6 +158,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                         duration: Number(campaign.duration),
                     })
                 );
+
                 setCampaigns(parsedCampaigns);
                 return parsedCampaigns;
             } else {
@@ -187,9 +173,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [checkNetwork]);
 
-    /**
-     * Global Context Value
-     */
     return (
         <WowzarushContext.Provider
             value={{
