@@ -67,4 +67,74 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
 
                     // Fetch Account Balance
                     const balance = await provider.getBalance(accounts[0]);
+                    setAccountBalance(Number(ethers.utils.formatEther(balance)));
+                } else {
+                    setError("No accounts found. Please connect your wallet.");
+                }
+            } catch (error: any) {
+                setError(error.message || "Failed to connect wallet");
+            }
+        } else {
+            setError("No Ethereum provider found. Please install MetaMask.");
+        }
+    }, []);
 
+    /**
+     * Disconnects the user's wallet
+     */
+    const disconnectWallet = useCallback(async (): Promise<void> => {
+        setConnectedAccount(null);
+        setIsConnected(false);
+        setAccountBalance(0);
+        return Promise.resolve();
+    }, []);
+
+    /**
+     * Get a specific campaign by ID from the smart contract
+     */
+    const getCampaignById = useCallback(async (id: string) => {
+        const allCampaigns = await fetchCampaigns();
+        const campaign = allCampaigns.find(camp => camp.id === id);
+        return campaign || null;
+    }, []);
+
+    /**
+     * Get a specific campaign from state by ID
+     */
+    const getCampaign = useCallback((id: string) => {
+        return campaigns.find(campaign => campaign.id === id);
+    }, [campaigns]);
+
+    /**
+     * Global Context Value
+     */
+    return (
+        <WowzarushContext.Provider
+            value={{
+                isConnected,
+                connectedAccount,
+                accountBalance,
+                campaigns,
+                userCampaigns,
+                loading,
+                error,
+                createCampaign: async () => { },
+                contributeToCampaign: async () => { },
+                withdrawFromCampaign: async () => { },
+                completeMilestone: async () => { },
+                updateMilestone: async () => { },
+                connectWallet,
+                disconnectWallet,
+                fetchCampaigns: async () => [],
+                getCampaignById,
+                getCampaign,
+                getUserContributions: async () => [],
+            }}
+        >
+            {children}
+        </WowzarushContext.Provider>
+    );
+};
+
+// Correctly exported hook
+export const useWowzarush = () => useContext(WowzarushContext);
