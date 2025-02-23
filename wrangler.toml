@@ -1,0 +1,29 @@
+name = "zugrama-initial"
+compatibility_date = "2025-02-23"
+
+[site]
+bucket = "./out"
+entry-point = "./"
+
+[[redirects]]
+source = "/_next/static/*"
+destination = "/_next/static/*"
+status = 200
+
+[[redirects]]
+source = "/_next/data/*"
+destination = "/_next/data/*"
+status = 200
+
+[[redirects]]
+source = "/assets/*"
+destination = "/assets/*"
+status = 200
+
+[[redirects]]
+source = "/images/*"
+destination = "/images/*"
+status = 200
+
+[env.production]
+node_compat = true

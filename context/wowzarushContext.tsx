@@ -6,6 +6,7 @@ import React, {
     useState,
     ReactNode,
     useCallback,
+    useEffect,
 } from "react";
 import { ethers } from "ethers";
 import type {
@@ -24,12 +25,12 @@ const defaultContextValue: wowzarushContextType = {
     userCampaigns: [],
     loading: false,
     error: null,
-    createCampaign: async () => {},
-    contributeToCampaign: async () => {},
-    withdrawFromCampaign: async () => {},
-    completeMilestone: async () => {},
-    updateMilestone: async () => {},
-    connectWallet: async () => {},
+    createCampaign: async () => { },
+    contributeToCampaign: async () => { },
+    withdrawFromCampaign: async () => { },
+    completeMilestone: async () => { },
+    updateMilestone: async () => { },
+    connectWallet: async () => { },
     disconnectWallet: async () => Promise.resolve(),
     fetchCampaigns: async () => [],
     getCampaignById: async () => null,
@@ -55,7 +56,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
      * Connects the user's wallet using MetaMask
      */
     const connectWallet = useCallback(async () => {
-        if (typeof window.ethereum !== "undefined") {
+        if (typeof window !== "undefined" && window.ethereum) {
             try {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 await window.ethereum.request({ method: "eth_requestAccounts" });
@@ -93,18 +94,20 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
      * Network Check and Switcher
      */
     const checkNetwork = useCallback(async () => {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const network = await provider.getNetwork();
-        const expectedChainId = "0x1"; // Mainnet (Change this to your network's chain ID)
+        if (typeof window !== "undefined" && window.ethereum) {
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+            const network = await provider.getNetwork();
+            const expectedChainId = "0x1"; // Mainnet (Change this to your network's chain ID)
 
-        if (network.chainId !== parseInt(expectedChainId, 16)) {
-            try {
-                await window.ethereum.request({
-                    method: "wallet_switchEthereumChain",
-                    params: [{ chainId: expectedChainId }],
-                });
-            } catch (switchError) {
-                setError("Failed to switch network.");
+            if (network.chainId !== parseInt(expectedChainId, 16)) {
+                try {
+                    await window.ethereum.request({
+                        method: "wallet_switchEthereumChain",
+                        params: [{ chainId: expectedChainId }],
+                    });
+                } catch (switchError) {
+                    setError("Failed to switch network.");
+                }
             }
         }
     }, []);
@@ -115,7 +118,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     const fetchCampaigns = useCallback(async (): Promise<Campaign[]> => {
         setLoading(true);
         try {
-            if (typeof window.ethereum !== "undefined") {
+            if (typeof window !== "undefined" && window.ethereum) {
                 const provider = new ethers.providers.Web3Provider(window.ethereum);
                 await window.ethereum.request({ method: "eth_requestAccounts" });
 
@@ -149,6 +152,17 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                         goalAmount: Number(ethers.utils.formatEther(campaign.goalAmount)),
                         totalFunded: Number(ethers.utils.formatEther(campaign.totalFunded)),
                         deadline: new Date(campaign.deadline.toNumber() * 1000),
+                        milestones: campaign.milestones
+                            ? campaign.milestones.map((ms: any, index: number): Milestone => ({
+                                id: ms.id ? ms.id.toString() : `milestone-${index}`,
+                                name: ms.name,
+                                target: Number(ethers.utils.formatEther(ms.target)),
+                                completed: ms.completed,
+                                dueDate: ms.dueDate
+                                    ? new Date(ms.dueDate.toNumber() * 1000)
+                                    : undefined,
+                            }))
+                            : [],
                         category: campaign.category,
                         beneficiaries: campaign.beneficiaries,
                         proofOfWork: campaign.proofOfWork,
@@ -174,28 +188,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }, [checkNetwork]);
 
     /**
-     * Placeholder Functions for Required Methods
+     * Global Context Value
      */
-    const createCampaign = useCallback(async () => {
-        console.log("createCampaign function called");
-    }, []);
-
-    const contributeToCampaign = useCallback(async () => {
-        console.log("contributeToCampaign function called");
-    }, []);
-
-    const withdrawFromCampaign = useCallback(async () => {
-        console.log("withdrawFromCampaign function called");
-    }, []);
-
-    const completeMilestone = useCallback(async () => {
-        console.log("completeMilestone function called");
-    }, []);
-
-    const updateMilestone = useCallback(async () => {
-        console.log("updateMilestone function called");
-    }, []);
-
     return (
         <WowzarushContext.Provider
             value={{
@@ -206,15 +200,14 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 userCampaigns,
                 loading,
                 error,
-                createCampaign,
-                contributeToCampaign,
-                withdrawFromCampaign,
-                completeMilestone,
-                updateMilestone,
+                createCampaign: async () => { },
+                contributeToCampaign: async () => { },
+                withdrawFromCampaign: async () => { },
+                completeMilestone: async () => { },
+                updateMilestone: async () => { },
                 connectWallet,
                 disconnectWallet,
                 fetchCampaigns,
-                getUserContributions: async () => [],
             }}
         >
             {children}
