@@ -11,7 +11,7 @@ import type { Campaign } from "@/utils/types"
 export default function CampaignDetailPage() {
     const params = useParams()
     const campaignId = params?.id
-    const { getCampaign, loading: contextLoading, error: contextError } = useWowzarush()
+    const { getCampaign, loading: contextLoading, error: contextError, getCampaignById } = useWowzarush()
     const [campaign, setCampaign] = useState<Campaign | null>(null)
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -26,7 +26,8 @@ export default function CampaignDetailPage() {
             }
             try {
                 setLoading(true)
-                const details = getCampaign()
+                const id = typeof campaignId === 'string' ? campaignId : campaignId.toString()
+                const details = await getCampaignById(id)
                 if (!details) {
                     throw new Error('Campaign not found')
                 }
@@ -39,7 +40,7 @@ export default function CampaignDetailPage() {
         }
 
         fetchCampaignDetails()
-    }, [campaignId, getCampaign])
+    }, [campaignId, getCampaignById])
 
     if (loading || contextLoading) {
         return (

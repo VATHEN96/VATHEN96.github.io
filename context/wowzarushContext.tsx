@@ -32,8 +32,8 @@ const defaultContextValue: wowzarushContextType = {
   connectWallet: async () => {},
   disconnectWallet: async () => Promise.resolve(),
   fetchCampaigns: async () => [],
-  getCampaignById: async () => null,
-  getCampaign: () => undefined,
+  getCampaignById: async (id: string) => null,
+  getCampaign: (id: string) => undefined,
   getUserContributions: async () => [],
 };
 
