@@ -41,31 +41,39 @@ export default function FileUpload({
 
         setUploading(true);
         setError(null);
+        setProgress(0);
 
         try {
             const uploadPromises = files.map(async (file) => {
                 const formData = new FormData();
                 formData.append('file', file);
 
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
+                try {
+                    const response = await fetch('/api/upload', {
+                        method: 'POST',
+                        body: formData,
+                    });
 
-                if (!response.ok) {
-                    throw new Error('Upload failed');
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || `Upload failed with status: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    setProgress((prev) => Math.min(prev + (100 / files.length), 99));
+                    return data.url;
+                } catch (uploadError) {
+                    throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
                 }
-
-                const data = await response.json();
-                return data.url;
             });
 
             const urls = await Promise.all(uploadPromises);
             onUploadComplete?.(urls.length === 1 ? urls[0] : urls);
             setFiles([]);
             setProgress(100);
-        } catch (err) {
-            setError('Failed to upload file(s). Please try again.');
+        } catch (err: any) {
+            const errorMessage = err.message || 'Failed to upload file(s). Please try again.';
+            setError(errorMessage);
             console.error('Upload error:', err);
         } finally {
             setUploading(false);

@@ -20,13 +20,15 @@ const nextConfig = {
       "fs": false,
       "net": false,
       "tls": false,
-      "http": require.resolve("stream-http"),
-      "https": require.resolve("https-browserify"),
-      "stream": require.resolve("stream-browserify"),
-      "crypto": require.resolve("crypto-browserify"),
-      "zlib": require.resolve("browserify-zlib"),
-      "path": require.resolve("path-browserify"),
-      "buffer": require.resolve("buffer/")
+      "http": "stream-http",
+      "https": "https-browserify",
+      "stream": "stream-browserify",
+      "crypto": "crypto-browserify",
+      "zlib": "browserify-zlib",
+      "path": "path-browserify",
+      "buffer": "buffer/",
+      "querystring": "querystring-es3"
+    };
     return config;
   }
 };

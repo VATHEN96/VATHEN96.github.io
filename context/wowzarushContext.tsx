@@ -14,7 +14,8 @@ import type {
   Milestone,
   wowzarushContextType,
 } from "../utils/contextInterfaces";
-import { contractABI, contractAddress } from "@/utils/constants";
+import { contractABI, contractAddress, chainIdHex } from "@/utils/constants";
+import { switchNetwork } from "@/utils/addCurrentNetwork";
 
 const defaultContextValue: wowzarushContextType = {
   isConnected: false,
@@ -60,11 +61,32 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         throw new Error("No Ethereum provider found. Please install MetaMask.");
       }
 
+      // Ensure we're on the correct network
+      const currentChainId = await ethereum.request({ method: "eth_chainId" });
+      if (currentChainId !== chainIdHex) {
+        await switchNetwork(chainIdHex);
+      }
+
       const provider = new ethers.providers.Web3Provider(ethereum);
-      await ethereum.request({ method: "eth_requestAccounts" });
+      try {
+        await ethereum.request({ method: "eth_requestAccounts" });
+      } catch (requestError: any) {
+        if (requestError.code === 4001) {
+          throw new Error("Please connect your wallet to continue. You can try again by clicking the 'Connect Wallet' button.");
+        }
+        throw new Error("Failed to connect to MetaMask. Please try again.");
+      }
+
+      // Verify network connection
+      try {
+        await provider.getNetwork();
+      } catch (networkError) {
+        throw new Error("Unable to connect to the Telos network. Please check your network connection and try again.");
+      }
+
       const signer = provider.getSigner();
       return { provider, signer };
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error getting provider and signer:", error);
       throw error;
     }
@@ -106,13 +128,80 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // Ensure correct network and RPC access before fetching
+      if (typeof window !== "undefined" && window.ethereum) {
+        try {
+          const currentChainId = await window.ethereum.request({ method: "eth_chainId" });
+          if (currentChainId !== chainIdHex) {
+            await switchNetwork(chainIdHex);
+            // Verify the network switch was successful
+            const newChainId = await window.ethereum.request({ method: "eth_chainId" });
+            if (newChainId !== chainIdHex) {
+              throw new Error("Failed to switch to the Telos network. Please switch manually through your wallet.");
+            }
+          }
+          
+          // Verify RPC endpoint access
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          try {
+            await provider.getNetwork();
+          } catch (rpcError) {
+            throw new Error("Unable to access RPC endpoint. Please check your network connection or try a different RPC endpoint.");
+          }
+        } catch (networkError: any) {
+          throw new Error(networkError.message || "Failed to connect to the Telos network. Please check your wallet connection.");
+        }
+      }
+
       const contract = await getContract();
-      const campaignData = await contract.getCampaigns();
-      const parsedCampaigns = campaignData.map(parseCampaign);
-      setCampaigns(parsedCampaigns);
-      return parsedCampaigns;
+      const campaignIds = await contract.getCampaignsByRange(0, await contract.campaignCounter() - 1);
+      const campaigns = await Promise.all(
+        campaignIds.map(async (id: number) => {
+          const metadata = await contract.getCampaignMetadata(id);
+          const details = await contract.getCampaignDetails(id);
+          const [donors, stakeholders] = await contract.getCampaignParticipants(id);
+          
+          // Fetch milestone data
+          const milestones = [];
+          for (let i = 0; i < metadata.milestones?.length || 0; i++) {
+            const milestoneMetadata = await contract.getMilestoneMetadata(id, i);
+            const [proofOfCompletion, fundsReleased] = await contract.getMilestoneProof(id, i);
+            milestones.push({
+              id: i.toString(),
+              name: milestoneMetadata.name,
+              target: Number(ethers.utils.formatEther(milestoneMetadata.targetAmount)),
+              completed: milestoneMetadata.isCompleted,
+              dueDate: undefined
+            });
+          }
+
+          return {
+            id: metadata.id.toString(),
+            creator: metadata.creator,
+            title: metadata.title,
+            description: details.description,
+            goalAmount: Number(ethers.utils.formatEther(metadata.goalAmount)),
+            totalFunded: Number(ethers.utils.formatEther(metadata.totalFunded)),
+            deadline: new Date(metadata.createdAt.toNumber() * 1000 + metadata.duration * 24 * 60 * 60 * 1000),
+            milestones,
+            category: metadata.category,
+            beneficiaries: details.beneficiaries,
+            proofOfWork: details.proofOfWork,
+            collateral: "0",
+            multimedia: details.media,
+            isActive: metadata.isActive,
+            createdAt: new Date(metadata.createdAt.toNumber() * 1000),
+            duration: Number(metadata.duration)
+          };
+        })
+      );
+      
+      setCampaigns(campaigns);
+      return campaigns;
     } catch (error: any) {
-      setError(error.message || "Failed to fetch campaigns");
+      console.error("Error fetching campaigns:", error);
+      setError(error.message || "Failed to fetch campaigns. Please ensure you're connected to Telos network.");
       return [];
     } finally {
       setLoading(false);
@@ -122,6 +211,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   const connectWallet = useCallback(async () => {
     try {
       setError(null);
+      setLoading(true);
       const { provider } = await getProviderAndSigner();
       const accounts = await provider.listAccounts();
       if (accounts.length === 0) {
@@ -140,10 +230,13 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         setUserCampaigns(userCamps);
       }
     } catch (error: any) {
+      console.error("Wallet connection error:", error);
       setError(error.message || "Failed to connect wallet");
       setIsConnected(false);
       setConnectedAccount(null);
       setAccountBalance(0);
+    } finally {
+      setLoading(false);
     }
   }, [fetchCampaigns, getProviderAndSigner]);
 
@@ -185,19 +278,35 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   // Listen for account and chain changes
   useEffect(() => {
     if (typeof window !== "undefined" && window.ethereum) {
-      const eth = window.ethereum as any;
+      const eth = window.ethereum;
       const handleAccountsChanged = async (accounts: string[]) => {
-        if (accounts.length === 0) {
-          await disconnectWallet();
-        } else if (accounts[0] !== connectedAccount) {
-          await connectWallet();
+        try {
+          if (accounts.length === 0) {
+            await disconnectWallet();
+          } else if (accounts[0] !== connectedAccount) {
+            await connectWallet();
+          }
+        } catch (error) {
+          console.error("Error handling account change:", error);
+          setError("Failed to handle account change");
         }
       };
+
+      const handleChainChanged = () => {
+        try {
+          window.location.reload();
+        } catch (error) {
+          console.error("Error handling chain change:", error);
+          setError("Failed to handle network change");
+        }
+      };
+
       eth?.on("accountsChanged", handleAccountsChanged);
-      eth?.on("chainChanged", () => window.location.reload());
+      eth?.on("chainChanged", handleChainChanged);
+
       return () => {
         eth?.removeListener("accountsChanged", handleAccountsChanged);
-        eth?.removeListener("chainChanged", () => window.location.reload());
+        eth?.removeListener("chainChanged", handleChainChanged);
       };
     }
   }, [connectedAccount, connectWallet, disconnectWallet]);
