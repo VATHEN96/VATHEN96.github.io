@@ -9,32 +9,43 @@ import Navbar from '@/components/navbar'
 import type { Campaign } from "@/utils/types"
 
 export default function CampaignDetailPage() {
-    const { id: campaignId } = useParams()
-    const { getCampaignById, loading, error } = useWowzarush()
+    const params = useParams()
+    const campaignId = params?.id
+    const { getCampaignById, loading: contextLoading, error: contextError } = useWowzarush()
     const [campaign, setCampaign] = useState<Campaign | null>(null)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const router = useRouter()
 
     useEffect(() => {
         const fetchCampaignDetails = async () => {
+            if (!campaignId || typeof campaignId !== 'string') {
+                setError('Invalid campaign ID')
+                return
+            }
+
             try {
-                if (!campaignId || typeof campaignId !== 'string') {
-                    throw new Error('Invalid campaign ID')
-                }
+                setLoading(true)
+                setError(null)
                 const details = await getCampaignById(campaignId)
                 if (!details) {
-                    throw new Error('Campaign not found')
+                    setError('Campaign not found')
+                    return
                 }
                 setCampaign(details)
             } catch (err) {
                 console.error('Error fetching campaign details:', err)
+                setError(err instanceof Error ? err.message : 'Failed to fetch campaign details')
+            } finally {
+                setLoading(false)
             }
         }
 
         fetchCampaignDetails()
     }, [campaignId, getCampaignById])
 
-    if (loading) {
+    if (loading || contextLoading) {
         return (
             <div className="flex items-center justify-center min-h-screen bg-[#90EE90]">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
@@ -42,11 +53,11 @@ export default function CampaignDetailPage() {
         )
     }
 
-    if (error) {
+    if (error || contextError) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#90EE90] gap-4">
                 <div className="bg-white p-8 rounded shadow-lg border-2 border-black">
-                    <p className="text-red-500 font-bold">{error}</p>
+                    <p className="text-red-500 font-bold">{error || contextError}</p>
                     <button
                         onClick={() => router.back()}
                         className="mt-4 bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-all duration-300"
@@ -75,7 +86,6 @@ export default function CampaignDetailPage() {
     return (
         <div className="min-h-screen bg-[#FFFDF6]">
             <Navbar />
-
             <main className="container mx-auto px-4 pt-24 pb-12">
                 <h1 className="text-4xl font-bold mb-8">{campaign.title}</h1>
                 <div className="bg-white p-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
