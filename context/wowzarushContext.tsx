@@ -197,6 +197,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
       const contract = await getContract();
       const campaignData = await contract.getCampaign(id);
+      if (!campaignData) return null;
       return parseCampaign(campaignData);
     } catch (error: any) {
       setError(error.message || "Failed to fetch campaign");
@@ -210,32 +211,38 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     return campaigns.find(campaign => campaign.id === id);
   }, [campaigns]);
 
+  const contextValue = {
+    isConnected,
+    connectedAccount,
+    accountBalance,
+    campaigns,
+    userCampaigns,
+    loading,
+    error,
+    createCampaign: async () => {},
+    contributeToCampaign: async () => {},
+    withdrawFromCampaign: async () => {},
+    completeMilestone: async () => {},
+    updateMilestone: async () => {},
+    connectWallet,
+    disconnectWallet,
+    fetchCampaigns,
+    getCampaignById,
+    getCampaign,
+    getUserContributions: async () => [],
+  };
+
   return (
-    <WowzarushContext.Provider
-      value={{
-        isConnected,
-        connectedAccount,
-        accountBalance,
-        campaigns,
-        userCampaigns,
-        loading,
-        error,
-        createCampaign: async () => {},
-        contributeToCampaign: async () => {},
-        withdrawFromCampaign: async () => {},
-        completeMilestone: async () => {},
-        updateMilestone: async () => {},
-        connectWallet,
-        disconnectWallet,
-        fetchCampaigns,
-        getCampaignById,
-        getCampaign,
-        getUserContributions: async () => [],
-      }}
-    >
+    <WowzarushContext.Provider value={contextValue}>
       {children}
     </WowzarushContext.Provider>
   );
 };
 
-export const useWowzarush = () => useContext(WowzarushContext);
+export const useWowzarush = () => {
+  const context = useContext(WowzarushContext);
+  if (!context) {
+    throw new Error("useWowzarush must be used within a WowzarushProvider");
+  }
+  return context;
+};
