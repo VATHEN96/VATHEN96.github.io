@@ -90,24 +90,32 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     /**
-     * Network Check and Switcher
+     * Placeholder for Required Functions
      */
-    const checkNetwork = useCallback(async () => {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const network = await provider.getNetwork();
-        const expectedChainId = "0x1"; // Mainnet (Change this to your network's chain ID)
+    const createCampaign = async () => {
+        console.warn("createCampaign function not implemented yet.");
+    };
 
-        if (network.chainId !== parseInt(expectedChainId, 16)) {
-            try {
-                await window.ethereum.request({
-                    method: "wallet_switchEthereumChain",
-                    params: [{ chainId: expectedChainId }],
-                });
-            } catch (switchError) {
-                setError("Failed to switch network.");
-            }
-        }
-    }, []);
+    const contributeToCampaign = async () => {
+        console.warn("contributeToCampaign function not implemented yet.");
+    };
+
+    const withdrawFromCampaign = async () => {
+        console.warn("withdrawFromCampaign function not implemented yet.");
+    };
+
+    const completeMilestone = async () => {
+        console.warn("completeMilestone function not implemented yet.");
+    };
+
+    const updateMilestone = async () => {
+        console.warn("updateMilestone function not implemented yet.");
+    };
+
+    const getUserContributions = async () => {
+        console.warn("getUserContributions function not implemented yet.");
+        return [];
+    };
 
     /**
      * Fetches all campaigns from the smart contract
@@ -126,7 +134,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                     signer
                 );
 
-                await checkNetwork();
                 const campaignCounter = await contract.campaignCounter();
 
                 if (Number(campaignCounter) === 0) {
@@ -182,24 +189,11 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         } finally {
             setLoading(false);
         }
-    }, [checkNetwork]);
+    }, []);
 
     /**
-     * Get a specific campaign by ID from the smart contract
+     * Global Context Value
      */
-    const getCampaignById = useCallback(async (id: string) => {
-        const allCampaigns = await fetchCampaigns();
-        const campaign = allCampaigns.find(camp => camp.id === id);
-        return campaign || null;
-    }, [fetchCampaigns]);
-
-    /**
-     * Get a specific campaign from state by ID
-     */
-    const getCampaign = useCallback((id: string) => {
-        return campaigns.find(campaign => campaign.id === id);
-    }, [campaigns]);
-
     return (
         <WowzarushContext.Provider
             value={{
@@ -210,11 +204,15 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                 userCampaigns,
                 loading,
                 error,
+                createCampaign,
+                contributeToCampaign,
+                withdrawFromCampaign,
+                completeMilestone,
+                updateMilestone,
                 connectWallet,
                 disconnectWallet,
                 fetchCampaigns,
-                getCampaignById,
-                getCampaign,
+                getUserContributions
             }}
         >
             {children}
