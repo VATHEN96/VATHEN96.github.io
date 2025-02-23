@@ -44,4 +44,38 @@ export interface wowzarushContextType {
   getCampaignById: (id: string) => Promise<Campaign | null>;
   getCampaign: (id: string) => Campaign | undefined;
   getUserContributions: () => Promise<Campaign[]>;
-} 
+}
+
+function createNewCampaign(userInput: Partial<Campaign>): Campaign {
+  const generateUniqueId = (): string => {
+    return 'unique-id';
+  };
+
+  const campaignData: Campaign = {
+    id: generateUniqueId(),
+    creator: userInput.creator || 'Default Creator',
+    title: userInput.title || 'Default Campaign Title',
+    description: userInput.description || 'Default Description',
+    goalAmount: userInput.goalAmount || 0,
+    totalFunded: userInput.totalFunded ?? 0,
+    deadline: userInput.deadline || new Date(),
+    milestones: userInput.milestones || [],
+    category: userInput.category || 'Default Category',
+    beneficiaries: userInput.beneficiaries || [],
+    proofOfWork: userInput.proofOfWork || 'Default Proof',
+    collateral: userInput.collateral || 'Default Collateral',
+    multimedia: userInput.multimedia || 'Default Multimedia',
+    isActive: userInput.isActive ?? true,
+    createdAt: userInput.createdAt || new Date(),
+    duration: userInput.duration || 0,
+  };
+
+  return campaignData;
+}
+
+const newCampaign = createNewCampaign({
+  title: 'My New Campaign',
+  creator: 'John Doe',
+  goalAmount: 1000,
+  // Add other properties as needed
+}); 
