@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation'
 import { useWowzarush } from '@/context/wowzarushContext'
 import Link from 'next/link'
 import Navbar from '@/components/navbar'
-import type { Campaign } from "@/utils/types"
+import type { Campaign } from "@/utils/contextInterfaces"
 
 export default function CampaignDetailPage() {
     const params = useParams()

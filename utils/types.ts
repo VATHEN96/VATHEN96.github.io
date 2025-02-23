@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 export interface Milestone {
   id: string;
   name: string;
@@ -46,18 +48,15 @@ export interface wowzarushContextType {
   getUserContributions: () => Promise<Campaign[]>;
 }
 
-function createNewCampaign(userInput: Partial<Campaign>): Campaign {
-  const generateUniqueId = (): string => {
-    return 'unique-id';
-  };
-
-  const campaignData: Campaign = {
-    id: generateUniqueId(),
+// Helper function to create a new Campaign object
+function createCampaignData(userInput: Partial<Campaign>): Campaign {
+  return {
+    id: uuidv4(), // Generate a unique ID
     creator: userInput.creator || 'Default Creator',
     title: userInput.title || 'Default Campaign Title',
     description: userInput.description || 'Default Description',
     goalAmount: userInput.goalAmount || 0,
-    totalFunded: userInput.totalFunded ?? 0,
+    totalFunded: userInput.totalFunded ?? 0, // Default to 0 if not provided
     deadline: userInput.deadline || new Date(),
     milestones: userInput.milestones || [],
     category: userInput.category || 'Default Category',
@@ -69,13 +68,24 @@ function createNewCampaign(userInput: Partial<Campaign>): Campaign {
     createdAt: userInput.createdAt || new Date(),
     duration: userInput.duration || 0,
   };
-
-  return campaignData;
 }
 
-const newCampaign = createNewCampaign({
-  title: 'My New Campaign',
-  creator: 'John Doe',
-  goalAmount: 1000,
-  // Add other properties as needed
-}); 
+// Example usage in your component or function
+async function handleCreateCampaign() {
+  try {
+    const campaignData = createCampaignData({
+      title: 'My New Campaign',
+      creator: 'John Doe',
+      goalAmount: 1000,
+      // Add other properties as needed
+    });
+    // Call the createCampaignData function
+    await createCampaignData(campaignData);
+    alert('Campaign created successfully!');
+  } catch (error) {
+    console.error('Campaign creation failed:', error);
+  }
+}
+
+// Call the function to create a campaign
+handleCreateCampaign();

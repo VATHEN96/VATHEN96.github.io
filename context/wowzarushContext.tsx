@@ -13,7 +13,7 @@ import type {
   Campaign,
   Milestone,
   wowzarushContextType,
-} from "@/utils/types";
+} from "../utils/contextInterfaces";
 import { contractABI, contractAddress } from "@/utils/constants";
 
 const defaultContextValue: wowzarushContextType = {
@@ -31,10 +31,10 @@ const defaultContextValue: wowzarushContextType = {
   updateMilestone: async () => {},
   connectWallet: async () => {},
   disconnectWallet: async () => Promise.resolve(),
-  fetchCampaigns: async () => [],
-  getCampaignById: async (id: string) => null,
-  getCampaign: (id: string) => undefined,
-  getUserContributions: async () => [],
+  fetchCampaigns: async () => Promise.resolve([]),
+  getCampaignById: async () => Promise.resolve<Campaign | null>(null),
+  getCampaign: () => undefined as Campaign | undefined,
+  getUserContributions: async () => Promise.resolve([]),
 };
 
 const WowzarushContext = createContext<wowzarushContextType>(defaultContextValue);
@@ -227,8 +227,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     connectWallet,
     disconnectWallet,
     fetchCampaigns,
-    getCampaignById,
-    getCampaign,
+    getCampaignById: (id: string) => getCampaignById(id),
+    getCampaign: (id: string) => getCampaign(id),
     getUserContributions: async () => [],
   };
 

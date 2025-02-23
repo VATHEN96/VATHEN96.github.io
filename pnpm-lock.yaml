@@ -112,6 +112,9 @@ devDependencies:
   tailwindcss:
     specifier: ^3.4.17
     version: 3.4.17(ts-node@10.9.2)
+  vercel:
+    specifier: ^41.2.0
+    version: 41.2.0
 
 packages:
 

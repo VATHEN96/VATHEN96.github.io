@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/navbar";
 import { Search, ArrowRight } from "lucide-react";
 import { useWowzarush } from "@/context/wowzarushContext";
-import type { Campaign } from "@/utils/types";
+import type { Campaign } from "../../utils/contextInterfaces";
 
 // Helper: Calculate the number of days left until a campaign's deadline
 const calculateDaysLeft = (deadline: Date | string): number => {
@@ -27,7 +27,7 @@ export default function CampaignsPage() {
     }, [fetchCampaigns]);
 
     // Filter campaigns based on search term (checks title and category)
-    const filteredCampaigns: Campaign[] = campaigns.filter((campaign) =>
+    const filteredCampaigns: Campaign[] = campaigns.filter((campaign: Campaign) =>
         campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         campaign.category.toLowerCase().includes(searchTerm.toLowerCase())
     );

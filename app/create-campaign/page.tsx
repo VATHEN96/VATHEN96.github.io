@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import Navbar from '@/components/navbar'
 import { useWowzarush } from '@/context/wowzarushContext'
+import { v4 as uuidv4 } from 'uuid'
+import { Campaign as CampaignInterface } from "../../utils/contextInterfaces"
 
 export default function CreateCampaign() {
     const { loading, createCampaign } = useWowzarush();
@@ -121,10 +123,12 @@ export default function CreateCampaign() {
 
             // Transform formData into campaignData with the proper shape.
             // Note: We omit totalFunded since createCampaign expects Omit<Campaign, "id" | "totalFunded">
-            const campaignData = {
+            const campaignData: CampaignInterface = {
+                id: uuidv4(),
                 title: formData.title,
                 description: formData.description,
                 goalAmount: Number(formData.goal),
+                totalFunded: 0,
                 deadline: deadline,
                 creator: "0xYourConnectedAccount", // Replace with actual account if available
                 milestones: formData.milestones.map((milestone, index) => ({
@@ -134,10 +138,10 @@ export default function CreateCampaign() {
                     completed: false, // New campaigns start with milestones not completed
                 })),
                 category: formData.category,
-                beneficiaries: formData.beneficiaries,
+                beneficiaries: formData.beneficiaries.split(',').map(b => b.trim()),
                 proofOfWork: formData.proofOfWork,
                 collateral: formData.collateral,
-                multimedia: formData.multimedia ? (formData.multimedia as unknown as File) : null,
+                multimedia: formData.multimedia ? formData.multimedia.toString() : '',
                 duration: duration,         // New property: campaign duration (in days)
                 isActive: true,             // New property: assume new campaign is active
                 createdAt: new Date(),      // New property: set creation date to current time
