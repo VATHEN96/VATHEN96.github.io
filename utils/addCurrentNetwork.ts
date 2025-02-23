@@ -9,15 +9,16 @@ const getEthereumObject = () => {
         if (typeof window === "undefined") return null;
 
         // Check if ethereum is already available
-        if (window.ethereum) {
+        const ethereum = window.ethereum;
+        if (ethereum) {
             // Handle Brave's ethereum provider
-            if (window.ethereum.isBraveWallet) {
+            if (ethereum.isBraveWallet) {
                 console.log("Using Brave Wallet provider");
-                return window.ethereum;
+                return ethereum;
             }
             // Handle MetaMask or other injected providers
             console.log("Using injected Web3 provider");
-            return window.ethereum;
+            return ethereum;
         }
 
         console.error("No Ethereum provider found. Please install MetaMask or use Brave Browser.");

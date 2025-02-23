@@ -65,10 +65,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
       const isBraveWallet = ethereum.isBraveWallet;
       if (isBraveWallet) {
         console.log('Using Brave Wallet');
-        // Ensure Brave Wallet is properly initialized
+        // Request accounts first for Brave Wallet
         await ethereum.request({ method: 'eth_requestAccounts' });
-      } else {
-        console.log('Using MetaMask wallet');
       }
 
       // Ensure we're on the correct network
@@ -76,6 +74,8 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
       if (currentChainId !== chainIdHex) {
         try {
           await switchNetwork(chainIdHex);
+          // Add a delay to ensure network switch is complete
+          await new Promise(resolve => setTimeout(resolve, 1500));
           // Verify the network switch was successful
           const newChainId = await ethereum.request({ method: "eth_chainId" });
           if (newChainId !== chainIdHex) {
@@ -88,18 +88,18 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const provider = new ethers.providers.Web3Provider(ethereum);
-      try {
+      
+      // For non-Brave wallets, request accounts after provider initialization
+      if (!isBraveWallet) {
         await ethereum.request({ method: "eth_requestAccounts" });
-      } catch (requestError: any) {
-        if (requestError.code === 4001) {
-          throw new Error("Please connect your wallet to continue. You can try again by clicking the 'Connect Wallet' button.");
-        }
-        throw new Error("Failed to connect to MetaMask. Please try again.");
       }
 
       // Verify network connection
       try {
-        await provider.getNetwork();
+        const network = await provider.getNetwork();
+        if (network.chainId !== parseInt(chainIdHex, 16)) {
+          throw new Error("Connected to wrong network. Please switch to Telos network.");
+        }
       } catch (networkError) {
         throw new Error("Unable to connect to the Telos network. Please check your network connection and try again.");
       }
