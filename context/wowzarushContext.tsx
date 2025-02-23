@@ -161,7 +161,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
                                     ? new Date(ms.dueDate.toNumber() * 1000)
                                     : undefined,
                             }))
-                            : [],
+                            : [], // Fix: Ensure milestones is always an array
                         category: campaign.category,
                         beneficiaries: campaign.beneficiaries,
                         proofOfWork: campaign.proofOfWork,
