@@ -154,71 +154,104 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         try {
           const currentChainId = await window.ethereum.request({ method: "eth_chainId" });
           if (currentChainId !== chainIdHex) {
-            await switchNetwork(chainIdHex);
-            // Verify the network switch was successful
-            const newChainId = await window.ethereum.request({ method: "eth_chainId" });
-            if (newChainId !== chainIdHex) {
-              throw new Error("Failed to switch to the Telos network. Please switch manually through your wallet.");
+            try {
+              await switchNetwork(chainIdHex);
+              // Wait for network switch to complete
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              // Verify the network switch was successful
+              const newChainId = await window.ethereum.request({ method: "eth_chainId" });
+              if (newChainId !== chainIdHex) {
+                throw new Error("Failed to switch to the Telos network. Please switch manually through your wallet.");
+              }
+            } catch (switchError: any) {
+              console.error("Network switching error:", switchError);
+              throw new Error(switchError.message || "Failed to switch to the Telos network");
             }
           }
           
-          // Verify RPC endpoint access
+          // Initialize provider after network switch
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           try {
-            await provider.getNetwork();
+            const network = await provider.getNetwork();
+            if (!network) {
+              throw new Error("Unable to detect network");
+            }
           } catch (rpcError) {
+            console.error("RPC connection error:", rpcError);
             throw new Error("Unable to access RPC endpoint. Please check your network connection or try a different RPC endpoint.");
           }
         } catch (networkError: any) {
+          console.error("Network connection error:", networkError);
           throw new Error(networkError.message || "Failed to connect to the Telos network. Please check your wallet connection.");
         }
       }
 
       const contract = await getContract();
-      const campaignIds = await contract.getCampaignsByRange(0, await contract.campaignCounter() - 1);
-      const campaigns = await Promise.all(
-        campaignIds.map(async (id: number) => {
-          const metadata = await contract.getCampaignMetadata(id);
-          const details = await contract.getCampaignDetails(id);
-          const [donors, stakeholders] = await contract.getCampaignParticipants(id);
-          
-          // Fetch milestone data
-          const milestones = [];
-          for (let i = 0; i < metadata.milestones?.length || 0; i++) {
-            const milestoneMetadata = await contract.getMilestoneMetadata(id, i);
-            const [proofOfCompletion, fundsReleased] = await contract.getMilestoneProof(id, i);
-            milestones.push({
-              id: i.toString(),
-              name: milestoneMetadata.name,
-              target: Number(ethers.utils.formatEther(milestoneMetadata.targetAmount)),
-              completed: milestoneMetadata.isCompleted,
-              dueDate: undefined
-            });
-          }
+      // Add error handling for contract calls
+      try {
+        const counter = await contract.campaignCounter();
+        if (!counter) {
+          console.warn("No campaigns found");
+          return [];
+        }
+        const campaignIds = await contract.getCampaignsByRange(0, counter.sub(1));
+        const campaigns = await Promise.all(
+          campaignIds.map(async (id: number) => {
+            try {
+              const metadata = await contract.getCampaignMetadata(id);
+              const details = await contract.getCampaignDetails(id);
+              const [donors, stakeholders] = await contract.getCampaignParticipants(id);
+              
+              // Fetch milestone data with error handling
+              const milestones = [];
+              for (let i = 0; i < metadata.milestones?.length || 0; i++) {
+                try {
+                  const milestoneMetadata = await contract.getMilestoneMetadata(id, i);
+                  const [proofOfCompletion, fundsReleased] = await contract.getMilestoneProof(id, i);
+                  milestones.push({
+                    id: i.toString(),
+                    name: milestoneMetadata.name,
+                    target: Number(ethers.utils.formatEther(milestoneMetadata.targetAmount)),
+                    completed: milestoneMetadata.isCompleted,
+                    dueDate: undefined
+                  });
+                } catch (milestoneError) {
+                  console.error(`Error fetching milestone ${i} for campaign ${id}:`, milestoneError);
+                }
+              }
 
-          return {
-            id: metadata.id.toString(),
-            creator: metadata.creator,
-            title: metadata.title,
-            description: details.description,
-            goalAmount: Number(ethers.utils.formatEther(metadata.goalAmount)),
-            totalFunded: Number(ethers.utils.formatEther(metadata.totalFunded)),
-            deadline: new Date(metadata.createdAt.toNumber() * 1000 + metadata.duration * 24 * 60 * 60 * 1000),
-            milestones,
-            category: metadata.category,
-            beneficiaries: details.beneficiaries,
-            proofOfWork: details.proofOfWork,
-            collateral: "0",
-            multimedia: details.media,
-            isActive: metadata.isActive,
-            createdAt: new Date(metadata.createdAt.toNumber() * 1000),
-            duration: Number(metadata.duration)
-          };
-        })
-      );
-      
-      setCampaigns(campaigns);
-      return campaigns;
+              return {
+                id: metadata.id.toString(),
+                creator: metadata.creator,
+                title: metadata.title,
+                description: details.description,
+                goalAmount: Number(ethers.utils.formatEther(metadata.goalAmount)),
+                totalFunded: Number(ethers.utils.formatEther(metadata.totalFunded)),
+                deadline: new Date(metadata.createdAt.toNumber() * 1000 + metadata.duration * 24 * 60 * 60 * 1000),
+                milestones,
+                category: metadata.category,
+                beneficiaries: details.beneficiaries,
+                proofOfWork: details.proofOfWork,
+                collateral: "0",
+                multimedia: details.media,
+                isActive: metadata.isActive,
+                createdAt: new Date(metadata.createdAt.toNumber() * 1000),
+                duration: Number(metadata.duration)
+              };
+            } catch (campaignError) {
+              console.error(`Error fetching campaign ${id}:`, campaignError);
+              return null;
+            }
+          })
+        );
+        
+        const validCampaigns = campaigns.filter(campaign => campaign !== null) as Campaign[];
+        setCampaigns(validCampaigns);
+        return validCampaigns;
+      } catch (contractError: any) {
+        console.error("Contract interaction error:", contractError);
+        throw new Error("Failed to interact with the smart contract. Please ensure you're connected to the correct network.");
+      }
     } catch (error: any) {
       console.error("Error fetching campaigns:", error);
       setError(error.message || "Failed to fetch campaigns. Please ensure you're connected to Telos network.");

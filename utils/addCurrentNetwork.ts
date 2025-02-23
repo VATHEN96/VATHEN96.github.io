@@ -8,21 +8,20 @@ const getEthereumObject = () => {
     try {
         if (typeof window === "undefined") return null;
 
-        // Wait for provider injection
-        if (!window.ethereum) {
-            console.error("No Ethereum provider found. Please install MetaMask or use Brave Browser.");
-            return null;
-        }
-
-        // Handle Brave's ethereum provider
-        if (window.ethereum.isBraveWallet) {
-            console.log("Using Brave Wallet provider");
+        // Check if ethereum is already available
+        if (window.ethereum) {
+            // Handle Brave's ethereum provider
+            if (window.ethereum.isBraveWallet) {
+                console.log("Using Brave Wallet provider");
+                return window.ethereum;
+            }
+            // Handle MetaMask or other injected providers
+            console.log("Using injected Web3 provider");
             return window.ethereum;
         }
 
-        // Handle MetaMask or other injected providers
-        console.log("Using injected Web3 provider");
-        return window.ethereum;
+        console.error("No Ethereum provider found. Please install MetaMask or use Brave Browser.");
+        return null;
     } catch (error) {
         console.error("Error accessing ethereum object:", error);
         return null;
