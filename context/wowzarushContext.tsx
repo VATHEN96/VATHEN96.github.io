@@ -1,217 +1,182 @@
-﻿"use client";
+﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import { ThirdwebSDK } from '@thirdweb-dev/sdk';
+import { useAddress } from '@thirdweb-dev/react';
 
-import React, {
-    createContext,
-    useContext,
-    useState,
-    ReactNode,
-    useCallback,
-} from "react";
-import { ethers } from "ethers";
-import type {
-    Campaign,
-    Milestone,
-    wowzarushContextType,
-} from "@/utils/contextInterfaces";
-import { contractABI, contractAddress } from "@/utils/constants";
+interface Milestone {
+    title: string;
+    description: string;
+    deadline: Date;
+    amount: number;
+    completed: boolean;
+}
 
-// Default context value with empty implementations
-const defaultContextValue: wowzarushContextType = {
-    isConnected: false,
-    connectedAccount: null,
-    accountBalance: 0,
-    campaigns: [],
-    userCampaigns: [],
-    loading: false,
-    error: null,
+interface Campaign {
+    id: string;
+    creator: string;
+    title: string;
+    description: string;
+    goalAmount: number;
+    totalFunded: number;
+    deadline: Date;
+    category: string;
+    beneficiaries: string[];
+    proofOfWork: string;
+    collateral: number;
+    multimedia: string[];
+    isActive: boolean;
+    createdAt: Date;
+    duration: number;
+    milestones: Milestone[];
+}
+
+interface WowzarushContextType {
+    address: string | undefined;
+    contract: any;
+    createCampaign: (form: any) => Promise<void>;
+    getCampaigns: () => Promise<Campaign[]>;
+    getUserCampaigns: () => Promise<Campaign[]>;
+    donate: (pId: string, amount: number) => Promise<void>;
+    getDonations: (pId: string) => Promise<any[]>;
+}
+
+const WowzarushContext = createContext<WowzarushContextType>({
+    address: undefined,
+    contract: null,
     createCampaign: async () => { },
-    contributeToCampaign: async () => { },
-    withdrawFromCampaign: async () => { },
-    completeMilestone: async () => { },
-    updateMilestone: async () => { },
-    connectWallet: async () => { },
-    disconnectWallet: async () => Promise.resolve(),
-    fetchCampaigns: async () => [],
-    getCampaignById: async () => null,
-    getCampaign: () => undefined,
-    getUserContributions: async () => [],
-};
+    getCampaigns: async () => [],
+    getUserCampaigns: async () => [],
+    donate: async () => { },
+    getDonations: async () => [],
+});
 
-// Create Context
-const WowzarushContext = createContext<wowzarushContextType>(
-    defaultContextValue
-);
+export const useWowzarushContext = () => useContext(WowzarushContext);
 
-export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
-    const [isConnected, setIsConnected] = useState(false);
-    const [connectedAccount, setConnectedAccount] = useState<string | null>(null);
-    const [accountBalance, setAccountBalance] = useState<number>(0);
+export const WowzarushContextProvider = ({ children }: { children: React.ReactNode }) => {
+    const { contract } = useContract("YOUR_CONTRACT_ADDRESS");
+    const address = useAddress();
     const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-    const [userCampaigns, setUserCampaigns] = useState<Campaign[]>([]);
-    const [loading, setLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
 
-    /**
-     * Connects the user's wallet using MetaMask
-     */
-    const connectWallet = useCallback(async () => {
-        if (typeof window !== "undefined" && window.ethereum) {
-            try {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                await window.ethereum.request({ method: "eth_requestAccounts" });
-                const accounts = await provider.listAccounts();
-
-                if (accounts.length > 0) {
-                    setConnectedAccount(accounts[0]);
-                    setIsConnected(true);
-
-                    // Fetch Account Balance
-                    const balance = await provider.getBalance(accounts[0]);
-                    setAccountBalance(Number(ethers.utils.formatEther(balance)));
-                } else {
-                    setError("No accounts found. Please connect your wallet.");
-                }
-            } catch (error: any) {
-                setError(error.message || "Failed to connect wallet");
-            }
-        } else {
-            setError("No Ethereum provider found. Please install MetaMask.");
-        }
-    }, []);
-
-    /**
-     * Disconnects the user's wallet
-     */
-    const disconnectWallet = useCallback(async (): Promise<void> => {
-        setConnectedAccount(null);
-        setIsConnected(false);
-        setAccountBalance(0);
-        return Promise.resolve();
-    }, []);
-
-    /**
-     * Network Check and Switcher
-     */
-    const checkNetwork = useCallback(async () => {
-        if (typeof window !== "undefined" && window.ethereum) {
-            const provider = new ethers.providers.Web3Provider(window.ethereum);
-            const network = await provider.getNetwork();
-            const expectedChainId = "0x1"; // Mainnet (Change this to your network's chain ID)
-
-            if (network.chainId !== parseInt(expectedChainId, 16)) {
-                try {
-                    await window.ethereum.request({
-                        method: "wallet_switchEthereumChain",
-                        params: [{ chainId: expectedChainId }],
-                    });
-                } catch (switchError) {
-                    setError("Failed to switch network.");
-                }
-            }
-        }
-    }, []);
-
-    /**
-     * Fetches all campaigns from the smart contract
-     */
-    const fetchCampaigns = useCallback(async (): Promise<Campaign[]> => {
-        setLoading(true);
+    const createCampaign = async (form: any) => {
         try {
-            if (typeof window !== "undefined" && window.ethereum) {
-                const provider = new ethers.providers.Web3Provider(window.ethereum);
-                await window.ethereum.request({ method: "eth_requestAccounts" });
+            const data = await contract.call('createCampaign', [
+                address,
+                form.title,
+                form.description,
+                form.goalAmount,
+                new Date(form.deadline).getTime(),
+                form.category,
+                form.beneficiaries,
+                form.proofOfWork,
+                form.collateral,
+                form.multimedia,
+                form.milestones.map((milestone: Milestone) => ({
+                    ...milestone,
+                    deadline: new Date(milestone.deadline).getTime(),
+                })),
+            ]);
 
-                const signer = provider.getSigner();
-                const contract = new ethers.Contract(
-                    contractAddress,
-                    contractABI,
-                    signer
-                );
-
-                await checkNetwork();
-                const campaignCounter = await contract.campaignCounter();
-
-                if (Number(campaignCounter) === 0) {
-                    setCampaigns([]);
-                    return [];
-                }
-
-                const campaignPromises = [];
-                for (let i = 0; i < Number(campaignCounter); i++) {
-                    campaignPromises.push(contract.getCampaignMetadata(i));
-                }
-
-                const rawCampaigns = await Promise.all(campaignPromises);
-                const parsedCampaigns: Campaign[] = rawCampaigns.map(
-                    (campaign: any) => ({
-                        id: campaign.id.toString(),
-                        creator: campaign.creator,
-                        title: campaign.title,
-                        description: campaign.description,
-                        goalAmount: Number(ethers.utils.formatEther(campaign.goalAmount)),
-                        totalFunded: Number(ethers.utils.formatEther(campaign.totalFunded)),
-                        deadline: new Date(campaign.deadline.toNumber() * 1000),
-                        milestones: Array.isArray(campaign.milestones)
-                            ? campaign.milestones.map((ms: any, index: number): Milestone => ({
-                                id: ms.id ? ms.id.toString() : `milestone-${index}`,
-                                name: ms.name,
-                                target: Number(ethers.utils.formatEther(ms.target)),
-                                completed: ms.completed,
-                                dueDate: ms.dueDate
-                                    ? new Date(ms.dueDate.toNumber() * 1000)
-                                    : undefined,
-                            }))
-                            : [], // Ensure milestones is always an array
-                        category: campaign.category,
-                        beneficiaries: campaign.beneficiaries,
-                        proofOfWork: campaign.proofOfWork,
-                        collateral: campaign.collateral,
-                        multimedia: campaign.multimedia,
-                        isActive: campaign.isActive,
-                        createdAt: new Date(campaign.createdAt.toNumber() * 1000),
-                        duration: Number(campaign.duration),
-                    })
-                );
-                setCampaigns(parsedCampaigns);
-                return parsedCampaigns;
-            } else {
-                setError("No Ethereum provider found. Please install MetaMask.");
-                return [];
-            }
-        } catch (err: any) {
-            setError(err.reason || err.message || "Failed to fetch campaigns");
-            return [];
-        } finally {
-            setLoading(false);
+            console.log("Contract call success", data);
+        } catch (error) {
+            console.log("Contract call failure", error);
         }
-    }, [checkNetwork]);
+    };
 
-    /**
-     * Global Context Value
-     */
+    const getCampaigns = async () => {
+        try {
+            const campaigns = await contract.call('getCampaigns');
+
+            const parsedCampaigns: Campaign[] = campaigns.map((campaign: any) => ({
+                id: campaign.id.toString(),
+                creator: campaign.creator,
+                title: campaign.title,
+                description: campaign.description,
+                goalAmount: Number(campaign.goalAmount),
+                totalFunded: Number(campaign.totalFunded),
+                deadline: new Date(campaign.deadline.toNumber()),
+                category: campaign.category,
+                beneficiaries: campaign.beneficiaries,
+                proofOfWork: campaign.proofOfWork,
+                collateral: Number(campaign.collateral),
+                multimedia: campaign.multimedia,
+                isActive: campaign.isActive,
+                createdAt: new Date(campaign.createdAt.toNumber()),
+                duration: Number(campaign.duration),
+                milestones: campaign.milestones.map((milestone: any) => ({
+                    title: milestone.title,
+                    description: milestone.description,
+                    deadline: new Date(milestone.deadline.toNumber()),
+                    amount: Number(milestone.amount),
+                    completed: milestone.completed,
+                })),
+            }));
+
+            return parsedCampaigns;
+        } catch (error) {
+            console.log("Contract call failure", error);
+            return [];
+        }
+    };
+
+    const getUserCampaigns = async () => {
+        try {
+            const allCampaigns = await getCampaigns();
+            const filteredCampaigns = allCampaigns.filter((campaign) =>
+                campaign.creator === address
+            );
+
+            return filteredCampaigns;
+        } catch (error) {
+            console.log("Contract call failure", error);
+            return [];
+        }
+    };
+
+    const donate = async (pId: string, amount: number) => {
+        try {
+            const data = await contract.call('donateToCampaign', [pId], {
+                value: ethers.utils.parseEther(amount.toString())
+            });
+
+            return data;
+        } catch (error) {
+            console.log("Contract call failure", error);
+        }
+    };
+
+    const getDonations = async (pId: string) => {
+        try {
+            const donations = await contract.call('getDonators', [pId]);
+            const numberOfDonations = donations[0].length;
+
+            const parsedDonations = [];
+
+            for (let i = 0; i < numberOfDonations; i++) {
+                parsedDonations.push({
+                    donator: donations[0][i],
+                    donation: ethers.utils.formatEther(donations[1][i].toString())
+                });
+            }
+
+            return parsedDonations;
+        } catch (error) {
+            console.log("Contract call failure", error);
+            return [];
+        }
+    };
+
     return (
-        <WowzarushContext.Provider
-            value={{
-                isConnected,
-                connectedAccount,
-                accountBalance,
-                campaigns,
-                userCampaigns,
-                loading,
-                error,
-                createCampaign: async () => { },
-                contributeToCampaign: async () => { },
-                withdrawFromCampaign: async () => { },
-                completeMilestone: async () => { },
-                updateMilestone: async () => { },
-                connectWallet,
-                disconnectWallet,
-                fetchCampaigns,
-            }}
-        >
+        <WowzarushContext.Provider value={{
+            address,
+            contract,
+            createCampaign,
+            getCampaigns,
+            getUserCampaigns,
+            donate,
+            getDonations,
+        }}>
             {children}
         </WowzarushContext.Provider>
     );
 };
 
-export const useWowzarush = () => useContext(WowzarushContext);
+export default WowzarushContext;
