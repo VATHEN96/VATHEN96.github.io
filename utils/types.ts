@@ -33,11 +33,11 @@ export interface wowzarushContextType {
   userCampaigns: Campaign[];
   loading: boolean;
   error: string | null;
-  createCampaign: () => Promise<void>;
-  contributeToCampaign: () => Promise<void>;
-  withdrawFromCampaign: () => Promise<void>;
-  completeMilestone: () => Promise<void>;
-  updateMilestone: () => Promise<void>;
+  createCampaign: (campaign: Campaign) => Promise<void>;
+  contributeToCampaign: (campaignId: string, amount: number) => Promise<void>;
+  withdrawFromCampaign: (campaignId: string, amount: number) => Promise<void>;
+  completeMilestone: (campaignId: string, milestoneId: string) => Promise<void>;
+  updateMilestone: (campaignId: string, milestoneId: string, milestone: Milestone) => Promise<void>;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
   fetchCampaigns: () => Promise<Campaign[]>;

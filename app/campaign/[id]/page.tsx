@@ -20,23 +20,19 @@ export default function CampaignDetailPage() {
 
     useEffect(() => {
         const fetchCampaignDetails = async () => {
-            if (!campaignId || typeof campaignId !== 'string') {
-                setError('Invalid campaign ID')
+            if (!campaignId) {
+                setError('Campaign ID is required')
                 return
             }
-
             try {
                 setLoading(true)
-                setError(null)
                 const details = await getCampaignById(campaignId)
                 if (!details) {
-                    setError('Campaign not found')
-                    return
+                    throw new Error('Campaign not found')
                 }
                 setCampaign(details)
-            } catch (err) {
-                console.error('Error fetching campaign details:', err)
-                setError(err instanceof Error ? err.message : 'Failed to fetch campaign details')
+            } catch (error: any) {
+                setError(error.message || 'Failed to fetch campaign details')
             } finally {
                 setLoading(false)
             }

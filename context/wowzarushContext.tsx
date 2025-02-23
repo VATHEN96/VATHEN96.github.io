@@ -32,7 +32,7 @@ const defaultContextValue: wowzarushContextType = {
   connectWallet: async () => {},
   disconnectWallet: async () => Promise.resolve(),
   fetchCampaigns: async () => [],
-  getCampaignById: async (id: string) => null,
+  getCampaignById: async (id: string): Promise<Campaign | null> => null,
   getCampaign: (id: string) => undefined,
   getUserContributions: async () => [],
 };
@@ -211,7 +211,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     return campaigns.find(campaign => campaign.id === id);
   }, [campaigns]);
 
-  const contextValue = {
+  const contextValue: wowzarushContextType = {
     isConnected,
     connectedAccount,
     accountBalance,
