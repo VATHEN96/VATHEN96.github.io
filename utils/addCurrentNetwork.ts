@@ -6,10 +6,19 @@ import { blockScannerUrl, currency, rpcUrl } from "./constants";
  */
 const getEthereumObject = () => {
     try {
-        if (typeof window !== "undefined" && window.ethereum) {
+        if (typeof window === "undefined") return null;
+
+        // Check for Brave's ethereum provider
+        if (window.ethereum?.isBraveWallet) {
             return window.ethereum;
         }
-        console.error("No Ethereum provider found. Please install MetaMask.");
+
+        // Check for MetaMask or other injected providers
+        if (window.ethereum) {
+            return window.ethereum;
+        }
+
+        console.error("No Ethereum provider found. Please install MetaMask or use Brave Browser.");
         return null;
     } catch (error) {
         console.error("Error accessing ethereum object:", error);

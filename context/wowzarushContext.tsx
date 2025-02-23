@@ -58,8 +58,12 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
 
       const ethereum = window.ethereum;
       if (!ethereum) {
-        throw new Error("No Ethereum provider found. Please install MetaMask.");
+        throw new Error("No Ethereum provider found. Please install MetaMask or use Brave Browser.");
       }
+
+      // Check if using Brave Wallet
+      const isBraveWallet = ethereum.isBraveWallet;
+      console.log(`Using ${isBraveWallet ? 'Brave' : 'MetaMask'} wallet`);
 
       // Ensure we're on the correct network
       const currentChainId = await ethereum.request({ method: "eth_chainId" });
