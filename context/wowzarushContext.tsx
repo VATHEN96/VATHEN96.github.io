@@ -141,7 +141,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         collateral: campaign.collateral,
         multimedia: campaign.multimedia,
         isActive: campaign.isActive,
-        createdAt: new Date(campaign.createdAt),
+        createdAt: new Date(campaign.createdAt.toNumber() * 1000),
         duration: Number(campaign.duration),
     }), []);
 
@@ -154,7 +154,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
             await checkNetwork();
 
             const campaignCounter = await contract.campaignCounter();
-            
+
             if (Number(campaignCounter) === 0) {
                 setCampaigns([]);
                 return [];
