@@ -166,7 +166,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
 
       setCampaigns(parsedCampaigns);
 
-      // If wallet is connected, update user campaigns
       if (connectedAccount) {
         const userCamps = parsedCampaigns.filter(
           (camp) =>
@@ -185,27 +184,25 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   }, [checkNetwork, getContract, connectedAccount]);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.ethereum) {
+    if (typeof window !== "undefined") {
       const ethereum = window.ethereum;
-      const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length === 0) {
-          disconnectWallet();
-        } else if (accounts[0] !== connectedAccount) {
-          setConnectedAccount(accounts[0]);
-        }
-      };
-
       if (ethereum) {
+        const handleAccountsChanged = (accounts: string[]) => {
+          if (accounts.length === 0) {
+            disconnectWallet();
+          } else if (accounts[0] !== connectedAccount) {
+            setConnectedAccount(accounts[0]);
+          }
+        };
+
         ethereum.on("accountsChanged", handleAccountsChanged);
         ethereum.on("chainChanged", () => window.location.reload());
-      }
 
-      return () => {
-        if (ethereum) {
+        return () => {
           ethereum.removeListener("accountsChanged", handleAccountsChanged);
           ethereum.removeListener("chainChanged", () => window.location.reload());
-        }
-      };
+        };
+      }
     }
   }, [connectedAccount, disconnectWallet]);
 
