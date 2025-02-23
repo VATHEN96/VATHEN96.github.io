@@ -1,4 +1,6 @@
-import React from 'react'
+'use client'
+
+export const runtime = 'edge';
 
 const page = () => {
   return (
