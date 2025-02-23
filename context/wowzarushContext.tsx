@@ -116,22 +116,18 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   const fetchCampaigns = useCallback(async (): Promise<Campaign[]> => {
     setLoading(true);
     setError(null);
-
     try {
       const contract = await getContract();
       await checkNetwork();
-
       const campaignCounter = await contract.campaignCounter();
       if (Number(campaignCounter) === 0) {
         setCampaigns([]);
         return [];
       }
-
       const campaignPromises = Array.from(
         { length: Number(campaignCounter) },
         (_, i) => contract.getCampaignMetadata(i)
       );
-
       const rawCampaigns = await Promise.all(campaignPromises);
       const parsedCampaigns = rawCampaigns.map((campaign: any) => ({
         id: campaign.id.toString(),
@@ -160,9 +156,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         createdAt: new Date(campaign.createdAt.toNumber() * 1000),
         duration: Number(campaign.duration),
       }));
-
       setCampaigns(parsedCampaigns);
-
       if (connectedAccount) {
         const userCamps = parsedCampaigns.filter(
           (camp) =>
@@ -170,7 +164,6 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
         );
         setUserCampaigns(userCamps);
       }
-
       return parsedCampaigns;
     } catch (err: any) {
       setError(err.reason || err.message || "Failed to fetch campaigns");
@@ -183,7 +176,7 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const eth = window.ethereum;
-      if (eth && eth.on) {
+      if (eth && typeof eth.on === "function") {
         const handleAccountsChanged = (accounts: string[]) => {
           if (accounts.length === 0) {
             disconnectWallet();
@@ -191,12 +184,10 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
             setConnectedAccount(accounts[0]);
           }
         };
-
         eth.on("accountsChanged", handleAccountsChanged);
         eth.on("chainChanged", () => window.location.reload());
-
         return () => {
-          if (eth.removeListener) {
+          if (typeof eth.removeListener === "function") {
             eth.removeListener("accountsChanged", handleAccountsChanged);
             eth.removeListener("chainChanged", () => window.location.reload());
           }
