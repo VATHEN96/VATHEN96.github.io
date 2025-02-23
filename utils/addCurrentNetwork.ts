@@ -5,11 +5,16 @@ import { blockScannerUrl, currency, rpcUrl } from "./constants";
  * This prevents errors in non-Ethereum browsers or server-side rendering.
  */
 const getEthereumObject = () => {
-    if (typeof window !== "undefined" && typeof window.ethereum !== "undefined") {
-        return window.ethereum;
+    try {
+        if (typeof window !== "undefined" && window.ethereum) {
+            return window.ethereum;
+        }
+        console.error("No Ethereum provider found. Please install MetaMask.");
+        return null;
+    } catch (error) {
+        console.error("Error accessing ethereum object:", error);
+        return null;
     }
-    console.error("No Ethereum provider found. Please install MetaMask.");
-    return null;
 };
 
 /**

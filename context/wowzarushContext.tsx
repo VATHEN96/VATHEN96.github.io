@@ -50,13 +50,24 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
 
   // Helper: Get provider and signer
   const getProviderAndSigner = useCallback(async () => {
-    if (typeof window === "undefined" || !window.ethereum) {
-      throw new Error("No Ethereum provider found. Please install MetaMask.");
+    try {
+      if (typeof window === "undefined") {
+        throw new Error("Browser environment is required");
+      }
+
+      const ethereum = window.ethereum;
+      if (!ethereum) {
+        throw new Error("No Ethereum provider found. Please install MetaMask.");
+      }
+
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      await ethereum.request({ method: "eth_requestAccounts" });
+      const signer = provider.getSigner();
+      return { provider, signer };
+    } catch (error) {
+      console.error("Error getting provider and signer:", error);
+      throw error;
     }
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    await window.ethereum.request({ method: "eth_requestAccounts" });
-    const signer = provider.getSigner();
-    return { provider, signer };
   }, []);
 
   // Helper: Get contract instance
