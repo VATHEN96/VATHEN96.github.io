@@ -146,9 +146,9 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
     return Promise.resolve();
   }, []);
 
-  // Auto-connect wallet if already connected
+  // Initialize wallet connection and fetch campaigns
   useEffect(() => {
-    const init = async () => {
+    const initializeWallet = async () => {
       try {
         const { provider, signer } = await getProviderAndSigner();
         if (signer) {
@@ -160,12 +160,15 @@ export const WowzarushProvider = ({ children }: { children: ReactNode }) => {
           await fetchCampaigns();
         }
       } catch (error) {
-        console.error("Error in init:", error);
+        console.error("Error initializing wallet:", error);
         setConnectedAccount(null);
         setAccountBalance(0);
       }
     };
-    init();
+
+    if (typeof window !== "undefined" && window.ethereum) {
+      initializeWallet();
+    }
   }, [fetchCampaigns, getProviderAndSigner]);
 
   // Listen for account and chain changes
