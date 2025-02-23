@@ -41,7 +41,7 @@ export interface wowzarushContextType {
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
   fetchCampaigns: () => Promise<Campaign[]>;
-  getCampaignById: (id: string) => Promise<Campaign | null>;
-  getCampaign: (id: string) => Campaign | undefined;
+  getCampaignById: () => Promise<Campaign | null>;
+  getCampaign: () => Campaign | undefined;
   getUserContributions: () => Promise<Campaign[]>;
 } 
