@@ -1,4 +1,4 @@
-import { blockScannerUrl, currency, rpcUrl } from "./constants";
+import { blockScannerUrl, currency, rpcUrl, backupRpcUrl } from "./constants";
 
 /**
  * Safely checks if `window.ethereum` is available.
@@ -49,6 +49,7 @@ export const switchNetwork = async (chainId: string) => {
             await addNetwork(chainId);
         } else {
             console.error("Error switching networks:", switchError);
+            throw new Error("Failed to switch network. Please try switching manually through your wallet.");
         }
     }
 };
@@ -67,7 +68,7 @@ const addNetwork = async (chainId: string) => {
                 {
                     chainId,
                     chainName: currency.name,
-                    rpcUrls: [rpcUrl],
+                    rpcUrls: [rpcUrl, backupRpcUrl],
                     nativeCurrency: {
                         name: currency.name,
                         symbol: currency.symbol,
@@ -79,5 +80,6 @@ const addNetwork = async (chainId: string) => {
         });
     } catch (addError: any) {
         console.error("Error adding network:", addError);
+        throw new Error("Failed to add network. Please check your wallet connection and try again.");
     }
 };
