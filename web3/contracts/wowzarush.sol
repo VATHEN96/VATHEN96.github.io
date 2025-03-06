@@ -1,8 +1,63 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.19;
 
-contract wowzarush {
-    // Keep all existing structs
+contract WowzaRush {
+    //--------------------------------------------------------------------------
+    // State Variables for Activation
+    //--------------------------------------------------------------------------
+    bool private isActivated;
+    address private owner;
+
+    //--------------------------------------------------------------------------
+    // Events for Activation
+    //--------------------------------------------------------------------------
+    event ContractActivated(address indexed activator, uint256 timestamp);
+    event ContractDeactivated(address indexed deactivator, uint256 timestamp);
+
+    //--------------------------------------------------------------------------
+    // Owner-Only & Activation Modifiers
+    //--------------------------------------------------------------------------
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+
+    modifier whenActivated() {
+        require(isActivated, "Contract is not activated");
+        _;
+    }
+
+    //--------------------------------------------------------------------------
+    // Constructor (Initializes Owner & Deactivation)
+    //--------------------------------------------------------------------------
+    constructor() {
+        owner = msg.sender;
+        isActivated = false;
+        campaignCounter = 0;
+    }
+
+    //--------------------------------------------------------------------------
+    // Activation Functions
+    //--------------------------------------------------------------------------
+    function activate() external onlyOwner {
+        require(!isActivated, "Contract is already activated");
+        isActivated = true;
+        emit ContractActivated(msg.sender, block.timestamp);
+    }
+
+    function deactivate() external onlyOwner {
+        require(isActivated, "Contract is already deactivated");
+        isActivated = false;
+        emit ContractDeactivated(msg.sender, block.timestamp);
+    }
+
+    function getActivationStatus() public view returns (bool) {
+        return isActivated;
+    }
+
+    //--------------------------------------------------------------------------
+    // Structs
+    //--------------------------------------------------------------------------
     struct Milestone {
         string name;
         uint256 targetAmount;
@@ -31,6 +86,11 @@ contract wowzarush {
         string proofOfWork;
         string beneficiaries;
         address[] stakeholders;
+        uint8 campaignType; // 0 for funding, 1 for investing
+        // Investment specific fields
+        uint256 equityPercentage; // Percentage of equity offered to investors (in basis points, 100 = 1%)
+        uint256 minInvestment; // Minimum investment amount
+        mapping(address => uint256) investments; // Track individual investments for investing campaigns
     }
 
     struct Vote {
@@ -39,7 +99,6 @@ contract wowzarush {
         address voter;
     }
 
-    // New structs for optimized data retrieval
     struct CampaignMetadata {
         uint256 id;
         address creator;
@@ -48,238 +107,228 @@ contract wowzarush {
         uint256 goalAmount;
         uint256 totalFunded;
         bool isActive;
-        uint256 createdAt;
-        uint256 duration;
     }
 
-    struct CampaignDetails {
-        string description;
-        string proofOfWork;
-        string beneficiaries;
-        string[] media;
-    }
-
-    struct MilestoneMetadata {
-        string name;
-        uint256 targetAmount;
-        bool isCompleted;
-        bool isFunded;
-        bool isUnderReview;
-    }
-
-    // Keep all existing state variables
-    uint256 public campaignCounter = 0;
+    //--------------------------------------------------------------------------
+    // State Variables
+    //--------------------------------------------------------------------------
+    uint256 private campaignCounter;
     mapping(uint256 => Campaign) public campaigns;
-    mapping(uint256 => mapping(address => uint256)) public donations;
     mapping(uint256 => mapping(uint256 => Vote[])) public milestoneVotes;
-    mapping(string => uint256[]) public categoryToCampaigns;
+    mapping(address => uint256[]) public userCampaigns;
+    mapping(address => uint256[]) public userDonations;
 
-    // Keep all existing events
-    event CampaignCreated(uint256 indexed campaignId, address indexed creator, string title, uint256 goalAmount);
-    event MilestoneFunded(uint256 indexed campaignId, uint256 indexed milestoneIndex, uint256 amount);
-    event MilestoneCompleted(uint256 indexed campaignId, uint256 indexed milestoneIndex, string proofOfCompletion);
-    event MilestoneUnderReview(uint256 indexed campaignId, uint256 indexed milestoneIndex);
-    event FundsWithdrawn(uint256 indexed campaignId, address indexed recipient, uint256 amount);
-    event VoteSubmitted(uint256 indexed campaignId, uint256 indexed milestoneIndex, address indexed voter, bool isUpvote, string message);
-    event MilestoneAccepted(uint256 indexed campaignId, uint256 indexed milestoneIndex);
-    event MilestoneRejected(uint256 indexed campaignId, uint256 indexed milestoneIndex);
+    //--------------------------------------------------------------------------
+    // Events
+    //--------------------------------------------------------------------------
+    event CampaignCreated(uint256 indexed campaignId, address indexed creator, string title);
+    event CampaignUpdated(uint256 indexed campaignId);
+    event DonationReceived(uint256 indexed campaignId, address indexed donor, uint256 amount);
+    event MilestoneCompleted(uint256 indexed campaignId, uint256 milestoneIndex);
+    event MilestoneVoteSubmitted(uint256 indexed campaignId, uint256 milestoneIndex, address voter, bool isUpvote);
+    event FundsReleased(uint256 indexed campaignId, uint256 milestoneIndex, uint256 amount);
+    event InvestmentReceived(uint256 indexed campaignId, address indexed investor, uint256 amount);
 
-    // Keep all existing modifiers
-    modifier campaignExists(uint256 _campaignId) {
-        require(_campaignId < campaignCounter, "wowzarush: Campaign does not exist");
-        _;
+    //--------------------------------------------------------------------------
+    // Getter: Campaign Count
+    //--------------------------------------------------------------------------
+    function getCampaignCount() public view returns (uint256) {
+        return campaignCounter;
     }
 
-    modifier onlyCampaignCreator(uint256 _campaignId) {
-        require(campaigns[_campaignId].creator == msg.sender, "wowzarush: Not campaign creator");
-        _;
-    }
-
-    modifier campaignActive(uint256 _campaignId) {
-        require(campaigns[_campaignId].isActive, "wowzarush: Campaign is not active");
-        require(block.timestamp < campaigns[_campaignId].createdAt + campaigns[_campaignId].duration * 1 days, "wowzarush: Campaign has ended");
-        _;
-    }
-
-    modifier validMilestone(uint256 _campaignId, uint256 _milestoneIndex) {
-        require(_milestoneIndex < campaigns[_campaignId].milestones.length, "wowzarush: Invalid milestone index");
-        _;
-    }
-
-    modifier isStakeholder(uint256 _campaignId) {
-        bool isValid = false;
-        address[] memory stakeholders = campaigns[_campaignId].stakeholders;
-        for (uint256 i = 0; i < stakeholders.length; i++) {
-            if (stakeholders[i] == msg.sender) {
-                isValid = true;
-                break;
-            }
-        }
-        require(isValid, "wowzarush: Not a stakeholder");
-        _;
-    }
-
-    // Main functions
+    //--------------------------------------------------------------------------
+    // Create Campaign (Requires Activation)
+    //--------------------------------------------------------------------------
     function createCampaign(
-        string memory _title,
-        string memory _description,
-        string memory _category,
-        uint256 _goalAmount,
-        uint256 _duration,
-        string[] memory _milestoneNames,
-        uint256[] memory _milestoneTargets,
-        string memory _proofOfWork,
-        string memory _beneficiaries,
-        string[] memory _media
-    ) external payable returns (uint256) {
-        require(_goalAmount > 0, "wowzarush: Goal amount must be greater than 0");
-        require(_duration > 0 && _duration <= 365, "wowzarush: Duration must be between 1 and 365 days");
-        require(_milestoneNames.length == _milestoneTargets.length, "wowzarush: Milestone arrays length mismatch");
-        require(_milestoneNames.length > 0, "wowzarush: At least one milestone required");
+        string memory title,
+        string memory description,
+        string memory category,
+        uint256 goalAmount,
+        uint256 duration,
+        string[] memory media,
+        Milestone[] memory milestones,
+        string memory beneficiaries,
+        address[] memory stakeholders,
+        uint8 campaignType,
+        uint256 equityPercentage,
+        uint256 minInvestment
+    ) public whenActivated returns (uint256) {
+        require(bytes(title).length > 0, "Title cannot be empty");
+        require(goalAmount > 0, "Goal amount must be greater than 0");
+        require(duration > 0, "Duration must be greater than 0");
+        require(milestones.length > 0, "At least one milestone is required");
+        require(campaignType <= 1, "Invalid campaign type");
+        
+        // Validation for investment campaigns
+        if (campaignType == 1) {
+            require(equityPercentage > 0 && equityPercentage <= 10000, "Equity percentage must be between 0.01% and 100%");
+            require(minInvestment > 0, "Minimum investment must be greater than 0");
+        }
 
         uint256 campaignId = campaignCounter++;
-        Campaign storage campaign = campaigns[campaignId];
 
+        Campaign storage campaign = campaigns[campaignId];
         campaign.id = campaignId;
         campaign.creator = msg.sender;
-        campaign.title = _title;
-        campaign.description = _description;
-        campaign.category = _category;
-        campaign.goalAmount = _goalAmount;
-        campaign.duration = _duration;
+        campaign.title = title;
+        campaign.description = description;
+        campaign.category = category;
+        campaign.goalAmount = goalAmount;
+        campaign.duration = duration;
         campaign.createdAt = block.timestamp;
         campaign.isActive = true;
-        campaign.proofOfWork = _proofOfWork;
-        campaign.beneficiaries = _beneficiaries;
-        campaign.media = _media;
-
-        // Initialize milestones
-        for (uint256 i = 0; i < _milestoneNames.length; i++) {
-            campaign.milestones.push(Milestone({
-                name: _milestoneNames[i],
-                targetAmount: _milestoneTargets[i],
-                isCompleted: false,
-                isFunded: false,
-                proofOfCompletion: "",
-                fundsReleased: 0,
-                isUnderReview: false
-            }));
+        campaign.media = media;
+        campaign.beneficiaries = beneficiaries;
+        campaign.stakeholders = stakeholders;
+        campaign.campaignType = campaignType;
+        
+        // Set investment-specific fields if it's an investment campaign
+        if (campaignType == 1) {
+            campaign.equityPercentage = equityPercentage;
+            campaign.minInvestment = minInvestment;
         }
 
-        categoryToCampaigns[_category].push(campaignId);
+        // Initialize milestones
+        for (uint i = 0; i < milestones.length; i++) {
+            campaign.milestones.push(milestones[i]);
+        }
 
-        emit CampaignCreated(campaignId, msg.sender, _title, _goalAmount);
+        userCampaigns[msg.sender].push(campaignId);
+
+        emit CampaignCreated(campaignId, msg.sender, title);
         return campaignId;
     }
 
-    function fundMilestone(uint256 _campaignId, uint256 _milestoneIndex) 
-        external 
-        payable 
-        campaignExists(_campaignId)
-        campaignActive(_campaignId)
-        validMilestone(_campaignId, _milestoneIndex)
-    {
-        Campaign storage campaign = campaigns[_campaignId];
-        Milestone storage milestone = campaign.milestones[_milestoneIndex];
+    //--------------------------------------------------------------------------
+    // Donate
+    //--------------------------------------------------------------------------
+    function donate(uint256 campaignId) public payable {
+        require(msg.value > 0, "Donation amount must be greater than 0");
+        Campaign storage campaign = campaigns[campaignId];
+        require(campaign.isActive, "Campaign is not active");
+        // Commenting out the campaign end check to allow donations regardless of end date
+        // require(block.timestamp < campaign.createdAt + campaign.duration, "Campaign has ended");
 
-        require(!milestone.isFunded, "wowzarush: Milestone already funded");
-        require(msg.value == milestone.targetAmount, "wowzarush: Incorrect funding amount");
-
-        milestone.isFunded = true;
         campaign.totalFunded += msg.value;
+        campaign.donors.push(msg.sender);
+        userDonations[msg.sender].push(campaignId);
 
-        if (donations[_campaignId][msg.sender] == 0) {
-            campaign.donors.push(msg.sender);
-            campaign.stakeholders.push(msg.sender); // Add donor to stakeholders
-        }
-        donations[_campaignId][msg.sender] += msg.value;
-
-        emit MilestoneFunded(_campaignId, _milestoneIndex, msg.value);
+        emit DonationReceived(campaignId, msg.sender, msg.value);
     }
 
-    function completeMilestone(
-        uint256 _campaignId, 
-        uint256 _milestoneIndex,
-        string memory _proofOfCompletion
-    ) 
-        external 
-        campaignExists(_campaignId)
-        onlyCampaignCreator(_campaignId)
-        validMilestone(_campaignId, _milestoneIndex)
-    {
-        Campaign storage campaign = campaigns[_campaignId];
-        Milestone storage milestone = campaign.milestones[_milestoneIndex];
+    //--------------------------------------------------------------------------
+    // Submit Milestone Completion
+    //--------------------------------------------------------------------------
+    function submitMilestoneCompletion(
+        uint256 campaignId,
+        uint256 milestoneIndex,
+        string memory proofOfCompletion
+    ) public {
+        Campaign storage campaign = campaigns[campaignId];
+        require(msg.sender == campaign.creator, "Only campaign creator can submit milestone completion");
+        require(milestoneIndex < campaign.milestones.length, "Invalid milestone index");
+        require(!campaign.milestones[milestoneIndex].isCompleted, "Milestone already completed");
 
-        require(milestone.isFunded, "wowzarush: Milestone not funded");
-        require(!milestone.isCompleted, "wowzarush: Milestone already completed");
+        campaign.milestones[milestoneIndex].proofOfCompletion = proofOfCompletion;
+        campaign.milestones[milestoneIndex].isUnderReview = true;
 
-        milestone.isCompleted = true;
-        milestone.proofOfCompletion = _proofOfCompletion;
-        milestone.isUnderReview = true; // Set to under review for voting
-
-        emit MilestoneCompleted(_campaignId, _milestoneIndex, _proofOfCompletion);
-        emit MilestoneUnderReview(_campaignId, _milestoneIndex);
+        emit MilestoneCompleted(campaignId, milestoneIndex);
     }
 
-    function submitVote(
-    uint256 _campaignId, 
-    uint256 _milestoneIndex,
-    bool _isUpvote, 
-    string memory _message
-) 
-    external 
-    campaignExists(_campaignId)
-    validMilestone(_campaignId, _milestoneIndex)
-    isStakeholder(_campaignId)
-{
-    milestoneVotes[_campaignId][_milestoneIndex].push(Vote({
-        isUpvote: _isUpvote,
-        message: _message,
-        voter: msg.sender
-    }));
+    //--------------------------------------------------------------------------
+    // Vote on Milestone
+    //--------------------------------------------------------------------------
+    function voteMilestone(
+        uint256 campaignId,
+        uint256 milestoneIndex,
+        bool isUpvote,
+        string memory message
+    ) public {
+        Campaign storage campaign = campaigns[campaignId];
+        require(milestoneIndex < campaign.milestones.length, "Invalid milestone index");
+        require(campaign.milestones[milestoneIndex].isUnderReview, "Milestone not under review");
 
-    emit VoteSubmitted(_campaignId, _milestoneIndex, msg.sender, _isUpvote, _message);
-}
+        Vote memory vote = Vote({
+            isUpvote: isUpvote,
+            message: message,
+            voter: msg.sender
+        });
 
+        milestoneVotes[campaignId][milestoneIndex].push(vote);
 
-    function reviewMilestone(uint256 _campaignId, uint256 _milestoneIndex) 
-        external 
-        campaignExists(_campaignId)
-        validMilestone(_campaignId, _milestoneIndex)
-        onlyCampaignCreator(_campaignId)
-    {
-        Vote[] storage votes = milestoneVotes[_campaignId][_milestoneIndex];
+        emit MilestoneVoteSubmitted(campaignId, milestoneIndex, msg.sender, isUpvote);
+    }
 
-        uint256 upvotes = 0;
-        uint256 downvotes = 0;
+    //--------------------------------------------------------------------------
+    // Release Milestone Funds
+    //--------------------------------------------------------------------------
+    function releaseMilestoneFunds(uint256 campaignId, uint256 milestoneIndex) public {
+        Campaign storage campaign = campaigns[campaignId];
+        require(msg.sender == campaign.creator, "Only campaign creator can release funds");
+        require(milestoneIndex < campaign.milestones.length, "Invalid milestone index");
+        require(!campaign.milestones[milestoneIndex].isFunded, "Funds already released");
+
+        uint256 amount = campaign.milestones[milestoneIndex].targetAmount;
+        require(address(this).balance >= amount, "Insufficient contract balance");
+
+        campaign.milestones[milestoneIndex].isFunded = true;
+        campaign.milestones[milestoneIndex].fundsReleased = amount;
+
+        payable(campaign.creator).transfer(amount);
+
+        emit FundsReleased(campaignId, milestoneIndex, amount);
+    }
+
+    //--------------------------------------------------------------------------
+    // Invest in Campaign
+    //--------------------------------------------------------------------------
+    function invest(uint256 campaignId) public payable {
+        require(msg.value > 0, "Investment amount must be greater than 0");
+        Campaign storage campaign = campaigns[campaignId];
+        require(campaign.isActive, "Campaign is not active");
+        require(campaign.campaignType == 1, "Not an investment campaign");
+        require(msg.value >= campaign.minInvestment, "Investment amount below minimum");
+
+        // Update campaign funding
+        campaign.totalFunded += msg.value;
+        campaign.donors.push(msg.sender);
         
-        // Count the votes
-        for (uint256 i = 0; i < votes.length; i++) {
-            if (votes[i].isUpvote) {
-                upvotes++;
-            } else {
-                downvotes++;
-            }
-        }
+        // Track the investment amount for this investor
+        campaign.investments[msg.sender] += msg.value;
+        
+        // Add to user donations list (reusing for tracking investments)
+        userDonations[msg.sender].push(campaignId);
 
-        if (upvotes > downvotes) {
-            // Milestone accepted
-            campaigns[_campaignId].milestones[_milestoneIndex].isUnderReview = false;
-            emit MilestoneAccepted(_campaignId, _milestoneIndex);
-        } else {
-            // Milestone rejected
-            campaigns[_campaignId].milestones[_milestoneIndex].isUnderReview = false;
-            emit MilestoneRejected(_campaignId, _milestoneIndex);
+        emit InvestmentReceived(campaignId, msg.sender, msg.value);
+    }
+    
+    //--------------------------------------------------------------------------
+    // Get investment details
+    //--------------------------------------------------------------------------
+    function getInvestmentDetails(uint256 campaignId, address investor) public view returns (uint256 investmentAmount, uint256 equityShare) {
+        Campaign storage campaign = campaigns[campaignId];
+        require(campaign.campaignType == 1, "Not an investment campaign");
+        
+        uint256 investment = campaign.investments[investor];
+        
+        // Calculate equity share - proportional to investment amount
+        uint256 totalEquity = 0;
+        if (campaign.totalFunded > 0) {
+            totalEquity = (investment * campaign.equityPercentage) / campaign.totalFunded;
         }
+        
+        return (investment, totalEquity);
     }
 
-      function getCampaignMetadata(uint256 _campaignId) 
-        public 
-        view 
-        campaignExists(_campaignId) 
-        returns (CampaignMetadata memory) 
-    {
-        Campaign storage campaign = campaigns[_campaignId];
+    //--------------------------------------------------------------------------
+    // View Functions
+    //--------------------------------------------------------------------------
+    function getCampaign(uint256 campaignId) public view returns (Campaign memory) {
+        return campaigns[campaignId];
+    }
+
+    function getCampaignMetadata(uint256 campaignId) public view returns (CampaignMetadata memory) {
+        Campaign storage campaign = campaigns[campaignId];
         return CampaignMetadata({
             id: campaign.id,
             creator: campaign.creator,
@@ -287,111 +336,34 @@ contract wowzarush {
             category: campaign.category,
             goalAmount: campaign.goalAmount,
             totalFunded: campaign.totalFunded,
-            isActive: campaign.isActive,
-            createdAt: campaign.createdAt,
-            duration: campaign.duration
+            isActive: campaign.isActive
         });
     }
 
-    function getCampaignDetails(uint256 _campaignId) 
-        public 
-        view 
-        campaignExists(_campaignId) 
-        returns (CampaignDetails memory) 
-    {
-        Campaign storage campaign = campaigns[_campaignId];
-        return CampaignDetails({
-            description: campaign.description,
-            proofOfWork: campaign.proofOfWork,
-            beneficiaries: campaign.beneficiaries,
-            media: campaign.media
-        });
+    function getUserCampaigns(address user) public view returns (uint256[] memory) {
+        return userCampaigns[user];
     }
 
-    function getCampaignParticipants(uint256 _campaignId)
-        public
-        view
-        campaignExists(_campaignId)
-        returns (address[] memory donors, address[] memory stakeholders)
-    {
-        Campaign storage campaign = campaigns[_campaignId];
-        return (campaign.donors, campaign.stakeholders);
+    function getUserDonations(address user) public view returns (uint256[] memory) {
+        return userDonations[user];
     }
 
-    // Enhanced milestone retrieval functions
-    function getMilestoneMetadata(uint256 _campaignId, uint256 _milestoneIndex)
-        public
-        view
-        campaignExists(_campaignId)
-        validMilestone(_campaignId, _milestoneIndex)
-        returns (MilestoneMetadata memory)
-    {
-        Milestone storage milestone = campaigns[_campaignId].milestones[_milestoneIndex];
-        return MilestoneMetadata({
-            name: milestone.name,
-            targetAmount: milestone.targetAmount,
-            isCompleted: milestone.isCompleted,
-            isFunded: milestone.isFunded,
-            isUnderReview: milestone.isUnderReview
-        });
+    function getMilestoneVotes(uint256 campaignId, uint256 milestoneIndex) public view returns (Vote[] memory) {
+        return milestoneVotes[campaignId][milestoneIndex];
     }
 
-    function getMilestoneProof(uint256 _campaignId, uint256 _milestoneIndex)
-        public
-        view
-        campaignExists(_campaignId)
-        validMilestone(_campaignId, _milestoneIndex)
-        returns (string memory proofOfCompletion, uint256 fundsReleased)
-    {
-        Milestone storage milestone = campaigns[_campaignId].milestones[_milestoneIndex];
-        return (milestone.proofOfCompletion, milestone.fundsReleased);
-    }
-
-    // Enhanced category retrieval
-    function getCategoryStats(string memory _category)
-        public
-        view
-        returns (uint256 totalCampaigns, uint256 activeCampaigns)
-    {
-        uint256[] storage campaignIds = categoryToCampaigns[_category];
-        uint256 active = 0;
-        for (uint256 i = 0; i < campaignIds.length; i++) {
-            if (campaigns[campaignIds[i]].isActive) {
-                active++;
-            }
-        }
-        return (campaignIds.length, active);
-    }
-
-    // Batch retrieval functions
-    function getCampaignsByRange(uint256 _start, uint256 _end)
-        public
-        view
-        returns (uint256[] memory)
-    {
-        require(_end >= _start, "wowzarush: Invalid range");
-        uint256 length = _end - _start + 1;
-        uint256[] memory result = new uint256[](length);
-        for (uint256 i = 0; i < length && (_start + i) < campaignCounter; i++) {
-            result[i] = _start + i;
-        }
-        return result;
-    }
-
-    function getMilestoneStatus(uint256 _campaignId, uint256 _milestoneIndex)
-        public
-        view
-        campaignExists(_campaignId)
-        validMilestone(_campaignId, _milestoneIndex)
-        returns (bool isCompleted, bool isFunded, bool isUnderReview, uint256 voteCount)
-    {
-        Milestone storage milestone = campaigns[_campaignId].milestones[_milestoneIndex];
+    function getCampaignDetails(uint256 campaignId) public view returns (
+        string memory description,
+        string memory proofOfWork,
+        string memory beneficiaries,
+        string[] memory media
+    ) {
+        Campaign storage campaign = campaigns[campaignId];
         return (
-            milestone.isCompleted,
-            milestone.isFunded,
-            milestone.isUnderReview,
-            milestoneVotes[_campaignId][_milestoneIndex].length
+            campaign.description,
+            campaign.proofOfWork,
+            campaign.beneficiaries,
+            campaign.media
         );
     }
-
 }

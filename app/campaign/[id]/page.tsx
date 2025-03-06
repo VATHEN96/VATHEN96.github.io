@@ -1,127 +1,245 @@
-'use client'
+'use client';
 
-export const runtime = 'edge';
+import React, { useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
+import { format } from 'date-fns';
+import { 
+  CalendarDays, 
+  Clock, 
+  Users, 
+  Target, 
+  Award, 
+  Share2, 
+  AlertTriangle,
+  Wallet
+} from 'lucide-react';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useParams } from 'next/navigation'
-import { useWowzarush } from '@/context/wowzarushContext'
-import Link from 'next/link'
-import Navbar from '@/components/navbar'
-import type { Campaign } from "@/utils/contextInterfaces"
+import { useWowzaRush } from '@/context/wowzarushContext';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Skeleton } from '@/components/ui/skeleton';
+
+import { ContributionTiers } from '@/components/campaign/ContributionTiers';
+import MilestoneTimeline from '@/components/campaign/MilestoneTimeline';
+import { CommentsSection } from '@/components/campaign/CommentsSection';
+import { QASection } from '@/components/campaign/QASection';
+import { GovernanceRights } from '@/components/campaign/GovernanceRights';
+import { CampaignUpdates } from '@/components/campaign/CampaignUpdates';
+import { RiskAssessment } from '@/components/campaign/RiskAssessment';
+import { AnalyticsDashboard } from '@/components/campaign/AnalyticsDashboard';
+import { Campaign } from '@/types/campaign';
+import CampaignHeader from '@/components/campaign/CampaignHeader';
+import ContributeForm from '@/components/campaign/ContributeForm';
 
 export default function CampaignDetailPage() {
-    const params = useParams()
-    const campaignId = params?.id
-    const { getCampaign, loading: contextLoading, error: contextError, getCampaignById } = useWowzarush()
-    const [campaign, setCampaign] = useState<Campaign | null>(null)
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
+  const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'about';
+  
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [isLoading, setIsLoading] = useState(true);
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [hasContributed, setHasContributed] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
+  
+  const { 
+    isWalletConnected, 
+    connectWallet, 
+    getCampaign, 
+    getUserContributions,
+    userProfile
+  } = useWowzaRush();
 
-    const router = useRouter()
-
-    useEffect(() => {
-        const fetchCampaignDetails = async () => {
-            if (!campaignId) {
-                setError('Campaign ID is required')
-                return
-            }
-            try {
-                setLoading(true)
-                const id = typeof campaignId === 'string' ? campaignId : campaignId.toString()
-                const details = await getCampaignById(id)
-                if (!details) {
-                    throw new Error('Campaign not found')
-                }
-                setCampaign(details)
-            } catch (error: any) {
-                setError(error.message || 'Failed to fetch campaign details')
-            } finally {
-                setLoading(false)
-            }
+  useEffect(() => {
+    const loadCampaignData = async () => {
+      setIsLoading(true);
+      try {
+        const campaignData = await getCampaign(id as string);
+        setCampaign(campaignData);
+        
+        // Check if user is the creator
+        if (isWalletConnected && userProfile) {
+          setIsCreator(campaignData.creatorAddress === userProfile.walletAddress);
         }
-
-        fetchCampaignDetails()
-    }, [campaignId, getCampaignById])
-
-    if (loading || contextLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen bg-[#90EE90]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-            </div>
-        )
+        
+        // Check if user has contributed
+        if (isWalletConnected) {
+          const contributions = await getUserContributions(id as string);
+          setHasContributed(contributions && contributions.length > 0);
+        }
+      } catch (error) {
+        console.error('Error loading campaign:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    if (id) {
+      loadCampaignData();
     }
+  }, [id, isWalletConnected, userProfile, getCampaign, getUserContributions]);
 
-    if (error || contextError) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#90EE90] gap-4">
-                <div className="bg-white p-8 rounded shadow-lg border-2 border-black">
-                    <p className="text-red-500 font-bold">{error || contextError}</p>
-                    <button
-                        onClick={() => router.back()}
-                        className="mt-4 bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-all duration-300"
-                    >
-                        Go Back
-                    </button>
-                </div>
-            </div>
-        )
+  // Helper functions
+  const formatDate = (dateString) => {
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (e) {
+      return 'Invalid date';
     }
+  };
 
-    if (!campaign) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#90EE90]">
-                <p className="text-red-500 font-bold">Campaign not found</p>
-                <button
-                    onClick={() => router.back()}
-                    className="mt-4 bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-all duration-300"
-                >
-                    Go Back
-                </button>
-            </div>
-        )
-    }
+  const calculateTimeLeft = (endDate) => {
+    const now = new Date();
+    const end = new Date(endDate);
+    const diffTime = end - now;
+    
+    if (diffTime <= 0) return 'Ended';
+    
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    return diffDays > 0 
+      ? `${diffDays} days left` 
+      : `${diffHours} hours left`;
+  };
 
+  const calculateFundingProgress = (raised, goal) => {
+    return Math.min(Math.round((raised / goal) * 100), 100);
+  };
+
+  // Render loading state
+  if (isLoading) {
     return (
-        <div className="min-h-screen bg-[#FFFDF6]">
-            <Navbar />
-            <main className="container mx-auto px-4 pt-24 pb-12">
-                <h1 className="text-4xl font-bold mb-8">{campaign.title}</h1>
-                <div className="bg-white p-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-                    <p className="text-gray-600 mb-4">{campaign.description}</p>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <h2 className="font-bold">Goal Amount</h2>
-                            <p>{campaign.goalAmount} TLOS</p>
-                        </div>
-                        <div>
-                            <h2 className="font-bold">Total Funded</h2>
-                            <p>{campaign.totalFunded} TLOS</p>
-                        </div>
-                        <div>
-                            <h2 className="font-bold">Creator</h2>
-                            <p className="truncate">{campaign.creator}</p>
-                        </div>
-                        <div>
-                            <h2 className="font-bold">Category</h2>
-                            <p>{campaign.category}</p>
-                        </div>
-                    </div>
-                    <div className="mb-8">
-                        <h2 className="font-bold mb-4">Milestones</h2>
-                        {campaign.milestones.map((milestone) => (
-                            <div key={milestone.id} className="mb-4 p-4 border-2 border-black">
-                                <h3 className="font-bold">{milestone.name}</h3>
-                                <p>Target: {milestone.target} TLOS</p>
-                                <p>Status: {milestone.completed ? 'Completed' : 'In Progress'}</p>
-                                {milestone.dueDate && (
-                                    <p>Due: {milestone.dueDate.toLocaleDateString()}</p>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </main>
+      <div className="container py-8 space-y-8">
+        <Skeleton className="h-[400px] w-full rounded-xl" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 space-y-4">
+            <Skeleton className="h-12 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-[300px] w-full" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-[200px] w-full rounded-lg" />
+            <Skeleton className="h-[100px] w-full rounded-lg" />
+          </div>
         </div>
-    )
+      </div>
+    );
+  }
+
+  // Render 404 if campaign not found
+  if (!campaign) {
+    return (
+      <div className="container py-16 text-center">
+        <h1 className="text-3xl font-bold mb-4">Campaign Not Found</h1>
+        <p className="text-muted-foreground mb-8">The campaign you're looking for doesn't exist or has been removed.</p>
+        <Button asChild>
+          <a href="/explore">Explore Campaigns</a>
+        </Button>
+      </div>
+    );
+  }
+
+  // Governance notice for users
+  const renderGovernanceNotice = () => {
+    if (!isWalletConnected) {
+      return (
+        <Alert className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Connect your wallet to participate in governance for this campaign.
+            <Button variant="link" onClick={connectWallet} className="p-0 h-auto font-semibold ml-2">
+              Connect Wallet
+            </Button>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
+    if (!hasContributed) {
+      return (
+        <Alert className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            You need to contribute to this campaign to gain governance rights.
+            <Button 
+              variant="link" 
+              onClick={() => setActiveTab('contribute')} 
+              className="p-0 h-auto font-semibold ml-2"
+            >
+              Contribute Now
+            </Button>
+          </AlertDescription>
+        </Alert>
+      );
+    }
+    
+    return null;
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <CampaignHeader campaign={campaign} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="about" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="about">About</TabsTrigger>
+              <TabsTrigger value="updates">Updates</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger value="comments">Comments</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="about" className="space-y-6">
+              <RiskAssessment campaignId={id as string} />
+              
+              <h2 className="text-2xl font-bold mt-6">About This Campaign</h2>
+              <div className="prose max-w-none dark:prose-invert">
+                {campaign.description}
+              </div>
+              
+              <h3 className="mt-8">Campaign Updates</h3>
+              <CampaignUpdates campaignId={id as string} isCreator={isCreator} />
+              
+              <h3 className="mt-8">Milestones</h3>
+              <MilestoneTimeline 
+                milestones={campaign.milestones} 
+                campaignStartDate={campaign.createdAt}
+                campaignEndDate={campaign.deadline}
+                campaignGoalAmount={campaign.goalAmount}
+                totalFunded={campaign.totalFunded}
+              />
+            </TabsContent>
+            
+            <TabsContent value="updates">
+              {/* ...updates tab content... */}
+            </TabsContent>
+            
+            <TabsContent value="analytics">
+              <AnalyticsDashboard campaignId={id as string} />
+            </TabsContent>
+            
+            <TabsContent value="comments">
+              <h2 className="text-2xl font-bold mb-6">Community Discussion</h2>
+              <CommentsSection campaignId={id as string} creatorId={campaign.creator} />
+            </TabsContent>
+          </Tabs>
+        </div>
+        
+        <div className="lg:col-span-1">
+          <div className="sticky top-24">
+            <ContributeForm campaign={campaign} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -12,57 +12,57 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --background: 0 0% 100%; /* White */
+    --foreground: 0 0% 0%; /* Black */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 0 0% 0%; /* Black */
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 0 0% 0%; /* Black */
+    --primary: 0 0% 0%; /* Black */
+    --primary-foreground: 0 0% 100%; /* White */
+    --secondary: 0 0% 93%; /* Light gray (almost white) */
+    --secondary-foreground: 0 0% 0%; /* Black */
+    --muted: 0 0% 93%; /* Light gray (almost white) */
+    --muted-foreground: 0 0% 40%; /* Dark gray */
+    --accent: 0 0% 93%; /* Light gray (almost white) */
+    --accent-foreground: 0 0% 0%; /* Black */
+    --destructive: 0 0% 0%; /* Black */
+    --destructive-foreground: 0 0% 100%; /* White */
+    --border: 0 0% 0%; /* Black */
+    --input: 0 0% 93%; /* Light gray (almost white) */
+    --ring: 0 0% 0%; /* Black */
+    --chart-1: 0 0% 0%; /* Black */
+    --chart-2: 0 0% 20%; /* Dark gray */
+    --chart-3: 0 0% 40%; /* Medium gray */
+    --chart-4: 0 0% 60%; /* Light gray */
+    --chart-5: 0 0% 80%; /* Very light gray */
     --radius: 0.5rem;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --background: 0 0% 0%; /* Black */
+    --foreground: 0 0% 100%; /* White */
+    --card: 0 0% 0%; /* Black */
+    --card-foreground: 0 0% 100%; /* White */
+    --popover: 0 0% 0%; /* Black */
+    --popover-foreground: 0 0% 100%; /* White */
+    --primary: 0 0% 100%; /* White */
+    --primary-foreground: 0 0% 0%; /* Black */
+    --secondary: 0 0% 15%; /* Very dark gray (almost black) */
+    --secondary-foreground: 0 0% 100%; /* White */
+    --muted: 0 0% 15%; /* Very dark gray (almost black) */
+    --muted-foreground: 0 0% 70%; /* Light gray */
+    --accent: 0 0% 15%; /* Very dark gray (almost black) */
+    --accent-foreground: 0 0% 100%; /* White */
+    --destructive: 0 0% 100%; /* White */
+    --destructive-foreground: 0 0% 0%; /* Black */
+    --border: 0 0% 100%; /* White */
+    --input: 0 0% 15%; /* Very dark gray (almost black) */
+    --ring: 0 0% 100%; /* White */
+    --chart-1: 0 0% 100%; /* White */
+    --chart-2: 0 0% 80%; /* Very light gray */
+    --chart-3: 0 0% 60%; /* Light gray */
+    --chart-4: 0 0% 40%; /* Medium gray */
+    --chart-5: 0 0% 20%; /* Dark gray */
   }
 }
 
@@ -73,4 +73,49 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@keyframes glow {
+  0% {
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 20px rgba(0, 0, 0, 0.7));
+  }
+  100% {
+    filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 10px rgba(0, 0, 0, 0.5));
+  }
+}
+
+.dark @keyframes glow {
+  0% {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9)) drop-shadow(0 0 20px rgba(255, 255, 255, 0.7));
+  }
+  100% {
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.7)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+  }
+}
+
+.logo-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.logo-rotate-slow {
+  animation: rotate 30s linear infinite;
+}
+
+.logo-rotate-reverse {
+  animation: rotate 20s linear infinite reverse;
 }

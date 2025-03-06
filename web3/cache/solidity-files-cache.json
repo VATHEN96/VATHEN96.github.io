@@ -1,0 +1,85 @@
+{
+  "_format": "hh-sol-cache-2",
+  "files": {
+    "E:\\wowzarush.io-main\\web3\\contracts\\SimpleTest.sol": {
+      "lastModificationDate": 1740705032685,
+      "contentHash": "227987ac95954e03e36174fe48712514",
+      "sourceName": "contracts/SimpleTest.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 50,
+            "details": {
+              "yul": true
+            }
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.28"
+      ],
+      "artifacts": [
+        "SimpleTest"
+      ]
+    },
+    "E:\\wowzarush.io-main\\web3\\contracts\\WowzaRush.sol": {
+      "lastModificationDate": 1740822255809,
+      "contentHash": "b0a4a24094747d76dbd80f1287a92709",
+      "sourceName": "contracts/WowzaRush.sol",
+      "solcConfig": {
+        "version": "0.8.28",
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 50,
+            "details": {
+              "yul": true
+            }
+          },
+          "viaIR": true,
+          "evmVersion": "paris",
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.28"
+      ],
+      "artifacts": [
+        "WowzaRush"
+      ]
+    }
+  }
+}

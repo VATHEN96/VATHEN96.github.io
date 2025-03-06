@@ -6,10 +6,11 @@ import HowItWorks from '@/components/HowItWorks'
 import Testimonials from '@/components/Testimonials'
 import CTA from '@/components/CTA'
 import Footer from '@/components/Footer'
+import ClientImage from '@/components/ClientImage'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#FFFDF6] text-[#ecf0f1]">
+    <main className="min-h-screen bg-white dark:bg-black text-black dark:text-white">
       <Navbar />
       <Hero />
       <Features />

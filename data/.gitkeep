@@ -1,0 +1,2 @@
+# This file ensures the data directory exists
+# The directory will be used to store JSON files for our simple database 
