@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function ProfileViewPage() {
   const searchParams = useSearchParams();
-  const address = searchParams.get('address');
+  const address = searchParams?.get('address');
   const { getCreatorProfile } = useWowzaRush();
   
   const [profile, setProfile] = useState<any>(null);
