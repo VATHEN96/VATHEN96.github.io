@@ -145,7 +145,24 @@ const ContributionTiers: React.FC<ContributionTiersProps> = ({
         try {
           const tierData = await getCampaignTiers(campaignId);
           if (tierData && tierData.length > 0) {
-            setTiers(tierData);
+            // Map from blockchain service RewardTier to component RewardTier
+            const mappedTiers = tierData.map(tier => ({
+              id: tier.id,
+              title: tier.name, // Map name to title
+              description: tier.description,
+              amount: tier.amount,
+              maxContributors: tier.maxContributions,
+              rewards: {
+                nftBadge: tier.nftBadge,
+                governanceRights: tier.governanceRights, 
+                votingPower: tier.votingPower,
+                earlyAccess: false, // Default values for properties not in blockchain service
+                exclusiveUpdates: false,
+                physicalRewards: [],
+                customRewards: tier.rewards || []
+              }
+            }));
+            setTiers(mappedTiers);
           }
         } catch (error) {
           console.error('Error loading contribution tiers:', error);
@@ -260,11 +277,24 @@ const ContributionTiers: React.FC<ContributionTiersProps> = ({
       if (isEditing) {
         // Update each tier individually
         for (const tier of tiers) {
+          // Map from component RewardTier to blockchain service RewardTier
+          const blockchainTier = {
+            id: tier.id,
+            name: tier.title, // Map title to name
+            description: tier.description,
+            amount: tier.amount,
+            rewards: tier.rewards.customRewards,
+            nftBadge: tier.rewards.nftBadge,
+            votingPower: tier.rewards.votingPower,
+            maxContributions: tier.maxContributors,
+            governanceRights: tier.rewards.governanceRights
+          };
+          
           if (tier.id) {
-            await updateTier(tier.id, tier);
+            await updateTier(tier.id, blockchainTier);
           } else {
             // If a tier doesn't have an ID, create it
-            const newId = await createTier(campaignId, tier);
+            const newId = await createTier(campaignId, blockchainTier);
             // Update the tier with the new ID
             tier.id = newId;
           }
@@ -273,7 +303,20 @@ const ContributionTiers: React.FC<ContributionTiersProps> = ({
       } else {
         // Create each tier individually
         for (const tier of tiers) {
-          const newId = await createTier(campaignId, tier);
+          // Map from component RewardTier to blockchain service RewardTier
+          const blockchainTier = {
+            id: tier.id,
+            name: tier.title, // Map title to name
+            description: tier.description,
+            amount: tier.amount,
+            rewards: tier.rewards.customRewards,
+            nftBadge: tier.rewards.nftBadge,
+            votingPower: tier.rewards.votingPower,
+            maxContributions: tier.maxContributors,
+            governanceRights: tier.rewards.governanceRights
+          };
+          
+          const newId = await createTier(campaignId, blockchainTier);
           // Update the tier with the new ID
           tier.id = newId;
         }
