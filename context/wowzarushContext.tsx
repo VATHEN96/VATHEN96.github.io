@@ -143,6 +143,9 @@ interface WowzaRushContextType {
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
   
+  // User profile
+  userProfile: any | null;
+  
   // Campaign functions
   getCampaign: (id: string) => Promise<any>;
   getCampaignDetails: (id: string) => Promise<any>;
@@ -1739,6 +1742,9 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children }
     isWalletConnected: !!account,
     connectWallet,
     disconnectWallet,
+    
+    // User profile
+    userProfile,
     
     // Campaign functions
     getCampaign,
