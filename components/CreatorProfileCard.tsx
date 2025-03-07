@@ -193,7 +193,7 @@ export default function CreatorProfileCard({
           <StyledProgress value={trustScore} className="h-2" indicatorColor={getTrustScoreColor()} />
         </div>
         
-        {profile.badges.length > 0 && (
+        {profile.badges?.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {profile.badges.map((badge, index) => (
               <Badge 
