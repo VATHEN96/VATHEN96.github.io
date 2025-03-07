@@ -56,6 +56,8 @@ export interface CampaignAnalytics {
     participationRate: number; // % of contributors who vote
     milestoneCompletionRate: number; // % of milestones completed on time
     socialEngagement: number; // social shares/mentions
+    contributorChangePercent?: number; // % change in contributors
+    fundingAmount?: number; // Total funding amount in ETH
   };
   metrics: OnChainMetric[];
   projections: {
@@ -67,6 +69,10 @@ export interface CampaignAnalytics {
     fundingRisk: 'low' | 'medium' | 'high';
     scheduleRisk: 'low' | 'medium' | 'high';
     deliveryRisk: 'low' | 'medium' | 'high';
+  };
+  governance?: {
+    proposalCount: number;
+    voteCount: number;
   };
 }
 
@@ -414,7 +420,9 @@ class AnalyticsService {
           fundingRate: 2.5,
           participationRate: 68,
           milestoneCompletionRate: 85,
-          socialEngagement: 245
+          socialEngagement: 245,
+          contributorChangePercent: 12,
+          fundingAmount: 35.6
         },
         metrics,
         projections: {
@@ -426,6 +434,10 @@ class AnalyticsService {
           fundingRisk: 'low',
           scheduleRisk: 'medium',
           deliveryRisk: 'low'
+        },
+        governance: {
+          proposalCount: 8,
+          voteCount: 142
         }
       };
     } catch (error) {

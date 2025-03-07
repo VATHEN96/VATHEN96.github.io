@@ -223,16 +223,16 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                     <CardDescription>Unique wallets</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{analytics.totalContributors}</div>
+                    <div className="text-3xl font-bold">{analytics.performance.contributorCount}</div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {analytics.contributorChange > 0 ? (
+                      {analytics.performance.contributorChangePercent > 0 ? (
                         <span className="text-green-500 flex items-center">
                           <TrendingUp className="h-4 w-4 mr-1" />
-                          +{analytics.contributorChange}% from last week
+                          +{analytics.performance.contributorChangePercent}% from last week
                         </span>
                       ) : (
                         <span className="text-red-500">
-                          {analytics.contributorChange}% from last week
+                          {analytics.performance.contributorChangePercent}% from last week
                         </span>
                       )}
                     </div>
@@ -245,10 +245,10 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                     <CardDescription>Current total</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{analytics.fundsRaised} ETH</div>
+                    <div className="text-3xl font-bold">{analytics.performance.fundingAmount || "0"} ETH</div>
                     <div className="flex items-center mt-2">
-                      <Progress value={analytics.percentageRaised} className="h-2" />
-                      <span className="ml-2 text-sm">{analytics.percentageRaised}%</span>
+                      <Progress value={analytics.performance.fundingProgress} className="h-2" />
+                      <span className="ml-2 text-sm">{analytics.performance.fundingProgress}%</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -262,15 +262,15 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                     <div className="flex justify-between">
                       <div>
                         <div className="text-sm text-muted-foreground">Proposals</div>
-                        <div className="text-xl font-bold">{analytics.totalProposals}</div>
+                        <div className="text-xl font-bold">{analytics.governance?.proposalCount || 0}</div>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">Votes Cast</div>
-                        <div className="text-xl font-bold">{analytics.totalVotes}</div>
+                        <div className="text-xl font-bold">{analytics.governance?.voteCount || 0}</div>
                       </div>
                       <div>
                         <div className="text-sm text-muted-foreground">Participation</div>
-                        <div className="text-xl font-bold">{analytics.voterParticipation}%</div>
+                        <div className="text-xl font-bold">{analytics.performance.participationRate}%</div>
                       </div>
                     </div>
                   </CardContent>
