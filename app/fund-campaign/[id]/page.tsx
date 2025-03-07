@@ -16,7 +16,7 @@ const FundCampaignPage = () => {
   const params = useParams()
   const router = useRouter()
   const campaignId = params?.id
-  const { loading: contextLoading, error: contextError, account, isWalletConnected, connectWallet, getInvestmentDetails, getCampaign } = useWowzaRush()
+  const { loading: contextLoading, error: contextError, account, isWalletConnected, connectWallet, getCampaign } = useWowzaRush()
 
   // Local implementation of getCampaignById using getCampaign from context
   const getCampaignById = async (id: string) => {
@@ -25,6 +25,22 @@ const FundCampaignPage = () => {
     } catch (error) {
       console.error('Error fetching campaign:', error);
       return null;
+    }
+  };
+
+  // Local implementation of getInvestmentDetails function
+  const getInvestmentDetails = async (id: string) => {
+    try {
+      console.log(`[Local getInvestmentDetails] Getting investment details for campaign ${id}`);
+      // In a real implementation, this would call the blockchain service
+      // For now, we'll return mock data
+      return {
+        investmentAmount: '100', // Mock investment amount
+        equityShare: '500'       // Mock equity share (500 basis points = 5%)
+      };
+    } catch (error) {
+      console.error('Error in getInvestmentDetails function:', error);
+      throw error;
     }
   };
 
