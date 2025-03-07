@@ -42,7 +42,7 @@ export default function CampaignDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params?.id;
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get('tab') || 'about';
+  const initialTab = searchParams?.get('tab') || 'about';
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isLoading, setIsLoading] = useState(true);
