@@ -450,7 +450,7 @@ export default function VoteRequests({ campaignId, isCreator }: VoteRequestsProp
                     Proposed by {truncateAddress(proposal.proposedBy)} • {new Date(proposal.createdAt).toLocaleDateString()}
                   </CardDescription>
                 </div>
-                <Badge variant={proposal.status === 'approved' ? 'success' : proposal.status === 'rejected' ? 'destructive' : 'outline'}>
+                <Badge variant={proposal.status === 'approved' ? 'secondary' : proposal.status === 'rejected' ? 'destructive' : 'outline'}>
                   {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
                 </Badge>
               </div>
