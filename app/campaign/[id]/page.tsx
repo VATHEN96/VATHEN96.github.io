@@ -93,7 +93,7 @@ export default function CampaignDetailPage() {
   }, [id, isWalletConnected, userProfile, getCampaign, getUserContributions]);
 
   // Helper functions
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string | number | Date): string => {
     try {
       return format(new Date(dateString), 'MMM dd, yyyy');
     } catch (e) {
@@ -101,10 +101,10 @@ export default function CampaignDetailPage() {
     }
   };
 
-  const calculateTimeLeft = (endDate) => {
+  const calculateTimeLeft = (endDate: string | number | Date): string => {
     const now = new Date();
     const end = new Date(endDate);
-    const diffTime = end - now;
+    const diffTime = end.getTime() - now.getTime();
     
     if (diffTime <= 0) return 'Ended';
     
@@ -116,8 +116,15 @@ export default function CampaignDetailPage() {
       : `${diffHours} hours left`;
   };
 
-  const calculateFundingProgress = (raised, goal) => {
-    return Math.min(Math.round((raised / goal) * 100), 100);
+  const calculateFundingProgress = (raised: number | string, goal: number | string): number => {
+    const raisedNum = typeof raised === 'string' ? parseFloat(raised) : raised;
+    const goalNum = typeof goal === 'string' ? parseFloat(goal) : goal;
+    
+    if (isNaN(raisedNum) || isNaN(goalNum) || goalNum === 0) {
+      return 0;
+    }
+    
+    return Math.min(Math.round((raisedNum / goalNum) * 100), 100);
   };
 
   // Render loading state
