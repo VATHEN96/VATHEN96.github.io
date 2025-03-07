@@ -384,10 +384,10 @@ class AnalyticsService {
   }
   
   // Remove link between proposal and milestone
-  async unlinkProposalFromMilestone(proposalId: string, milestoneId: string): Promise<boolean> {
+  async unlinkProposalFromMilestone(campaignId: string, milestoneId: string, proposalId: string): Promise<boolean> {
     try {
       // In a real implementation, this would remove the linkage in the database or blockchain
-      console.log(`Unlinking proposal ${proposalId} from milestone ${milestoneId}`);
+      console.log(`Unlinking proposal ${proposalId} from milestone ${milestoneId} in campaign ${campaignId}`);
       
       toast.success('Proposal unlinked from milestone');
       return true;

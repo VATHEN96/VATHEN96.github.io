@@ -140,7 +140,7 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
   // Handle unlinking a proposal from milestone
   const handleUnlinkProposal = async (milestoneId: string, proposalId: string) => {
     try {
-      const success = await unlinkProposalFromMilestone(proposalId, milestoneId);
+      const success = await unlinkProposalFromMilestone(campaignId, milestoneId, proposalId);
       
       if (success) {
         toast.success('Proposal unlinked from milestone');
