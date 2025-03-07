@@ -29,7 +29,7 @@ export interface MilestoneProgress {
   description: string;
   dueDate: number;
   completedDate?: number;
-  status: 'pending' | 'inProgress' | 'completed' | 'delayed';
+  status: 'pending' | 'inProgress' | 'completed' | 'delayed' | 'at_risk';
   progress: number; // 0-100
   linkedProposals: LinkedProposal[];
   fundingRequired: number;
@@ -361,11 +361,20 @@ class AnalyticsService {
           title: 'Public Launch',
           description: 'Full public release of the product',
           dueDate: Date.now() + 45 * 24 * 60 * 60 * 1000, // 45 days from now
-          status: 'pending',
-          progress: 0,
-          linkedProposals: [],
+          status: 'at_risk',
+          progress: 10,
+          linkedProposals: [
+            {
+              id: 'proposal_8',
+              title: 'Risk mitigation plan',
+              status: 'active',
+              votingEndTime: Date.now() + 3 * 24 * 60 * 60 * 1000,
+              votingPower: 38000,
+              impactDescription: 'Address delayed dependencies that put launch timeline at risk'
+            }
+          ],
           fundingRequired: 20,
-          fundingReceived: 0,
+          fundingReceived: 5,
           deliverables: ['Production deployment', 'Press release', 'Community launch event']
         },
         {
