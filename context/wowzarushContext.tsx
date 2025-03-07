@@ -117,7 +117,7 @@ export interface CreatorProfile {
   verificationLevel?: VerificationLevel;
   trustScore?: number;
   joinDate?: string | Date;
-  badges?: string[];
+  badges?: (string | { id: number; name: string; icon: string; })[];
   socialLinks?: {
     website?: string;
     twitter?: string;

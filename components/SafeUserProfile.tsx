@@ -650,11 +650,22 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
               <div>
                 <h3 className="text-sm font-medium text-gray-300 mb-2">Badges</h3>
                 <div className="flex flex-wrap gap-2">
-                  {userData.badges.map((badge) => (
-                    <Badge key={badge.id} variant="outline" className="px-2 py-1 bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700">
-                      <span className="mr-1">{badge.icon}</span> {badge.name}
-                    </Badge>
-                  ))}
+                  {userData.badges.map((badge, index) => {
+                    // Handle both string badges and object badges
+                    if (typeof badge === 'string') {
+                      return (
+                        <Badge key={index} variant="outline" className="px-2 py-1 bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700">
+                          {badge}
+                        </Badge>
+                      );
+                    } else {
+                      return (
+                        <Badge key={badge.id || index} variant="outline" className="px-2 py-1 bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700">
+                          <span className="mr-1">{badge.icon}</span> {badge.name}
+                        </Badge>
+                      );
+                    }
+                  })}
                 </div>
               </div>
               
