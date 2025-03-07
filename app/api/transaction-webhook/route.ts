@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Map external status to our internal status
-    let internalStatus;
+    let internalStatus: 'pending' | 'confirmed' | 'rejected';
     switch (data.status.toLowerCase()) {
       case 'confirmed':
       case 'success':
