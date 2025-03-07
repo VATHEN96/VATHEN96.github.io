@@ -5,11 +5,12 @@ import { VerificationLevel } from '@/context/wowzarushContext';
 // For this example, we'll use in-memory storage
 const creatorProfiles = new Map();
 
+// Updated using proper types from Next.js 15
 export async function GET(
-  request: NextRequest,
-  context: { params: { address: string } }
-) {
-  const address = context.params.address.toLowerCase();
+  request: Request,
+  { params }: { params: { address: string } }
+): Promise<Response> {
+  const address = params.address.toLowerCase();
   
   // Get the creator profile
   const profile = creatorProfiles.get(address);
@@ -24,11 +25,12 @@ export async function GET(
   return NextResponse.json(profile);
 }
 
+// Updated using proper types from Next.js 15
 export async function PUT(
-  request: NextRequest,
-  context: { params: { address: string } }
-) {
-  const address = context.params.address.toLowerCase();
+  request: Request,
+  { params }: { params: { address: string } }
+): Promise<Response> {
+  const address = params.address.toLowerCase();
   
   try {
     const data = await request.json();
