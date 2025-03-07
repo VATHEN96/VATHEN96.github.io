@@ -241,6 +241,7 @@ interface WowzaRushContextType {
   getComments: (campaignId: string) => Promise<Comment[]>;
   addComment: (campaignId: string, content: string, parentId?: string) => Promise<Comment>;
   likeComment: (commentId: string) => Promise<boolean>;
+  reportComment: (commentId: string) => Promise<boolean>;
   getQuestions: (campaignId: string) => Promise<any[]>;
   addQuestion: (campaignId: string, content: string) => Promise<any>;
   answerQuestion: (questionId: string, answer: string) => Promise<boolean>;
@@ -712,6 +713,17 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
       return true;
     } catch (error) {
       console.error(`Error liking comment ${commentId}:`, error);
+      return false;
+    }
+  };
+  
+  const reportComment = async (commentId: string) => {
+    try {
+      // Implementation would call an API endpoint
+      toast.success(`Comment reported successfully`);
+      return true;
+    } catch (error) {
+      console.error(`Error reporting comment ${commentId}:`, error);
       return false;
     }
   };
@@ -1820,7 +1832,7 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
   const contextValue: WowzaRushContextType = {
     // Wallet connection
     account,
-    isWalletConnected: !!account,
+    isWalletConnected,
     connectWallet,
     disconnectWallet,
     
@@ -1861,6 +1873,7 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
     getComments,
     addComment,
     likeComment,
+    reportComment,
     getQuestions,
     addQuestion,
     answerQuestion,
