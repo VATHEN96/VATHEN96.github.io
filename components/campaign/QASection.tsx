@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useWowzaRush, Question } from '@/context/wowzarushContext';
+import { useWowzaRush } from '@/context/wowzarushContext';
+import type { Question } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Loader2, MessageCircle, CheckCircle2, ThumbsUp, Search, Filter } from 'lucide-react';
+import { Loader2, MessageCircle, CheckCircle2, ThumbsUp, Search, Filter, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -44,6 +45,7 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
+  const [isAskingQuestion, setIsAskingQuestion] = useState(false);
 
   const isCreator = account?.toLowerCase() === creatorId?.toLowerCase();
 
@@ -64,19 +66,17 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
             {
               id: '1',
               campaignId,
-              userId: '0x1234567890abcdef1234567890abcdef12345678',
-              title: 'Timeline for Beta Launch',
-              content: 'When do you plan to launch the beta version of your product? Will early contributors get priority access?',
-              timestamp: Date.now() - 3600000 * 24 * 3, // 3 days ago
-              likes: 12,
+              title: 'When will the first milestone be completed?',
+              content: 'I\'m interested in knowing the timeline for the first milestone. Can you provide more details?',
+              createdAt: Date.now() - 86400000 * 3, // 3 days ago
+              creatorAddress: '0x1234567890abcdef1234567890abcdef12345678',
+              creatorName: 'User1',
               isAnswered: true,
-              answer: {
-                userId: creatorId || '0xcreator0000000000000000000000000000',
-                content: 'Thanks for your question! We plan to launch the beta in Q1 next year. And yes, all early contributors will receive priority access and special perks!',
-                timestamp: Date.now() - 3600000 * 24 * 2, // 2 days ago
-                isCreator: true
-              },
-              tags: ['roadmap', 'timeline', 'beta']
+              isPinned: true,
+              answerCount: 1,
+              upvotes: 5,
+              tags: ['timeline', 'milestones'],
+              bestAnswerId: '101'
             },
             {
               id: '2',
@@ -159,40 +159,34 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
   }, [questions, filter, searchQuery]);
 
   const handleQuestionSubmit = async () => {
-    if (!isWalletConnected) {
-      toast.error('Please connect your wallet to ask a question');
+    if (!newQuestionTitle.trim() || !newQuestionContent.trim()) {
+      toast.error('Please provide both a title and content for your question');
       return;
     }
-    
-    if (!newQuestionTitle.trim()) {
-      toast.error('Please enter a question title');
-      return;
-    }
-    
-    if (!newQuestionContent.trim()) {
-      toast.error('Please enter your question');
-      return;
-    }
-    
+
     setIsSubmitting(true);
+
     try {
-      // Use the context function to add a question
+      // In a real implementation, this would call the API
       const newQuestion = await addQuestion(
-        campaignId, 
-        newQuestionTitle, 
-        newQuestionContent, 
-        newQuestionTags
+        campaignId,
+        newQuestionTitle,
+        newQuestionContent
       );
-      
-      // Update the UI with the new question
+
+      // Add the new question to the list
       setQuestions(prev => [newQuestion, ...prev]);
+      
+      // Reset form
       setNewQuestionTitle('');
       setNewQuestionContent('');
       setNewQuestionTags([]);
-      toast.success('Question submitted successfully');
+      setIsAskingQuestion(false);
+      
+      toast.success('Your question has been submitted');
     } catch (error) {
       console.error('Error submitting question:', error);
-      toast.error('Failed to submit question');
+      toast.error('Failed to submit your question');
     } finally {
       setIsSubmitting(false);
     }
@@ -253,22 +247,19 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
     }
     
     try {
-      // Use the context function to like a question
       await likeQuestion(questionId);
       
-      // Update the UI to reflect the like
-      setQuestions(prev => prev.map(question => {
-        if (question.id === questionId) {
-          return {
-            ...question,
-            likes: question.likes + 1
-          };
-        }
-        return question;
-      }));
+      // Update the UI
+      setQuestions(prev => 
+        prev.map(question => 
+          question.id === questionId 
+            ? { ...question, upvotes: question.upvotes + 1 } 
+            : question
+        )
+      );
     } catch (error) {
       console.error('Error liking question:', error);
-      toast.error('Failed to like question');
+      toast.error('Failed to like the question');
     }
   };
 
@@ -380,23 +371,25 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
                       <div className="flex items-center gap-2">
                         <h4 className="font-medium text-lg">{question.title}</h4>
                         {question.isAnswered && (
-                          <Badge variant="success" className="bg-green-100 text-green-800 border-green-200">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Answered
+                          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
+                            Solved
                           </Badge>
                         )}
                       </div>
                       
                       <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-500">
-                        <span>{formatDistanceToNow(question.timestamp, { addSuffix: true })}</span>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1" />
+                          <span>{formatDistanceToNow(new Date(question.createdAt), { addSuffix: true })}</span>
+                        </div>
                         <span>•</span>
-                        <Link href={`/profile/view?address=${question.userId}`} className="hover:underline">
-                          User {question.userId.substring(0, 6)}...
+                        <Link href={`/profile/view?address=${question.creatorAddress}`} className="hover:underline">
+                          User {question.creatorAddress.substring(0, 6)}...
                         </Link>
                         <span>•</span>
                         <div className="flex items-center">
                           <ThumbsUp className="h-3 w-3 mr-1" />
-                          {question.likes}
+                          {question.upvotes}
                         </div>
                       </div>
                     </div>
@@ -417,88 +410,45 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
                   <div className="space-y-6">
                     {/* Question content */}
                     <div className="flex gap-3">
-                      <Link href={`/profile/view?address=${question.userId}`}>
-                        <Avatar className="h-10 w-10">
-                          <AvatarFallback>{question.userId.substring(0, 2).toUpperCase()}</AvatarFallback>
+                      <Link href={`/profile/view?address=${question.creatorAddress}`}>
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={`https://avatar.vercel.sh/${question.creatorAddress}`} />
+                          <AvatarFallback>{question.creatorAddress.substring(0, 2).toUpperCase()}</AvatarFallback>
                         </Avatar>
                       </Link>
                       
                       <div className="flex-1">
-                        <Link href={`/profile/view?address=${question.userId}`} className="font-semibold hover:underline">
-                          User {question.userId.substring(0, 6)}...
+                        <Link href={`/profile/view?address=${question.creatorAddress}`} className="font-semibold hover:underline">
+                          User {question.creatorAddress.substring(0, 6)}...
                         </Link>
                         <p className="mt-2 text-gray-700">{question.content}</p>
                         
                         <div className="flex items-center mt-4">
-                          <Button variant="ghost" size="sm" onClick={() => handleLike(question.id)}>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="text-gray-500 hover:text-gray-700"
+                            onClick={() => handleLike(question.id)}
+                          >
                             <ThumbsUp className="h-4 w-4 mr-1" />
-                            Helpful ({question.likes})
+                            {question.upvotes}
                           </Button>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Answer section */}
-                    {question.isAnswered && question.answer ? (
-                      <div className="mt-6 pl-6 border-l-2 border-green-500">
-                        <div className="flex gap-3">
-                          <Link href={`/profile/view?address=${question.answer.userId}`}>
-                            <Avatar className="h-10 w-10">
-                              <AvatarFallback>{question.answer.userId.substring(0, 2).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                          </Link>
-                          
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <Link href={`/profile/view?address=${question.answer.userId}`} className="font-semibold hover:underline">
-                                User {question.answer.userId.substring(0, 6)}...
-                              </Link>
-                              
-                              {question.answer.isCreator && (
-                                <Badge className="bg-purple-500 hover:bg-purple-600">Creator</Badge>
-                              )}
-                            </div>
-                            
-                            <p className="text-sm text-gray-500">
-                              {formatDistanceToNow(question.answer.timestamp, { addSuffix: true })}
-                            </p>
-                            
-                            <p className="mt-2 text-gray-700">{question.answer.content}</p>
-                          </div>
+                    {/* Answer section - only show if question is answered */}
+                    {question.isAnswered && question.bestAnswerId ? (
+                      <div className="mt-4 pl-4 border-l-2 border-green-200">
+                        <div className="text-sm font-medium text-green-600 mb-2">
+                          <CheckCircle2 className="h-4 w-4 inline mr-1" />
+                          Answered by Creator
                         </div>
+                        <p className="text-gray-700">
+                          This question has been answered by the creator. View the full answer in the detailed view.
+                        </p>
                       </div>
-                    ) : (
-                      <div className="mt-6">
-                        {replyingTo === question.id ? (
-                          <div className="space-y-3">
-                            <Textarea
-                              placeholder="Write your answer..."
-                              value={replyContent}
-                              onChange={(e) => setReplyContent(e.target.value)}
-                              className="min-h-[100px]"
-                            />
-                            <div className="flex justify-end gap-2">
-                              <Button variant="outline" onClick={() => setReplyingTo(null)}>
-                                Cancel
-                              </Button>
-                              <Button 
-                                onClick={() => handleAnswerSubmit(question.id)}
-                                disabled={isSubmitting || !replyContent.trim()}>
-                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                                Post Answer
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <Button 
-                            onClick={() => setReplyingTo(question.id)}
-                            disabled={!isWalletConnected}>
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Answer this question
-                          </Button>
-                        )}
-                      </div>
-                    )}
+                    ) : null}
                   </div>
                 </AccordionContent>
               </AccordionItem>

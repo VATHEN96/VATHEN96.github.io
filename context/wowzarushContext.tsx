@@ -9,12 +9,12 @@ import BlockchainService, {
   NFTBadgeMetadata 
 } from '@/services/blockchainService';
 import NotificationService, { 
-  Notification, 
-  NotificationPreferences, 
   CampaignUpdate, 
   DeliveryStatus, 
-  DeliveryMilestone 
-} from '../services/NotificationService.ts';
+  DeliveryMilestone, 
+  Notification, 
+  NotificationPreferences 
+} from '../services/NotificationService';
 import RiskAssessmentService, { RiskScore, CampaignReport, SpamPreventionRules } from '@/services/RiskAssessmentService';
 import AnalyticsService, {
   OnChainMetric, 
@@ -48,6 +48,21 @@ import {
   Trophy,
   AlertCircle
 } from 'lucide-react';
+import { Web3Provider } from '@ethersproject/providers';
+import { useAccount, useNetwork } from 'wagmi';
+import { configureChains } from 'wagmi';
+import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
+import { supportedChains } from '@/constants/chains';
+import { ethers } from 'ethers';
+import { signMessage } from '@wagmi/core';
+import { 
+  CreatorProfile,
+  User,
+  CampaignAnalytics,
+  MetricChartData,
+  MilestoneProgress,
+  LinkedProposal
+} from '@/types';
 
 // Define the Comment interface
 export interface Comment {
@@ -303,7 +318,7 @@ interface WowzaRushContextType {
   getMetricChartData: (
     campaignId: string, 
     metricId: string, 
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all'
+    timeframe: 'daily' | 'weekly' | 'monthly' | 'all' = 'weekly'
   ) => Promise<MetricChartData>;
   getMilestonesWithProposals: (campaignId: string) => Promise<MilestoneProgress[]>;
   getCampaignAnalytics: (campaignId: string) => Promise<CampaignAnalytics>;
@@ -376,7 +391,7 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
-  // State for user profile
+  // User profile state
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [user, setUser] = useState<User | null>(null);
   
@@ -1350,16 +1365,21 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
   };
 
   const getMetricChartData = async (
-    campaignId: string, 
-    metricId: string, 
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all'
+    campaignId: string,
+    metricId: string,
+    timeframe: 'daily' | 'weekly' | 'monthly' | 'all' = 'weekly'
   ): Promise<MetricChartData> => {
     try {
-      return await analyticsService.getMetricChartData(campaignId, metricId, timeframe);
+      // For actual implementation, we'd call the analytics service
+      // For development, we'll use the mock service
+      return await analyticsService.getMetricChartData(campaignId, metricId, timeframe as any);
     } catch (error) {
-      console.error('Error getting metric chart data:', error);
-      toast.error('Failed to fetch chart data');
-      return { metric: { id: '', name: '', description: '' }, data: [] };
+      console.error("Error fetching metric chart data:", error);
+      return { 
+        metricId,
+        metric: { id: '', name: '', description: '' }, 
+        data: [] 
+      };
     }
   };
 
@@ -1380,13 +1400,40 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
       console.error('Error getting campaign analytics:', error);
       toast.error('Failed to fetch campaign analytics');
       return {
-        totalFunding: 0,
-        backerCount: 0,
-        avgContribution: 0,
-        completedMilestones: 0,
-        totalMilestones: 0,
-        proposalCount: 0,
-        voteParticipation: 0
+        campaignId,
+        performance: {
+          contributionsTotal: 0,
+          contributorsTotal: 0,
+          contributorChangePercent: 0,
+          averageContribution: 0,
+          recentActivity: 0
+        },
+        funding: {
+          totalRaised: 0,
+          fundingGoal: 0,
+          percentFunded: 0,
+          fundingRate: 0,
+          fundingLeft: 0,
+          daysLeft: 0
+        },
+        tiers: {
+          popularTiers: [],
+          tiersDistribution: []
+        },
+        governance: {
+          totalProposals: 0,
+          activeProposals: 0,
+          averageParticipation: 0,
+          voterCount: 0
+        },
+        milestones: {
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          delayed: 0,
+          percentComplete: 0,
+          onTrack: false
+        }
       };
     }
   };

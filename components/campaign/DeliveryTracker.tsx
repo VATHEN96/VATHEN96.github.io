@@ -363,7 +363,7 @@ export function DeliveryTracker({ campaignId, isCreator = false }: DeliveryTrack
                                   </Button>
                                   <Button 
                                     size="sm" 
-                                    variant={milestone.status === 'completed' ? 'default' : 'outline'}
+                                    variant={(milestone.status === 'completed') ? 'default' : 'outline'}
                                     className="bg-green-600 hover:bg-green-700"
                                     onClick={() => handleUpdateMilestone(selectedDelivery.id, milestone.id, 'completed')}
                                   >

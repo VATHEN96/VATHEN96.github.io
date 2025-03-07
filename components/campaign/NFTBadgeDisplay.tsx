@@ -22,22 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Medal, Trophy, Award, ExternalLink, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
-
-export interface NFTBadge {
-  id: string;
-  tokenId: string;
-  name: string;
-  description: string;
-  imageUrl: string;
-  campaignId: string;
-  campaignTitle: string;
-  tierId: string;
-  tierName: string;
-  acquiredAt: number;
-  rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
-  properties?: Record<string, any>;
-  contractAddress: string;
-}
+import { NFTBadge } from '@/types';
 
 interface NFTBadgeDisplayProps {
   badges?: NFTBadge[];
@@ -234,7 +219,7 @@ const NFTBadgeDisplay: React.FC<NFTBadgeDisplayProps> = ({
                 className="w-full h-full object-cover"
               />
               <Badge className={`absolute top-2 right-2 ${getRarityColor(badge.rarity)}`}>
-                {badge.rarity.charAt(0).toUpperCase() + badge.rarity.slice(1)}
+                {badge.rarity ? badge.rarity.charAt(0).toUpperCase() + badge.rarity.slice(1) : 'Unknown'}
               </Badge>
             </div>
             
@@ -259,7 +244,7 @@ const NFTBadgeDisplay: React.FC<NFTBadgeDisplayProps> = ({
               <DialogTitle className="flex items-center">
                 <span className="mr-2">{selectedBadge.name}</span>
                 <Badge className={getRarityColor(selectedBadge.rarity)}>
-                  {selectedBadge.rarity.charAt(0).toUpperCase() + selectedBadge.rarity.slice(1)}
+                  {selectedBadge.rarity ? selectedBadge.rarity.charAt(0).toUpperCase() + selectedBadge.rarity.slice(1) : 'Unknown'}
                 </Badge>
               </DialogTitle>
               <DialogDescription>
@@ -292,9 +277,9 @@ const NFTBadgeDisplay: React.FC<NFTBadgeDisplayProps> = ({
                   <p className="text-sm">{selectedBadge.tierName}</p>
                 </div>
                 
-                <div>
-                  <h4 className="font-medium text-sm mb-1">Acquired</h4>
-                  <p className="text-sm">{new Date(selectedBadge.acquiredAt).toLocaleDateString()}</p>
+                <div className="flex justify-between items-center mb-1">
+                  <span className="font-semibold">Acquired:</span>
+                  <p className="text-sm">{selectedBadge.acquiredAt ? new Date(selectedBadge.acquiredAt).toLocaleDateString() : 'Unknown'}</p>
                 </div>
                 
                 <div>
@@ -321,13 +306,16 @@ const NFTBadgeDisplay: React.FC<NFTBadgeDisplayProps> = ({
             </div>
             
             <DialogFooter className="flex justify-between items-center">
-              <Button
-                variant="outline"
+              <Button 
+                variant="outline" 
                 size="sm"
-                onClick={() => viewOnBlockExplorer(selectedBadge.contractAddress, selectedBadge.tokenId)}
+                onClick={() => viewOnBlockExplorer(
+                  selectedBadge.contractAddress || '', 
+                  selectedBadge.tokenId
+                )}
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                View on Etherscan
+                View on Explorer
               </Button>
               
               <Button size="sm">

@@ -47,7 +47,6 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import Link from 'next/link';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import {
@@ -59,36 +58,33 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { format } from 'date-fns';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Shield } from 'lucide-react';
+import * as z from 'zod';
+import { ProposalOption, Proposal, VotingPower, ProposalFormValues } from '@/types';
 
-export interface ProposalOption {
-  id: string;
-  text: string;
-  votes: number;
-}
-
-export interface Proposal {
-  id: string;
-  campaignId: string;
-  title: string;
-  description: string;
-  creatorAddress: string;
-  creatorName: string;
-  createdAt: number;
-  endTime: number;
-  options: ProposalOption[];
-  status: 'pending' | 'active' | 'completed' | 'cancelled';
-  totalVotes: number;
-  userVoted?: boolean;
-  userVoteOption?: string;
-}
-
-export interface VotingPower {
-  total: number;
-  tiers: {
-    tier: string;
-    power: number;
-  }[];
-}
+// Define the zod schema for proposal form
+const proposalFormSchema = z.object({
+  title: z.string().min(5, {
+    message: "Title must be at least 5 characters."
+  }),
+  description: z.string().min(20, {
+    message: "Description must be at least 20 characters."
+  }),
+  votingDuration: z.string(),
+  options: z.array(z.string()).min(2, {
+    message: "You must provide at least 2 options."
+  })
+});
 
 interface GovernanceRightsProps {
   campaignId: string;
@@ -113,17 +109,14 @@ export function GovernanceRights({ campaignId }: GovernanceRightsProps) {
   const [optionsCount, setOptionsCount] = useState<number>(2);
   const [voteLoading, setVoteLoading] = useState<string | null>(null);
   
-  const form = useForm<ProposalFormValues>({
+  const form = useForm<z.infer<typeof proposalFormSchema>>({
     resolver: zodResolver(proposalFormSchema),
     defaultValues: {
       title: '',
       description: '',
-      durationDays: 7,
-      options: [
-        { text: '' },
-        { text: '' }
-      ]
-    },
+      votingDuration: '7',
+      options: ['', '']
+    }
   });
   
   useEffect(() => {
@@ -209,40 +202,29 @@ export function GovernanceRights({ campaignId }: GovernanceRightsProps) {
   
   const handleAddOption = () => {
     const currentOptions = form.getValues('options');
-    
-    if (currentOptions.length < 5) {
-      form.setValue('options', [...currentOptions, { text: '' }]);
-      setOptionsCount(prev => prev + 1);
-    } else {
-      toast.error('Maximum 5 options allowed');
-    }
+    form.setValue('options', [...currentOptions, '']);
   };
   
   const handleRemoveOption = (index: number) => {
     const currentOptions = form.getValues('options');
-    
     if (currentOptions.length > 2) {
-      form.setValue('options', currentOptions.filter((_, i) => i !== index));
-      setOptionsCount(prev => prev - 1);
+      form.setValue('options', currentOptions.filter((_, i: number) => i !== index));
     } else {
-      toast.error('Minimum 2 options required');
+      toast.error('You need at least 2 options');
     }
   };
   
-  const onSubmitProposal = async (values: ProposalFormValues) => {
-    if (!isWalletConnected || !account) {
-      toast.error('Please connect your wallet first');
-      return;
-    }
+  const onSubmitProposal = async (values: z.infer<typeof proposalFormSchema>) => {
+    setIsSubmitting(true);
     
     try {
-      // Add endTime based on duration
-      const endTime = Date.now() + (values.durationDays * 24 * 60 * 60 * 1000);
+      const durationDays = parseInt(values.votingDuration);
+      const endTime = Date.now() + (durationDays * 24 * 60 * 60 * 1000);
       
-      // Format options for the API
-      const formattedOptions = values.options.map((option, index) => ({
+      // Map form values to proposal format
+      const proposalOptions = values.options.map((option: string, index: number) => ({
         id: `option-${index + 1}`,
-        text: option.text,
+        text: option,
         votes: 0
       }));
       
@@ -250,7 +232,7 @@ export function GovernanceRights({ campaignId }: GovernanceRightsProps) {
         campaignId,
         title: values.title,
         description: values.description,
-        options: formattedOptions,
+        options: proposalOptions,
         endTime
       });
       
@@ -420,13 +402,13 @@ export function GovernanceRights({ campaignId }: GovernanceRightsProps) {
                       
                       <FormField
                         control={form.control}
-                        name="durationDays"
+                        name="votingDuration"
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>Voting Duration</FormLabel>
                             <Select
                               onValueChange={field.onChange}
-                              defaultValue={field.value.toString()}
+                              defaultValue={field.value}
                             >
                               <FormControl>
                                 <SelectTrigger>
@@ -466,7 +448,7 @@ export function GovernanceRights({ campaignId }: GovernanceRightsProps) {
                             <div key={index} className="flex gap-2">
                               <FormField
                                 control={form.control}
-                                name={`options.${index}.text`}
+                                name={`options.${index}`}
                                 render={({ field }) => (
                                   <FormItem className="flex-1">
                                     <FormControl>
