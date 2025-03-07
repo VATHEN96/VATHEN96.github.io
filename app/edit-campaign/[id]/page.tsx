@@ -45,14 +45,24 @@ export default function EditCampaignPage() {
   const campaignId = params?.id as string;
   
   const { 
-    getCampaignById, 
     account, 
     isWalletConnected, 
     connectWallet,
     proposeCampaignEdit, // This will need to be added to the context
     loading,
-    error
+    error,
+    getCampaign
   } = useWowzaRush();
+  
+  // Local implementation of getCampaignById using getCampaign from context
+  const getCampaignById = async (id: string) => {
+    try {
+      return await getCampaign(id);
+    } catch (error) {
+      console.error('Error fetching campaign:', error);
+      return null;
+    }
+  };
   
   // Campaign data states
   const [originalCampaign, setOriginalCampaign] = useState<any>(null);
