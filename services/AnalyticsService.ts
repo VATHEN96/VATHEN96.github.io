@@ -20,6 +20,7 @@ export interface ChartDataPoint {
 export interface MetricChartData {
   metricId: string;
   timeline: ChartDataPoint[];
+  metricName?: string;
 }
 
 export interface MilestoneProgress {
@@ -196,13 +197,27 @@ class AnalyticsService {
       
       return {
         metricId,
-        timeline
+        timeline,
+        metricName: this.getMetricNameFromId(metricId)
       };
     } catch (error) {
-      console.error(`Error fetching chart data for metric ${metricId}:`, error);
-      toast.error('Failed to load metric chart data');
+      console.error('Error getting metric chart data:', error);
       throw error;
     }
+  }
+  
+  // Helper method to get a friendly name for a metric ID
+  private getMetricNameFromId(metricId: string): string {
+    const metricMap: Record<string, string> = {
+      'funding_total': 'Total Funding',
+      'funding_rate': 'Funding Rate',
+      'contributor_count': 'Contributors',
+      'governance_proposals': 'Proposals',
+      'governance_votes': 'Votes',
+      'milestone_completion': 'Milestone Completion'
+    };
+    
+    return metricMap[metricId] || metricId;
   }
   
   // Get milestone progress with linked governance proposals

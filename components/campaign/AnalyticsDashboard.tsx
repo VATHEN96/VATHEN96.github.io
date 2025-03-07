@@ -334,7 +334,7 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                     <YAxis />
                     <CartesianGrid strokeDasharray="3 3" />
                     <Tooltip 
-                      formatter={(value: any) => [value, chartData.metricName]}
+                      formatter={(value: any) => [value, chartData?.metricName || selectedMetric]}
                       labelFormatter={(label) => new Date(label).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
