@@ -554,7 +554,7 @@ export default function MilestoneManagement({
     try {
       await releaseMilestoneFunds(
         campaignId,
-        selectedMilestone
+        String(selectedMilestone)
       );
       
       // Refresh campaign data
