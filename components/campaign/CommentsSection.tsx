@@ -59,7 +59,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ campaignId, cr
                 {
                   id: '1-1',
                   parentId: '1',
-                  userId: creatorId,
+                  userId: creatorId || '0xcreator0000000000000000000000000000',
                   content: 'Thank you for your support! We are working hard to deliver on our promises.',
                   timestamp: Date.now() - 3600000 * 24, // 1 day ago
                   likes: 2,
