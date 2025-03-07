@@ -2,22 +2,25 @@
 name = "wowzarush"
 compatibility_date = "2023-12-01"
 
-# Pages configuration
-[site]
-bucket = ".next/static"
-
+# Build output configuration
 [build]
 command = "npm run build"
-output_directory = ".next"
 
+[build.environment]
+NODE_ENV = "production"
+NEXT_TELEMETRY_DISABLED = "1"
+
+# Pages specific configuration
+[site]
+bucket = ".next"
+
+# This is the key property Cloudflare Pages is looking for
+[build.upload]
+format = "directory"
+
+# Environment-specific configurations
 [env.production]
 pages_build_output_dir = ".next"
 
 [env.preview]
 pages_build_output_dir = ".next"
-
-# Disable TypeScript checking during build to allow deployment
-# We'll handle TypeScript errors separately
-[build.environment]
-NODE_ENV = "production"
-NEXT_TELEMETRY_DISABLED = "1"

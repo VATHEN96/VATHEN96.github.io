@@ -8,9 +8,10 @@
     },
     "scripts": {
         "dev": "next dev",
-        "build": "next build && echo 'Skipping lint checks...'",
+        "build": "next build",
         "start": "next start",
         "lint": "next lint",
+        "clean-build": "rm -rf .next && next build",
         "deploy": "npx @cloudflare/next-on-pages"
     },
     "dependencies": {
