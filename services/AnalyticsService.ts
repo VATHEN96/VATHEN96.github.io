@@ -40,7 +40,7 @@ export interface MilestoneProgress {
 export interface LinkedProposal {
   id: string;
   title: string;
-  status: 'pending' | 'active' | 'completed' | 'cancelled';
+  status: 'pending' | 'active' | 'completed' | 'cancelled' | 'passed' | 'rejected';
   votingEndTime: number;
   votingPower: number;
   result?: string;
