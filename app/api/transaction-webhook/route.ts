@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { ProofEntry } from '../proofs/route';
 
 // Path to our JSON file that will serve as a simple database
 const DATA_FILE_PATH = path.join(process.cwd(), 'data', 'proofs.json');
@@ -14,7 +15,7 @@ const ensureDataDirectory = () => {
 };
 
 // Get all proofs from the JSON file
-const getProofs = () => {
+const getProofs = (): ProofEntry[] => {
   ensureDataDirectory();
   
   if (!fs.existsSync(DATA_FILE_PATH)) {
@@ -32,13 +33,13 @@ const getProofs = () => {
 };
 
 // Save proofs to the JSON file
-const saveProofs = (proofs) => {
+const saveProofs = (proofs: ProofEntry[]) => {
   ensureDataDirectory();
   fs.writeFileSync(DATA_FILE_PATH, JSON.stringify(proofs, null, 2));
 };
 
 // Update proof status by transaction hash
-const updateProofStatus = (transactionHash, status) => {
+const updateProofStatus = (transactionHash: string, status: 'pending' | 'confirmed' | 'rejected'): boolean => {
   const allProofs = getProofs();
   let updated = false;
   
