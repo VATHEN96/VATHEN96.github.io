@@ -291,10 +291,11 @@ export const useWowzaRush = () => {
 // Props for the provider component
 interface WowzaRushProviderProps {
   children: ReactNode;
+  contractAddress?: string;
 }
 
 // Provider component
-export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children }) => {
+export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, contractAddress }) => {
   // State for wallet connection
   const [account, setAccount] = useState<string | null>(null);
   const [isWalletConnected, setIsWalletConnected] = useState<boolean>(false);
