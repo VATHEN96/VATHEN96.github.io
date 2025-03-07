@@ -381,7 +381,16 @@ export default function VoteRequests({ campaignId, isCreator }: VoteRequestsProp
       
     } catch (error) {
       console.error('Error creating proposal:', error);
-      toast.error(error.message || 'Failed to create proposal');
+      
+      // Handle the unknown error type properly
+      let errorMessage = 'Failed to create proposal';
+      if (error instanceof Error) {
+        errorMessage = error.message || errorMessage;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsSubmittingProposal(false);
     }
