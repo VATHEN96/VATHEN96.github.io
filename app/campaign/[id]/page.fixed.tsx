@@ -49,7 +49,7 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
   const searchParams = useSearchParams();
   
   const { 
-    getCampaignById, 
+    getCampaign, 
     loading, 
     error, 
     account,
@@ -91,8 +91,8 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
     const fetchCampaignDetails = async () => {
       try {
         setLoadingState(true);
-        if (getCampaignById && campaignId) {
-          const fetchedCampaign = await getCampaignById(campaignId.toString());
+        if (getCampaign && campaignId) {
+          const fetchedCampaign = await getCampaign(campaignId.toString());
           setCampaign(fetchedCampaign);
         }
         setLoadingState(false);
@@ -103,7 +103,7 @@ export default function CampaignDetailPage({ params }: { params: { id: string } 
     };
 
     fetchCampaignDetails();
-  }, [campaignId, getCampaignById]);
+  }, [campaignId, getCampaign]);
 
   // Loading state
   if (loadingState) {
