@@ -7,9 +7,9 @@ const creatorProfiles = new Map();
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  context: { params: { address: string } }
 ) {
-  const address = params.address.toLowerCase();
+  const address = context.params.address.toLowerCase();
   
   // Get the creator profile
   const profile = creatorProfiles.get(address);
@@ -26,9 +26,9 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { address: string } }
+  context: { params: { address: string } }
 ) {
-  const address = params.address.toLowerCase();
+  const address = context.params.address.toLowerCase();
   
   try {
     const data = await request.json();
