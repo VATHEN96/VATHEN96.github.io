@@ -45,6 +45,7 @@ export interface LinkedProposal {
   votingPower: number;
   result?: string;
   impactDescription?: string;
+  proposedDate?: number; // Timestamp when the proposal was proposed
 }
 
 export interface CampaignAnalytics {
@@ -243,7 +244,8 @@ class AnalyticsService {
               votingEndTime: Date.now() - 35 * 24 * 60 * 60 * 1000,
               votingPower: 50000,
               result: 'Approved (92%)',
-              impactDescription: 'Established project timeline and major deliverables'
+              impactDescription: 'Established project timeline and major deliverables',
+              proposedDate: Date.now() - 35 * 24 * 60 * 60 * 1000
             }
           ],
           fundingRequired: 5,
@@ -266,7 +268,8 @@ class AnalyticsService {
               votingEndTime: Date.now() - 25 * 24 * 60 * 60 * 1000,
               votingPower: 48000,
               result: 'Approved (88%)',
-              impactDescription: 'Finalized technical architecture with community feedback'
+              impactDescription: 'Finalized technical architecture with community feedback',
+              proposedDate: Date.now() - 25 * 24 * 60 * 60 * 1000
             },
             {
               id: 'proposal_3',
@@ -275,7 +278,8 @@ class AnalyticsService {
               votingEndTime: Date.now() - 20 * 24 * 60 * 60 * 1000,
               votingPower: 52000,
               result: 'Approved (76%)',
-              impactDescription: 'Community voted on most important features for the prototype'
+              impactDescription: 'Community voted on most important features for the prototype',
+              proposedDate: Date.now() - 20 * 24 * 60 * 60 * 1000
             }
           ],
           fundingRequired: 10,
@@ -298,7 +302,8 @@ class AnalyticsService {
               votingEndTime: Date.now() - 10 * 24 * 60 * 60 * 1000,
               votingPower: 55000,
               result: 'Approved (95%)',
-              impactDescription: 'Approved distribution of test tokens to alpha testers'
+              impactDescription: 'Approved distribution of test tokens to alpha testers',
+              proposedDate: Date.now() - 10 * 24 * 60 * 60 * 1000
             }
           ],
           fundingRequired: 8,
@@ -320,7 +325,8 @@ class AnalyticsService {
               votingEndTime: Date.now() - 7 * 24 * 60 * 60 * 1000,
               votingPower: 60000,
               result: 'Approved (82%)',
-              impactDescription: 'Adjusted feature scope to focus on core functionality'
+              impactDescription: 'Adjusted feature scope to focus on core functionality',
+              proposedDate: Date.now() - 7 * 24 * 60 * 60 * 1000
             },
             {
               id: 'proposal_6',
@@ -328,7 +334,8 @@ class AnalyticsService {
               status: 'active',
               votingEndTime: Date.now() + 2 * 24 * 60 * 60 * 1000,
               votingPower: 25000,
-              impactDescription: 'Proposal to improve the user interface before beta launch'
+              impactDescription: 'Proposal to improve the user interface before beta launch',
+              proposedDate: Date.now() + 2 * 24 * 60 * 60 * 1000
             }
           ],
           fundingRequired: 12,
@@ -349,7 +356,8 @@ class AnalyticsService {
               status: 'active',
               votingEndTime: Date.now() + 5 * 24 * 60 * 60 * 1000,
               votingPower: 42000,
-              impactDescription: 'Vote on which security firm to engage for audit'
+              impactDescription: 'Vote on which security firm to engage for audit',
+              proposedDate: Date.now() + 5 * 24 * 60 * 60 * 1000
             }
           ],
           fundingRequired: 15,
@@ -370,7 +378,8 @@ class AnalyticsService {
               status: 'active',
               votingEndTime: Date.now() + 3 * 24 * 60 * 60 * 1000,
               votingPower: 38000,
-              impactDescription: 'Address delayed dependencies that put launch timeline at risk'
+              impactDescription: 'Address delayed dependencies that put launch timeline at risk',
+              proposedDate: Date.now() + 3 * 24 * 60 * 60 * 1000
             }
           ],
           fundingRequired: 20,
@@ -482,21 +491,24 @@ class AnalyticsService {
           title: 'Community rewards program',
           status: 'active',
           votingEndTime: Date.now() + 7 * 24 * 60 * 60 * 1000,
-          votingPower: 38000
+          votingPower: 38000,
+          proposedDate: Date.now() - 2 * 24 * 60 * 60 * 1000
         },
         {
           id: 'proposal_9',
           title: 'Partnership with external project',
           status: 'active',
           votingEndTime: Date.now() + 10 * 24 * 60 * 60 * 1000,
-          votingPower: 42000
+          votingPower: 42000,
+          proposedDate: Date.now() - 4 * 24 * 60 * 60 * 1000
         },
         {
           id: 'proposal_10',
           title: 'Budget reallocation for marketing',
           status: 'pending',
           votingEndTime: Date.now() + 14 * 24 * 60 * 60 * 1000,
-          votingPower: 0
+          votingPower: 0,
+          proposedDate: Date.now() - 1 * 24 * 60 * 60 * 1000
         }
       ];
     } catch (error) {
