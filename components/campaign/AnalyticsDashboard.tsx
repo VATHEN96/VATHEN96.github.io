@@ -460,7 +460,7 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                         </Badge>
                       </div>
                       
-                      <Progress value={milestone.progressPercentage} className="h-2" />
+                      <Progress value={milestone.progress} className="h-2" />
                       
                       {/* Description */}
                       <p className="text-sm text-muted-foreground mt-2">{milestone.description}</p>
