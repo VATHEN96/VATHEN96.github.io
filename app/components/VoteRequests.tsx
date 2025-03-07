@@ -305,8 +305,8 @@ export default function VoteRequests({ campaignId, isCreator }: VoteRequestsProp
       // Create notification for campaign creator
       saveNotification({
         campaignId,
-        proposalId: proposalId,
-        proposalTitle: proposal.title,
+        milestoneIndex: proposal.milestoneIndex || 0,
+        milestoneTitle: proposal.title,
         message: messageToSave,
         type: 'vote',
         voter: account || undefined,
