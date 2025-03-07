@@ -131,6 +131,8 @@ export interface CreatorProfile {
     following?: number;
     totalFundsRaised?: string;
     totalContributors?: number;
+    campaignsCreated?: number;
+    successfulCampaigns?: number;
   };
 }
 
