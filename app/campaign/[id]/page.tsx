@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { 
@@ -39,7 +39,8 @@ import CampaignHeader from '@/components/campaign/CampaignHeader';
 import ContributeForm from '@/components/campaign/ContributeForm';
 
 export default function CampaignDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') || 'about';
   
@@ -59,9 +60,14 @@ export default function CampaignDetailPage() {
 
   useEffect(() => {
     const loadCampaignData = async () => {
+      if (!id) {
+        console.error('Campaign ID is missing');
+        return;
+      }
+      
       setIsLoading(true);
       try {
-        const campaignData = await getCampaign(id as string);
+        const campaignData = await getCampaign(id);
         setCampaign(campaignData);
         
         // Check if user is the creator
@@ -71,7 +77,7 @@ export default function CampaignDetailPage() {
         
         // Check if user has contributed
         if (isWalletConnected) {
-          const contributions = await getUserContributions(id as string);
+          const contributions = await getUserContributions(id);
           setHasContributed(contributions && contributions.length > 0);
         }
       } catch (error) {
