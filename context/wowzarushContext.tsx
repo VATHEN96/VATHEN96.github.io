@@ -130,6 +130,7 @@ export interface CreatorProfile {
     followers?: number;
     following?: number;
     totalFundsRaised?: string;
+    totalContributors?: number;
   };
 }
 
