@@ -1,5 +1,6 @@
 name = "zugrama-initial"
 compatibility_date = "2025-02-23"
+compatibility_flags = ["nodejs_compat"]
 
 [site]
 bucket = "./out"
@@ -26,4 +27,7 @@ destination = "/images/*"
 status = 200
 
 [env.production]
-node_compat = true
+compatibility_flags = ["nodejs_compat"]
+
+[env.preview]
+compatibility_flags = ["nodejs_compat"]
