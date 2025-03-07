@@ -100,7 +100,7 @@ export default function MyCampaignsPage() {
       
       // Count completed milestones - handle both property names
       const completedMilestones = userCampaigns.reduce((sum, campaign) => {
-        return sum + (campaign.milestones ? campaign.milestones.filter(m => {
+        return sum + (campaign.milestones ? campaign.milestones.filter((m: Milestone) => {
           // Handle both property names based on interface
           if ('isCompleted' in m) {
             return m.isCompleted === true;
