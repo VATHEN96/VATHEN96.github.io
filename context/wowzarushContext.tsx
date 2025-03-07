@@ -49,6 +49,18 @@ import {
   AlertCircle
 } from 'lucide-react';
 
+// Define the Comment interface
+export interface Comment {
+  id: string;
+  campaignId: string;
+  userId: string;
+  content: string;
+  timestamp: number;
+  likes: number;
+  isCreator: boolean;
+  replies?: Comment[];
+}
+
 // Create instances of services
 const blockchainService = new BlockchainService();
 // NotificationService is now an object, not a class, so no instantiation needed
@@ -226,8 +238,8 @@ interface WowzaRushContextType {
   followCreator: (creatorAddress: string, shouldFollow?: boolean) => Promise<boolean>;
   
   // Comments and Q&A functions
-  getComments: (campaignId: string) => Promise<any[]>;
-  addComment: (campaignId: string, content: string, parentId?: string) => Promise<any>;
+  getComments: (campaignId: string) => Promise<Comment[]>;
+  addComment: (campaignId: string, content: string, parentId?: string) => Promise<Comment>;
   likeComment: (commentId: string) => Promise<boolean>;
   getQuestions: (campaignId: string) => Promise<any[]>;
   addQuestion: (campaignId: string, content: string) => Promise<any>;
@@ -636,47 +648,37 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
       return [
         {
           id: 'comment-1',
+          campaignId,
+          userId: '0x1234567890abcdef1234567890abcdef12345678',
           content: 'This is an amazing campaign!',
-          author: {
-            id: 'user-1',
-            name: 'User 1',
-            avatarUrl: 'https://via.placeholder.com/50'
-          },
-          createdAt: Date.now() - 60 * 60 * 1000,
+          timestamp: Date.now() - 60 * 60 * 1000,
           likes: 5,
-          userLiked: Math.random() > 0.5,
+          isCreator: true,
           replies: [
             {
               id: 'comment-2',
-              parentId: 'comment-1',
+              campaignId,
+              userId: '0x2234567890abcdef1234567890abcdef12345678',
               content: 'I agree, it\'s fantastic!',
-              author: {
-                id: 'user-2',
-                name: 'User 2',
-                avatarUrl: 'https://via.placeholder.com/50'
-              },
-              createdAt: Date.now() - 30 * 60 * 1000,
+              timestamp: Date.now() - 30 * 60 * 1000,
               likes: 2,
-              userLiked: Math.random() > 0.5
+              isCreator: false
             }
           ]
         },
         {
           id: 'comment-3',
+          campaignId,
+          userId: '0x3234567890abcdef1234567890abcdef12345678',
           content: 'Looking forward to seeing this project succeed!',
-          author: {
-            id: 'user-3',
-            name: 'User 3',
-            avatarUrl: 'https://via.placeholder.com/50'
-          },
-          createdAt: Date.now() - 2 * 60 * 60 * 1000,
-          likes: 8,
-          userLiked: Math.random() > 0.5,
+          timestamp: Date.now() - 120 * 60 * 1000,
+          likes: 3,
+          isCreator: false,
           replies: []
         }
-      ];
+      ] as Comment[];
     } catch (error) {
-      console.error(`Error getting comments for campaign ${campaignId}:`, error);
+      console.error('Error getting comments:', error);
       return [];
     }
   };
@@ -684,17 +686,14 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
   const addComment = async (campaignId: string, content: string, parentId?: string) => {
     try {
       // Implementation would call an API endpoint
-      const comment = {
+      const comment: Comment = {
         id: `comment-${Date.now()}`,
+        campaignId,
+        userId: account || '0x0000000000000000000000000000000000000000',
         content,
-        author: {
-          id: account || 'anonymous',
-          name: account ? 'Connected User' : 'Anonymous',
-          avatarUrl: 'https://via.placeholder.com/50'
-        },
-        createdAt: Date.now(),
+        timestamp: Date.now(),
         likes: 0,
-        userLiked: false,
+        isCreator: false, // This would be determined by checking if the user is the creator
         replies: []
       };
       
