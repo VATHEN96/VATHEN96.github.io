@@ -66,7 +66,11 @@ export default function MilestoneManagement({
   const submitMilestoneCompletion = async (campaignId: string, milestoneIndex: number, proof: string) => {
     try {
       await saveProof(campaignId, milestoneIndex, proof, account || 'unknown');
-      return true;
+      // Return a mock transaction object with a hash property
+      return {
+        hash: `mock-tx-${Date.now()}`,
+        wait: async () => ({ status: 1 })
+      };
     } catch (error) {
       console.error('Error submitting milestone completion:', error);
       return false;
@@ -417,7 +421,7 @@ export default function MilestoneManagement({
       );
       
       // If the transaction has a hash, update our API record
-      if (txResult && txResult.hash) {
+      if (txResult && typeof txResult === 'object' && 'hash' in txResult) {
         // Update the API with the transaction hash
         await saveProof(
           campaignId,
