@@ -24,6 +24,30 @@ import AnalyticsService, {
   LinkedProposal, 
   CampaignAnalytics,
 } from '@/services/AnalyticsService';
+import { 
+  Shield, 
+  CircleCheck, 
+  Award, 
+  CircleDollarSign, 
+  Users, 
+  Calendar, 
+  CircleAlert,
+  ExternalLink,
+  History,
+  Activity,
+  Flame,
+  Star,
+  Sparkles,
+  Heart,
+  TrendingUp,
+  BadgeCheck,
+  MessageSquare,
+  HelpCircle,
+  CheckCircle,
+  Loader2,
+  Trophy,
+  AlertCircle
+} from 'lucide-react';
 
 // Create instances of services
 const blockchainService = new BlockchainService();
@@ -82,6 +106,30 @@ const mockBackedCampaigns = [
     image: '/images/campaign4.jpg'
   }
 ];
+
+// Add the CreatorProfile interface definition
+export interface CreatorProfile {
+  id?: string;
+  address: string;
+  displayName?: string;
+  bio?: string;
+  profileImageUrl?: string;
+  verificationLevel?: VerificationLevel;
+  trustScore?: number;
+  joinDate?: string | Date;
+  socialLinks?: {
+    website?: string;
+    twitter?: string;
+    github?: string;
+    linkedin?: string;
+  };
+  stats?: {
+    campaigns?: number;
+    contributions?: number;
+    followers?: number;
+    following?: number;
+  };
+}
 
 // Define the VerificationLevel enum
 export enum VerificationLevel {
