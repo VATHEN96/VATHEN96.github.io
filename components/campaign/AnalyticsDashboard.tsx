@@ -484,7 +484,7 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                                           {proposal.status.charAt(0).toUpperCase() + proposal.status.slice(1)}
                                         </Badge>
                                         <span className="text-xs text-muted-foreground">
-                                          Proposed: {formatDate(proposal.proposedDate)}
+                                          Proposed: {proposal.proposedDate ? formatDate(proposal.proposedDate) : 'Unknown'}
                                         </span>
                                       </div>
                                     </div>
