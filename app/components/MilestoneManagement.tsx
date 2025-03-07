@@ -524,7 +524,7 @@ export default function MilestoneManagement({
         milestoneTitle: milestoneName,
         message: messageToSave,
         type: 'vote',
-        voter: account,
+        voter: account || undefined,
         isUpvote: isUpvote
       });
       
