@@ -116,7 +116,6 @@ export default function ContributedCampaignsPage() {
                   <CampaignCard
                     key={campaign.id}
                     campaign={campaign}
-                    onClick={() => router.push(`/campaign/${campaign.id}`)}
                   />
                 ))}
               </div>
