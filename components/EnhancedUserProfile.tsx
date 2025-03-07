@@ -174,6 +174,7 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
       totalRaised: 0,
       totalBacked: 0,
       successfulCampaigns: 0,
+      campaignsCreated: 0,
       totalContributors: 0
     };
 
@@ -184,7 +185,7 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
         title: 'Campaign Pioneer',
         description: 'Created your first campaign',
         icon: <Flame className="h-6 w-6 text-orange-500" />,
-        earned: stats.successfulCampaigns > 0,
+        earned: (stats.successfulCampaigns ?? 0) > 0,
         earnedAt: Date.now() - 3600000 * 24 * 30, // 30 days ago
       },
       {
@@ -193,35 +194,35 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
         description: 'Completed identity verification',
         icon: <BadgeCheck className="h-6 w-6 text-green-500" />,
         earned: profile?.verificationLevel > VerificationLevel.NONE,
-        earnedAt: Date.now() - 3600000 * 24 * 20, // 20 days ago
+        earnedAt: Date.now() - 3600000 * 24 * 15, // 15 days ago
       },
       {
-        id: 'funding_milestone',
-        title: 'Funding Milestone',
-        description: 'Raised 10 ETH across all campaigns',
+        id: 'fundraising',
+        title: 'Fundraising Star',
+        description: 'Raised over $10,000 in total',
         icon: <Trophy className="h-6 w-6 text-yellow-500" />,
-        earned: stats.totalRaised > 10,
-        earnedAt: stats.totalRaised > 10 ? Date.now() - 3600000 * 24 * 5 : undefined, // 5 days ago
-        progress: Math.min(stats.totalRaised || 0, 10),
-        total: 10
+        earned: (stats.totalRaised ?? 0) > 10,
+        earnedAt: (stats.totalRaised ?? 0) > 10 ? Date.now() - 3600000 * 24 * 5 : undefined, // 5 days ago
+        progress: Math.min((stats.totalRaised ?? 0), 10),
+        total: 10,
       },
       {
         id: 'community_builder',
         title: 'Community Builder',
-        description: 'Attracted 50 unique contributors',
+        description: 'Attracted over 50 contributors',
         icon: <Users className="h-6 w-6 text-blue-500" />,
-        earned: stats.totalContributors > 50,
-        earnedAt: stats.totalContributors > 50 ? Date.now() - 3600000 * 24 * 2 : undefined, // 2 days ago
-        progress: Math.min(stats.totalContributors || 0, 50),
-        total: 50
+        earned: (stats.totalContributors ?? 0) > 50,
+        earnedAt: (stats.totalContributors ?? 0) > 50 ? Date.now() - 3600000 * 24 * 2 : undefined, // 2 days ago
+        progress: Math.min((stats.totalContributors ?? 0), 50),
+        total: 50,
       },
       {
-        id: 'successful_campaign',
-        title: 'Campaign Success',
+        id: 'campaign_closer',
+        title: 'Campaign Closer',
         description: 'Successfully completed a campaign',
-        icon: <CheckCircle className="h-6 w-6 text-green-500" />,
-        earned: stats.successfulCampaigns > 0,
-        earnedAt: stats.successfulCampaigns > 0 ? Date.now() - 3600000 * 24 * 10 : undefined, // 10 days ago
+        icon: <CheckCircle className="h-6 w-6 text-green-600" />,
+        earned: (stats.successfulCampaigns ?? 0) > 0,
+        earnedAt: (stats.successfulCampaigns ?? 0) > 0 ? Date.now() - 3600000 * 24 * 10 : undefined, // 10 days ago
       },
     ];
     
