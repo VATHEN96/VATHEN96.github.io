@@ -71,7 +71,7 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
               likes: 12,
               isAnswered: true,
               answer: {
-                userId: creatorId,
+                userId: creatorId || '0xcreator0000000000000000000000000000',
                 content: 'Thanks for your question! We plan to launch the beta in Q1 next year. And yes, all early contributors will receive priority access and special perks!',
                 timestamp: Date.now() - 3600000 * 24 * 2, // 2 days ago
                 isCreator: true
@@ -99,7 +99,7 @@ const QASection: React.FC<QASectionProps> = ({ campaignId, creatorId }) => {
               likes: 15,
               isAnswered: true,
               answer: {
-                userId: creatorId,
+                userId: creatorId || '0xcreator0000000000000000000000000000',
                 content: 'Great question! Our token distribution is as follows: 40% to community and contributors, 30% to the team (vested over 3 years), 20% to investors, and 10% reserved for future development and partnerships.',
                 timestamp: Date.now() - 3600000 * 24, // 24 hours ago
                 isCreator: true
