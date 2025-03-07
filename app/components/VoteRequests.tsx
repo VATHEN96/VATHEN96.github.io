@@ -488,7 +488,7 @@ export default function VoteRequests({ campaignId, isCreator }: VoteRequestsProp
                       <div key={index} className="bg-background p-3 rounded-md border">
                         <div className="flex justify-between">
                           <span className="text-sm font-medium">{truncateAddress(vote.voter)}</span>
-                          <Badge variant={vote.isUpvote ? "success" : "destructive"}>
+                          <Badge variant={vote.isUpvote ? "secondary" : "destructive"}>
                             {vote.isUpvote ? "Approve" : "Reject"}
                           </Badge>
                         </div>
