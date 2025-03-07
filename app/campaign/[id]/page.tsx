@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { ContributionTiers } from '@/components/campaign/ContributionTiers';
+import ContributionTiers from '@/components/campaign/ContributionTiers';
 import MilestoneTimeline from '@/components/campaign/MilestoneTimeline';
 import { CommentsSection } from '@/components/campaign/CommentsSection';
 import { QASection } from '@/components/campaign/QASection';
