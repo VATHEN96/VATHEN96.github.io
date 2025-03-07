@@ -16,7 +16,17 @@ const FundCampaignPage = () => {
   const params = useParams()
   const router = useRouter()
   const campaignId = params?.id
-  const { getCampaignById, loading: contextLoading, error: contextError, account, isWalletConnected, connectWallet, donate, invest, getInvestmentDetails } = useWowzaRush()
+  const { loading: contextLoading, error: contextError, account, isWalletConnected, connectWallet, donate, invest, getInvestmentDetails, getCampaign } = useWowzaRush()
+
+  // Local implementation of getCampaignById using getCampaign from context
+  const getCampaignById = async (id: string) => {
+    try {
+      return await getCampaign(id);
+    } catch (error) {
+      console.error('Error fetching campaign:', error);
+      return null;
+    }
+  };
 
   const [campaign, setCampaign] = useState<CampaignType | null>(null)
   const [amount, setAmount] = useState('')
