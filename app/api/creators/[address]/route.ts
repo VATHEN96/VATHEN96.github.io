@@ -1,91 +1,62 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { VerificationLevel } from '@/context/wowzarushContext';
+import { NextResponse } from 'next/server';
 
 // In a real implementation, this would use a database
 // For this example, we'll use in-memory storage
 const creatorProfiles = new Map();
 
-// Updated using proper types from Next.js 15
-export async function GET(
-  request: Request,
-  { params }: { params: { address: string } }
-): Promise<Response> {
-  const address = params.address.toLowerCase();
+// Simplified API routes with minimal type annotations for Next.js 15
+export async function GET(request: Request, context: any) {
+  const address = context.params.address.toLowerCase();
   
   // Get the creator profile
-  const profile = creatorProfiles.get(address);
-  
-  if (!profile) {
-    return NextResponse.json(
-      { error: 'Creator not found' },
-      { status: 404 }
-    );
-  }
+  const profile = creatorProfiles.get(address) || {
+    address,
+    displayName: `Creator ${address.substring(0, 6)}`,
+    bio: "No bio available",
+    profileImageUrl: "",
+    verificationLevel: "UNVERIFIED",
+    socialLinks: {},
+    stats: {
+      campaignsCreated: 0,
+      successfulCampaigns: 0,
+      totalFundsRaised: "0",
+      completedMilestones: 0,
+      totalContributors: 0
+    },
+    badges: []
+  };
   
   return NextResponse.json(profile);
 }
 
-// Updated using proper types from Next.js 15
-export async function PUT(
-  request: Request,
-  { params }: { params: { address: string } }
-): Promise<Response> {
-  const address = params.address.toLowerCase();
+export async function PUT(request: Request, context: any) {
+  const address = context.params.address.toLowerCase();
   
   try {
     const data = await request.json();
     
-    // Validate the request data
-    if (!data) {
-      return NextResponse.json(
-        { error: 'Invalid request data' },
-        { status: 400 }
-      );
-    }
-    
-    // Get the existing profile or create a new one
-    let profile = creatorProfiles.get(address);
-    
-    if (!profile) {
-      // Create a new profile
-      profile = {
-        address,
-        displayName: `Creator ${address.substring(0, 6)}`,
-        bio: "",
-        profileImageUrl: "",
-        verificationLevel: VerificationLevel.UNVERIFIED,
-        socialLinks: {},
-        stats: {
-          campaignsCreated: 0,
-          successfulCampaigns: 0,
-          totalFundsRaised: "0",
-          completedMilestones: 0,
-          totalContributors: 0
-        },
-        badges: []
-      };
-    }
-    
-    // Update the profile with the new data
-    // Note: In a real implementation, you would validate and sanitize the input
-    const updatedProfile = {
-      ...profile,
-      ...data,
-      // Ensure these fields aren't overridden
+    const profile = {
       address,
-      verificationLevel: data.verificationLevel || profile.verificationLevel,
+      displayName: data.displayName || `Creator ${address.substring(0, 6)}`,
+      bio: data.bio || "",
+      profileImageUrl: data.profileImageUrl || "",
+      verificationLevel: data.verificationLevel || "UNVERIFIED",
+      socialLinks: data.socialLinks || {},
       stats: {
-        ...profile.stats,
-        ...(data.stats || {})
-      }
+        campaignsCreated: data.stats?.campaignsCreated || 0,
+        successfulCampaigns: data.stats?.successfulCampaigns || 0,
+        totalFundsRaised: data.stats?.totalFundsRaised || "0",
+        completedMilestones: data.stats?.completedMilestones || 0,
+        totalContributors: data.stats?.totalContributors || 0
+      },
+      badges: data.badges || []
     };
     
     // Save the updated profile
-    creatorProfiles.set(address, updatedProfile);
+    creatorProfiles.set(address, profile);
     
-    return NextResponse.json(updatedProfile);
+    return NextResponse.json(profile);
   } catch (error) {
-    console.error('Error updating creator profile:', error);
     return NextResponse.json(
       { error: 'Failed to update profile' },
       { status: 500 }
