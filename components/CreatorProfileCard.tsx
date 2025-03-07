@@ -230,8 +230,8 @@ export default function CreatorProfileCard({
               <div>
                 <p className="text-sm font-medium">Success Rate</p>
                 <p className="text-lg font-bold">
-                  {profile?.stats?.campaignsCreated > 0 
-                    ? Math.round((profile?.stats?.successfulCampaigns / profile?.stats?.campaignsCreated) * 100)
+                  {(profile?.stats?.campaignsCreated ?? 0) > 0 
+                    ? Math.round(((profile?.stats?.successfulCampaigns ?? 0) / (profile?.stats?.campaignsCreated ?? 1)) * 100)
                     : 0}%
                 </p>
               </div>
