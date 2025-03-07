@@ -42,7 +42,7 @@ const CATEGORIES = [
 export default function EditCampaignPage() {
   const params = useParams();
   const router = useRouter();
-  const campaignId = params.id as string;
+  const campaignId = params?.id as string;
   
   const { 
     getCampaignById, 
