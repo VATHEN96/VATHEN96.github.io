@@ -11,9 +11,10 @@ import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 interface CampaignCardProps {
   campaign: Campaign;
+  compact?: boolean;
 }
 
-export default function CampaignCard({ campaign }: CampaignCardProps) {
+export default function CampaignCard({ campaign, compact = false }: CampaignCardProps) {
   const { getCreatorProfile } = useWowzaRush();
   const [creatorName, setCreatorName] = useState<string>('');
   const [creatorImage, setCreatorImage] = useState<string>('');
@@ -71,12 +72,12 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-black p-6 rounded-lg border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-200">
+    <div className={`bg-white dark:bg-black ${compact ? 'p-4' : 'p-6'} rounded-lg border-2 border-black dark:border-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,255,255,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] transition-all duration-200`}>
       <div className="space-y-4">
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-2">
             <Link href={`/profile/${campaign.creator}`} className="hover:opacity-80 transition-opacity">
-              <Avatar className="h-8 w-8 border border-black dark:border-white">
+              <Avatar className={`${compact ? 'h-6 w-6' : 'h-8 w-8'} border border-black dark:border-white`}>
                 <AvatarImage src={creatorImage} alt={creatorName} />
                 <AvatarFallback className="bg-black text-white dark:bg-white dark:text-black">{creatorName.slice(0, 2)}</AvatarFallback>
               </Avatar>
@@ -88,14 +89,18 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
               <VerificationBadge level={verificationLevel} showLabel={false} size="sm" />
             </div>
           </div>
-          <span className="bg-white dark:bg-black px-2 py-1 rounded-full text-sm font-semibold border-2 border-black dark:border-white text-black dark:text-white">
-            {formattedCategory}
-          </span>
+          {!compact && (
+            <span className="bg-white dark:bg-black px-2 py-1 rounded-full text-sm font-semibold border-2 border-black dark:border-white text-black dark:text-white">
+              {formattedCategory}
+            </span>
+          )}
         </div>
         
-        <h3 className="text-xl font-bold text-black dark:text-white">{campaign.title}</h3>
+        <h3 className={`${compact ? 'text-lg' : 'text-xl'} font-bold text-black dark:text-white`}>{campaign.title}</h3>
 
-        <p className="text-black dark:text-white line-clamp-2">{campaign.description}</p>
+        {!compact && (
+          <p className="text-black dark:text-white line-clamp-2">{campaign.description}</p>
+        )}
 
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-black dark:text-white">
@@ -114,34 +119,49 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
           </div>
         </div>
 
-        <div className="flex justify-between items-center text-sm">
-          <div className="space-y-1">
-            <p className="text-black dark:text-white">Time Left</p>
-            <p className="font-semibold text-black dark:text-white">{daysLeft} days</p>
+        {!compact && (
+          <div className="flex justify-between items-center text-sm">
+            <div className="space-y-1">
+              <p className="text-black dark:text-white">Time Left</p>
+              <p className="font-semibold text-black dark:text-white">{daysLeft} days</p>
+            </div>
+            <div className="space-y-1 text-right">
+              <p className="text-black dark:text-white">Milestones</p>
+              <p className="font-semibold text-black dark:text-white">{Array.isArray(campaign.milestones) ? campaign.milestones.length : 0}</p>
+            </div>
           </div>
-          <div className="space-y-1 text-right">
-            <p className="text-black dark:text-white">Milestones</p>
-            <p className="font-semibold text-black dark:text-white">{Array.isArray(campaign.milestones) ? campaign.milestones.length : 0}</p>
-          </div>
-        </div>
+        )}
 
-        <div className="pt-4 flex gap-4">
-          <Link href={`/campaign/${campaign.id}`} className="flex-1">
-            <Button
-              className="w-full bg-black hover:bg-gray-800 text-white font-semibold dark:bg-white dark:text-black dark:hover:bg-gray-200 border-2 border-black dark:border-white"
-              variant="default"
-            >
-              View Details
-            </Button>
-          </Link>
-          <Link href={`/fund-campaign/${campaign.id}`} className="flex-1">
-            <Button
-              className="w-full bg-white hover:bg-gray-100 text-black font-semibold dark:bg-black dark:text-white dark:hover:bg-gray-900 border-2 border-black dark:border-white"
-              variant="outline"
-            >
-              Fund Now
-            </Button>
-          </Link>
+        <div className={`${compact ? 'pt-2' : 'pt-4'} flex gap-4`}>
+          {compact ? (
+            <Link href={`/fund-campaign/${campaign.id}`} className="flex-1">
+              <Button
+                className="w-full bg-black hover:bg-gray-800 text-white font-semibold dark:bg-white dark:text-black dark:hover:bg-gray-200 border-2 border-black dark:border-white"
+                variant="default"
+              >
+                Fund Now
+              </Button>
+            </Link>
+          ) : (
+            <>
+              <Link href={`/campaign/${campaign.id}`} className="flex-1">
+                <Button
+                  className="w-full bg-black hover:bg-gray-800 text-white font-semibold dark:bg-white dark:text-black dark:hover:bg-gray-200 border-2 border-black dark:border-white"
+                  variant="default"
+                >
+                  View Details
+                </Button>
+              </Link>
+              <Link href={`/fund-campaign/${campaign.id}`} className="flex-1">
+                <Button
+                  className="w-full bg-white hover:bg-gray-100 text-black font-semibold dark:bg-black dark:text-white dark:hover:bg-gray-900 border-2 border-black dark:border-white"
+                  variant="outline"
+                >
+                  Fund Now
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>
