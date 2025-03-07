@@ -114,13 +114,21 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
   
   // Memoize generator functions to prevent recreating them on every render
   const generateMockAchievements = useCallback((profileData: CreatorProfile) => {
-    // Ensure stats are available
+    // Ensure stats are available with all potential properties
     const stats = profileData?.stats || {
-      totalRaised: 0,
-      totalBacked: 0,
-      successfulCampaigns: 0,
-      totalContributors: 0
+      campaigns: 0,
+      contributions: 0,
+      followers: 0,
+      following: 0,
+      totalFundsRaised: "0",
+      totalContributors: 0,
+      campaignsCreated: 0,
+      successfulCampaigns: 0
     };
+    
+    // For backward compatibility - calculate values from available fields
+    const totalFundsRaisedNum = parseFloat(stats.totalFundsRaised || "0");
+    const totalContributors = stats.totalContributors || 0;
 
     // In a real app, these would come from backend data
     const mockAchievements: Achievement[] = [
@@ -129,7 +137,7 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
         title: 'Campaign Pioneer',
         description: 'Created your first campaign',
         icon: <Flame className="h-6 w-6 text-orange-500" />,
-        earned: stats.successfulCampaigns > 0,
+        earned: (stats.successfulCampaigns ?? 0) > 0,
         earnedAt: Date.now() - 3600000 * 24 * 30, // 30 days ago
       },
       {
@@ -137,7 +145,7 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
         title: 'Verified Creator',
         description: 'Completed identity verification',
         icon: <BadgeCheck className="h-6 w-6 text-green-500" />,
-        earned: profileData?.verificationLevel > VerificationLevel.NONE,
+        earned: (profileData?.verificationLevel ?? 0) > (VerificationLevel.NONE ?? 0),
         earnedAt: Date.now() - 3600000 * 24 * 20, // 20 days ago
       },
       {
@@ -145,9 +153,9 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
         title: 'Funding Milestone',
         description: 'Raised 10 ETH across all campaigns',
         icon: <Trophy className="h-6 w-6 text-yellow-500" />,
-        earned: stats.totalRaised > 10,
-        earnedAt: stats.totalRaised > 10 ? Date.now() - 3600000 * 24 * 5 : undefined, // 5 days ago
-        progress: Math.min(stats.totalRaised || 0, 10),
+        earned: totalFundsRaisedNum > 10,
+        earnedAt: totalFundsRaisedNum > 10 ? Date.now() - 3600000 * 24 * 5 : undefined, // 5 days ago
+        progress: Math.min(totalFundsRaisedNum, 10),
         total: 10
       },
       {
@@ -155,9 +163,9 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
         title: 'Community Builder',
         description: 'Attracted 50 unique contributors',
         icon: <Users className="h-6 w-6 text-blue-500" />,
-        earned: stats.totalContributors > 50,
-        earnedAt: stats.totalContributors > 50 ? Date.now() - 3600000 * 24 * 2 : undefined, // 2 days ago
-        progress: Math.min(stats.totalContributors || 0, 50),
+        earned: totalContributors > 50,
+        earnedAt: totalContributors > 50 ? Date.now() - 3600000 * 24 * 2 : undefined, // 2 days ago
+        progress: Math.min(totalContributors, 50),
         total: 50
       },
       {
@@ -165,8 +173,8 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
         title: 'Campaign Success',
         description: 'Successfully completed a campaign',
         icon: <CheckCircle className="h-6 w-6 text-green-500" />,
-        earned: stats.successfulCampaigns > 0,
-        earnedAt: stats.successfulCampaigns > 0 ? Date.now() - 3600000 * 24 * 10 : undefined, // 10 days ago
+        earned: (stats.successfulCampaigns ?? 0) > 0,
+        earnedAt: (stats.successfulCampaigns ?? 0) > 0 ? Date.now() - 3600000 * 24 * 10 : undefined, // 10 days ago
       },
     ];
     
@@ -506,10 +514,14 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
 
   // Create default profile stats 
   const defaultStats = {
-    totalRaised: 12500,
-    totalBacked: 8,
-    successfulCampaigns: 3,
-    totalContributors: 42
+    campaigns: 5,
+    contributions: 8,
+    followers: 120,
+    following: 45,
+    totalFundsRaised: "12500",
+    totalContributors: 42,
+    campaignsCreated: 5,
+    successfulCampaigns: 3
   };
 
   // Ensure profile stats are available with null checking
@@ -526,17 +538,17 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
   const mockProfile = {
     displayName: safeDisplayName,
     bio: safeBio,
-    avatar: profile && profile.profileImageUrl ? profile.profileImageUrl : "",
-    coverImage: profile && profile.coverImageUrl ? profile.coverImageUrl : "",
-    joinedDate: profile && profile.createdAt ? profile.createdAt : Date.now() - 1000 * 60 * 60 * 24 * 90, // 90 days ago
-    trustScore: profile && profile.trustScore ? profile.trustScore : 85,
-    followers: profile && profile.followers ? profile.followers : 128,
-    following: profile && profile.following ? profile.following : 45,
-    // Use safe profileStats object
-    totalRaised: profileStats.totalRaised,
-    totalBacked: profileStats.totalBacked,
-    successfulCampaigns: profileStats.successfulCampaigns,
-    socialLinks: profile && profile.socialLinks ? profile.socialLinks : {
+    avatar: profile?.profileImageUrl || "",
+    coverImage: profile?.socialLinks?.website || "", // Fallback to website URL
+    joinedDate: profile?.joinDate ? new Date(profile.joinDate).getTime() : (Date.now() - 1000 * 60 * 60 * 24 * 90), // 90 days ago
+    trustScore: profile?.trustScore || 85,
+    followers: profileStats.followers || 128,
+    following: profileStats.following || 45,
+    // Use derived values for compatibility
+    totalRaised: parseFloat(profileStats.totalFundsRaised || "0"),
+    totalBacked: profileStats.contributions || 0,
+    successfulCampaigns: profileStats.successfulCampaigns || 0,
+    socialLinks: profile?.socialLinks || {
       twitter: "https://twitter.com/username",
       github: "https://github.com/username",
       website: "https://example.com"
