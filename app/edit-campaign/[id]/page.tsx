@@ -145,7 +145,7 @@ export default function EditCampaignPage() {
   
   // Handle input changes
   const handleChange = (field: string, value: any) => {
-    setEditedCampaign(prev => ({
+    setEditedCampaign((prev: any) => ({
       ...prev,
       [field]: value
     }));
