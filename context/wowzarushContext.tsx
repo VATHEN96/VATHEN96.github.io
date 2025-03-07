@@ -223,6 +223,7 @@ interface WowzaRushContextType {
   // Creator profile functions
   getCreatorProfile: (address?: string) => Promise<any>;
   updateCreatorProfile: (profileData: any) => Promise<boolean>;
+  followCreator: (creatorAddress: string, shouldFollow?: boolean) => Promise<boolean>;
   
   // Comments and Q&A functions
   getComments: (campaignId: string) => Promise<any[]>;
@@ -597,6 +598,33 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
       return true;
     } catch (error) {
       console.error('Error updating creator profile:', error);
+      return false;
+    }
+  };
+  
+  const followCreator = async (creatorAddress: string, shouldFollow?: boolean): Promise<boolean> => {
+    try {
+      if (!account) {
+        toast.error('Please connect your wallet to follow creators');
+        return false;
+      }
+
+      // Default to following if not specified
+      const isFollowing = shouldFollow !== false;
+
+      if (process.env.NEXT_PUBLIC_MOCK_DATA === 'true') {
+        // Mock implementation for development
+        console.log(`${isFollowing ? 'Following' : 'Unfollowing'} creator: ${creatorAddress}`);
+        return true;
+      }
+
+      // In production, this would call your API endpoint
+      // Example: const response = await axios.post('/api/follow-creator', { creatorAddress, shouldFollow: isFollowing, account });
+      
+      // For now, we'll just simulate success
+      return true;
+    } catch (error) {
+      console.error(`Error ${shouldFollow !== false ? 'following' : 'unfollowing'} creator ${creatorAddress}:`, error);
       return false;
     }
   };
@@ -1817,6 +1845,7 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
     getUserContributedCampaigns,
     getCreatorProfile,
     updateCreatorProfile,
+    followCreator,
     
     // State
     campaigns,
