@@ -1,5 +1,42 @@
 'use client';
 
+// Add these interfaces at the top of the file
+interface TrendingCampaign {
+  id: string;
+  title: string;
+  category: string;
+  fundingPercentage: number;
+  growth: number;
+  contributorsCount: number;
+}
+
+interface Campaign {
+  id: string;
+  title: string;
+  category: string;
+  totalFunded: string;
+  goalAmount: string;
+  [key: string]: any;
+}
+
+// Add more interfaces for the other data types
+interface FundingDataPoint {
+  month: string;
+  amount: number;
+}
+
+interface CategoryData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface GovernanceActivity {
+  month: string;
+  proposals: number;
+  votes: number;
+}
+
 import { useState, useEffect } from 'react';
 import { useWowzaRush } from '@/context/wowzarushContext';
 import { Button } from '@/components/ui/button';
@@ -32,10 +69,10 @@ export default function AnalyticsPage() {
     currency: 'TELOS'  // Default currency
   });
   
-  const [trendingCampaigns, setTrendingCampaigns] = useState([]);
-  const [fundingOverTime, setFundingOverTime] = useState([]);
-  const [categoryDistribution, setCategoryDistribution] = useState([]);
-  const [governanceActivity, setGovernanceActivity] = useState([]);
+  const [trendingCampaigns, setTrendingCampaigns] = useState<TrendingCampaign[]>([]);
+  const [fundingOverTime, setFundingOverTime] = useState<FundingDataPoint[]>([]);
+  const [categoryDistribution, setCategoryDistribution] = useState<CategoryData[]>([]);
+  const [governanceActivity, setGovernanceActivity] = useState<GovernanceActivity[]>([]);
 
   // Fallback data in case API fails
   const fallbackData = {
@@ -127,8 +164,8 @@ export default function AnalyticsPage() {
             setGovernanceActivity(chartsData.governanceActivity);
             
             // Map trending campaigns to actual campaign data if possible
-            const enrichedTrendingCampaigns = chartsData.trendingCampaigns.map(trendingCampaign => {
-              const matchingCampaign = campaigns?.find(c => c.id === trendingCampaign.id);
+            const enrichedTrendingCampaigns = chartsData.trendingCampaigns.map((trendingCampaign: TrendingCampaign) => {
+              const matchingCampaign = campaigns?.find((c: Campaign) => c.id === trendingCampaign.id);
               if (matchingCampaign) {
                 return {
                   ...trendingCampaign,
@@ -157,9 +194,9 @@ export default function AnalyticsPage() {
           
           // If we have campaigns data, use it to enrich trending campaigns
           if (campaigns && campaigns.length > 0) {
-            const enrichedTrendingCampaigns = fallbackData.trendingCampaigns.map((tc, index) => {
+            const enrichedTrendingCampaigns = fallbackData.trendingCampaigns.map((tc: any, index: number) => {
               if (index < campaigns.length) {
-                const campaign = campaigns[index];
+                const campaign = campaigns[index] as Campaign;
                 return {
                   ...tc,
                   id: campaign.id,
@@ -194,7 +231,7 @@ export default function AnalyticsPage() {
   }, [campaigns, fetchCampaigns]);
 
   // Filter trending campaigns based on search query
-  const filteredCampaigns = trendingCampaigns.filter(campaign => 
+  const filteredCampaigns = trendingCampaigns.filter((campaign: TrendingCampaign) => 
     campaign.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     campaign.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
