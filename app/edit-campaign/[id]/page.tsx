@@ -48,7 +48,6 @@ export default function EditCampaignPage() {
     account, 
     isWalletConnected, 
     connectWallet,
-    proposeCampaignEdit, // This will need to be added to the context
     loading,
     error,
     getCampaign
@@ -60,6 +59,19 @@ export default function EditCampaignPage() {
       return await getCampaign(id);
     } catch (error) {
       console.error('Error fetching campaign:', error);
+      return null;
+    }
+  };
+  
+  // Local implementation of proposeCampaignEdit
+  const proposeCampaignEdit = async (campaignId: number, changes: any): Promise<string | null> => {
+    try {
+      console.log(`Proposing edit for campaign ${campaignId}:`, changes);
+      // In a real implementation, this would interact with the blockchain
+      // For now, mock a successful response with a random ID
+      return `proposal-${Date.now()}`;
+    } catch (error) {
+      console.error('Error proposing campaign edit:', error);
       return null;
     }
   };
