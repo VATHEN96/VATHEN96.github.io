@@ -29,7 +29,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import ContributionTiers from '@/components/campaign/ContributionTiers';
 import MilestoneTimeline from '@/components/campaign/MilestoneTimeline';
 import { CommentsSection } from '@/components/campaign/CommentsSection';
-import { QASection } from '@/components/campaign/QASection';
+import QASection from '@/components/campaign/QASection';
 import { GovernanceRights } from '@/components/campaign/GovernanceRights';
 import { CampaignUpdates } from '@/components/campaign/CampaignUpdates';
 import { RiskAssessment } from '@/components/campaign/RiskAssessment';
