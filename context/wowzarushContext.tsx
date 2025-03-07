@@ -58,6 +58,7 @@ export interface Comment {
   timestamp: number;
   likes: number;
   isCreator: boolean;
+  parentId?: string;  // Optional parentId for replies
   replies?: Comment[];
 }
 
