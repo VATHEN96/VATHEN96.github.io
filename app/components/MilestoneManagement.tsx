@@ -563,4 +563,7 @@ export default function MilestoneManagement({
       toast.success('Funds released successfully');
     } catch (error: any) {
       console.error('Error releasing funds:', error);
-      toast.error(`
+      toast.error(`Failed to release funds: ${error.message || 'Unknown error'}`);
+    }
+  };
+}
