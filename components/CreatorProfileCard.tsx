@@ -197,11 +197,13 @@ export default function CreatorProfileCard({
           <div className="flex flex-wrap gap-2">
             {profile.badges?.map((badge, index) => (
               <Badge 
-                key={index} 
+                key={typeof badge === 'string' ? index : badge.id} 
                 variant="secondary"
                 className="capitalize"
               >
-                {badge.replace(/_/g, ' ')}
+                {typeof badge === 'string' 
+                  ? badge.replace(/_/g, ' ') 
+                  : badge.name}
               </Badge>
             ))}
           </div>
