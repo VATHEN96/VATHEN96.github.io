@@ -249,7 +249,10 @@ export default function CampaignDetailPage() {
         
         <div className="lg:col-span-1">
           <div className="sticky top-24">
-            <ContributeForm campaign={campaign} />
+            <ContributeForm 
+              campaignId={campaign.id} 
+              goalAmount={typeof campaign.goalAmount === 'string' ? parseFloat(campaign.goalAmount) : campaign.goalAmount}
+            />
           </div>
         </div>
       </div>
