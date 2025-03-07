@@ -163,12 +163,12 @@ export default function CreatorProfileCard({
       <CardHeader className="pb-2">
         <div className="flex items-center space-x-4">
           <Avatar className="h-12 w-12">
-            <AvatarImage src={profile.profileImageUrl} alt={profile.displayName} />
-            <AvatarFallback>{profile.displayName.substring(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarImage src={profile.profileImageUrl} alt={profile.displayName || profile.address} />
+            <AvatarFallback>{(profile.displayName || profile.address).substring(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">{profile.displayName}</h3>
+              <h3 className="text-lg font-semibold">{profile.displayName || profile.address.substring(0, 10)}</h3>
               {getVerificationBadge()}
             </div>
             <p className="text-sm text-gray-500">
