@@ -4,7 +4,7 @@ compatibility_date = "2023-12-01"
 
 # Build output configuration
 [build]
-command = "npm run build"
+command = "npm run cloudflare-build"
 
 [build.environment]
 NODE_ENV = "production"

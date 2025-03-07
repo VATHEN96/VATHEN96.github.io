@@ -12,7 +12,7 @@
         "start": "next start",
         "lint": "next lint",
         "clean-build": "rm -rf .next && next build",
-        "deploy": "npx @cloudflare/next-on-pages"
+        "cloudflare-build": "node cloudflare-build.js"
     },
     "dependencies": {
         "@hookform/resolvers": "^4.1.3",
