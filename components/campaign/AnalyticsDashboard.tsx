@@ -225,14 +225,14 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                   <CardContent>
                     <div className="text-3xl font-bold">{analytics.performance.contributorCount}</div>
                     <div className="text-sm text-muted-foreground mt-1">
-                      {analytics.performance.contributorChangePercent > 0 ? (
+                      {(analytics.performance.contributorChangePercent ?? 0) > 0 ? (
                         <span className="text-green-500 flex items-center">
                           <TrendingUp className="h-4 w-4 mr-1" />
-                          +{analytics.performance.contributorChangePercent}% from last week
+                          +{analytics.performance.contributorChangePercent ?? 0}% from last week
                         </span>
                       ) : (
                         <span className="text-red-500">
-                          {analytics.performance.contributorChangePercent}% from last week
+                          {analytics.performance.contributorChangePercent ?? 0}% from last week
                         </span>
                       )}
                     </div>
