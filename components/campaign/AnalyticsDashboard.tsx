@@ -160,8 +160,8 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
   };
 
   // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (dateValue: string | number) => {
+    const date = new Date(dateValue);
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
