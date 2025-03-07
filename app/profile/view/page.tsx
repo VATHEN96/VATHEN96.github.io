@@ -76,8 +76,7 @@ export default function ProfileViewPage() {
         </div>
       ) : (
         <EnhancedUserProfile 
-          profile={profile} 
-          address={address} 
+          address={address as string} 
           isViewOnly={true} 
         />
       )}
