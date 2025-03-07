@@ -309,7 +309,7 @@ export default function VoteRequests({ campaignId, isCreator }: VoteRequestsProp
         proposalTitle: proposal.title,
         message: messageToSave,
         type: 'vote',
-        voter: account,
+        voter: account || undefined,
         isUpvote: isUpvote
       });
       
