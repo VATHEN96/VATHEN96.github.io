@@ -107,7 +107,7 @@ const ContributionTiers: React.FC<ContributionTiersProps> = ({
   initialTiers = [],
   onChange
 }) => {
-  const { getCampaignTiers, createCampaignTiers, updateCampaignTiers } = useWowzaRush();
+  const { getCampaignTiers, createTier, updateTier } = useWowzaRush();
   const [tiers, setTiers] = useState<RewardTier[]>(initialTiers);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -258,11 +258,31 @@ const ContributionTiers: React.FC<ContributionTiersProps> = ({
     setIsSubmitting(true);
     try {
       if (isEditing) {
-        await updateCampaignTiers(campaignId, tiers);
+        // Update each tier individually
+        for (const tier of tiers) {
+          if (tier.id) {
+            await updateTier(tier.id, tier);
+          } else {
+            // If a tier doesn't have an ID, create it
+            const newId = await createTier(campaignId, tier);
+            // Update the tier with the new ID
+            tier.id = newId;
+          }
+        }
         toast.success('Contribution tiers updated successfully');
       } else {
-        await createCampaignTiers(campaignId, tiers);
+        // Create each tier individually
+        for (const tier of tiers) {
+          const newId = await createTier(campaignId, tier);
+          // Update the tier with the new ID
+          tier.id = newId;
+        }
         toast.success('Contribution tiers saved successfully');
+      }
+      
+      // Call the onChange callback if provided
+      if (onChange) {
+        onChange([...tiers]);
       }
     } catch (error) {
       console.error('Error saving contribution tiers:', error);
