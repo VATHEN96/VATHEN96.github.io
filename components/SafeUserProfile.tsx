@@ -553,12 +553,12 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
       github: "https://github.com/username",
       website: "https://example.com"
     },
-    badges: profile && profile.badges ? profile.badges : [
-      { id: 1, name: "Early Adopter", icon: "🚀" },
+    badges: profile?.badges || [
+      { id: 1, name: "Early Supporter", icon: "🌟" },
       { id: 2, name: "Top Creator", icon: "🏆" },
       { id: 3, name: "Verified", icon: "✅" }
     ],
-    skills: profile && profile.skills ? profile.skills : ["Blockchain Development", "Smart Contracts", "Web3", "DeFi"]
+    skills: ["Blockchain Development", "Smart Contracts", "Web3", "DeFi"]
   };
 
   // Use real data if available, otherwise use mock data
