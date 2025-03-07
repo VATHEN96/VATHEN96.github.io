@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
-import { format as formatDate } from 'date-fns';
+import * as dateFns from 'date-fns';
 import { 
   CalendarDays, 
   Clock, 
@@ -95,7 +95,7 @@ export default function CampaignDetailPage() {
   // Helper functions
   const formatDateString = (dateString: string | number | Date): string => {
     try {
-      return formatDate(new Date(dateString), 'MMM dd, yyyy');
+      return dateFns.format(new Date(dateString), 'MMM dd, yyyy');
     } catch (e) {
       return 'Invalid date';
     }
