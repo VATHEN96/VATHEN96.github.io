@@ -13,7 +13,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-black text-white py-20">
+    <footer className="bg-black dark:bg-white text-white dark:text-black py-20">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-12">
           <div className="lg:col-span-2">
@@ -23,14 +23,14 @@ export default function Footer() {
               viewport={{ once: true }}
             >
               <h3 className="text-3xl font-bold mb-4">wowzarush</h3>
-              <p className="text-gray-400 mb-6 max-w-sm">
+              <p className="text-gray-300 dark:text-gray-700 mb-6 max-w-sm">
                 Empowering innovation through transparent, milestone-based crowdfunding on the blockchain.
               </p>
               <div className="flex space-x-4">
-                <Link href="#" className="hover:text-[#3498db] transition-colors">
+                <Link href="#" className="hover:text-gray-400 dark:hover:text-gray-600 transition-colors">
                   <Twitter className="w-6 h-6" />
                 </Link>
-                <Link href="https://github.com/manovHacksaw/zugrama" className="hover:text-[#3498db] transition-colors">
+                <Link href="https://github.com/manovHacksaw/zugrama" className="hover:text-gray-400 dark:hover:text-gray-600 transition-colors">
                   <Github className="w-6 h-6" />
                 </Link>
                 
@@ -52,7 +52,7 @@ export default function Footer() {
                   <li key={item}>
                     <Link 
                       href="#" 
-                      className="text-gray-400 hover:text-[#3498db] transition-colors"
+                      className="text-gray-300 dark:text-gray-700 hover:text-gray-400 dark:hover:text-gray-600 transition-colors"
                     >
                       {item}
                     </Link>
@@ -63,7 +63,7 @@ export default function Footer() {
           ))}
         </div>
 
-        <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
+        <div className="mt-12 pt-8 border-t border-gray-800 dark:border-gray-300 text-center text-gray-300 dark:text-gray-700">
           <p>© 2024 wowzarush. All rights reserved.</p>
         </div>
       </div>
