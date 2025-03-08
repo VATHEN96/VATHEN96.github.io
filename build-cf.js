@@ -110,29 +110,24 @@ try {
     fs.writeFileSync('context/wowzarushContext.tsx', contextContent);
   }
   
-  // Step 5: Fix ListItem duplication in navbar.tsx
-  console.log(`${colors.yellow}Fixing ListItem duplication in navbar.tsx...${colors.reset}`);
+  // Step 5: Fix ListItem issue in navbar.tsx
+  console.log(`${colors.yellow}Fixing ListItem issue in navbar.tsx...${colors.reset}`);
   if (fs.existsSync('components/navbar.tsx')) {
     let navbarContent = fs.readFileSync('components/navbar.tsx', 'utf8');
     
     // Backup the original file
     fs.writeFileSync('components/navbar.tsx.bak', navbarContent);
     
-    // Rename the imported ListItem to avoid conflict with local component
+    // First, remove ListItem from the imports since we define it locally
     navbarContent = navbarContent.replace(
-      /import \{\s*([^}]*),\s*ListItem,\s*([^}]*)\} from ['"]@\/components\/ui\/navigation-menu['"];/g,
-      "import { $1, ListItem as NavigationListItem, $2 } from '@/components/ui/navigation-menu';"
+      /import \{\s*([\w,\s]+),\s*ListItem,\s*([\w,\s]*)\} from ['"]@\/components\/ui\/navigation-menu['"];/,
+      "import { $1, $2 } from '@/components/ui/navigation-menu';"
     );
     
-    // Replace all usages of the imported ListItem
-    navbarContent = navbarContent.replace(
-      /<ListItem([^>]*)>/g,
-      "<NavigationListItem$1>"
-    );
-    navbarContent = navbarContent.replace(
-      /<\/ListItem>/g,
-      "</NavigationListItem>"
-    );
+    // Clean up potential empty arrays or duplicate commas in the imports
+    navbarContent = navbarContent.replace(/import \{\s*,/g, "import {");
+    navbarContent = navbarContent.replace(/,\s*,/g, ",");
+    navbarContent = navbarContent.replace(/,\s*\}/g, "}");
     
     fs.writeFileSync('components/navbar.tsx', navbarContent);
   }
@@ -206,6 +201,9 @@ const nextConfig = {
   },
   // Support both .js and .mjs files
   pageExtensions: ['tsx', 'ts', 'jsx', 'js', 'mjs'],
+  // Customize output directory structure to reduce size
+  output: 'export', // Use static export for Cloudflare
+  distDir: '.next-cf', // Use a different directory to avoid conflicting with dev
 };
 
 export default nextConfig;
@@ -246,9 +244,66 @@ NEXT_IGNORE_ESLINT_ERROR=1
 
   // Step 10: Create .nojekyll file for GitHub Pages
   console.log(`${colors.yellow}Creating .nojekyll file...${colors.reset}`);
-  fs.writeFileSync('.next/.nojekyll', '');
+  fs.writeFileSync('.next-cf/.nojekyll', '');
 
-  // Step 11: Restore the original files
+  // Step 11: Clean up webpack cache to reduce size
+  console.log(`${colors.yellow}Cleaning up webpack cache to reduce size...${colors.reset}`);
+  const cacheDir = path.join('.next-cf', 'cache');
+  if (fs.existsSync(cacheDir)) {
+    // Delete the webpack cache files that are too large
+    const webpackCacheDir = path.join(cacheDir, 'webpack');
+    if (fs.existsSync(webpackCacheDir)) {
+      console.log(`${colors.green}Removing ${webpackCacheDir} to reduce deployed size${colors.reset}`);
+      // Use recursive delete for directories
+      fs.rmSync(webpackCacheDir, { recursive: true, force: true });
+    }
+  }
+
+  // Step 12: Copy built files to .next for Cloudflare Pages
+  console.log(`${colors.yellow}Copying optimized build to .next for Cloudflare Pages...${colors.reset}`);
+  
+  // First, clean up existing .next directory
+  if (fs.existsSync('.next')) {
+    fs.rmSync('.next', { recursive: true, force: true });
+  }
+  
+  // Create .next directory
+  fs.mkdirSync('.next', { recursive: true });
+  
+  // Copy files from .next-cf to .next, skipping large cache files
+  function copyRecursive(src, dest) {
+    if (!fs.existsSync(src)) return;
+    
+    const stats = fs.statSync(src);
+    if (stats.isDirectory()) {
+      // Skip cache directories that might have large files
+      if (src.includes('cache/webpack')) {
+        console.log(`${colors.yellow}Skipping webpack cache directory: ${src}${colors.reset}`);
+        return;
+      }
+      
+      if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+      }
+      
+      const entries = fs.readdirSync(src);
+      for (const entry of entries) {
+        copyRecursive(path.join(src, entry), path.join(dest, entry));
+      }
+    } else {
+      // Skip files over 20MB to be safe (Cloudflare limit is 25MB)
+      if (stats.size > 20 * 1024 * 1024) {
+        console.log(`${colors.yellow}Skipping large file (${Math.round(stats.size / (1024 * 1024))}MB): ${src}${colors.reset}`);
+        return;
+      }
+      
+      fs.copyFileSync(src, dest);
+    }
+  }
+  
+  copyRecursive('.next-cf', '.next');
+
+  // Step 13: Restore the original files
   console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
   if (fs.existsSync('package.json.bak')) {
     fs.copyFileSync('package.json.bak', 'package.json');
@@ -274,8 +329,12 @@ NEXT_IGNORE_ESLINT_ERROR=1
     fs.copyFileSync('components/navbar.tsx.bak', 'components/navbar.tsx');
     fs.unlinkSync('components/navbar.tsx.bak');
   }
+  
+  if (fs.existsSync('next.config.mjs') && !fs.existsSync('next.config.mjs.bak')) {
+    fs.rmSync('next.config.mjs');
+  }
 
-  // Step 12: Done
+  // Step 14: Done
   console.log(`${colors.bright}${colors.green}Build completed successfully!${colors.reset}`);
   process.exit(0);
 } catch (error) {
