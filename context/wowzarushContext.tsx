@@ -318,7 +318,7 @@ interface WowzaRushContextType {
   getMetricChartData: (
     campaignId: string, 
     metricId: string, 
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all' = 'weekly'
+    timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'
   ) => Promise<MetricChartData>;
   getMilestonesWithProposals: (campaignId: string) => Promise<MilestoneProgress[]>;
   getCampaignAnalytics: (campaignId: string) => Promise<CampaignAnalytics>;
@@ -1367,7 +1367,7 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
   const getMetricChartData = async (
     campaignId: string,
     metricId: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all' = 'weekly'
+    timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'
   ): Promise<MetricChartData> => {
     try {
       // For actual implementation, we'd call the analytics service

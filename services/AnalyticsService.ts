@@ -172,8 +172,11 @@ class AnalyticsService {
   }
   
   // Get time series data for a specific metric
-  async getMetricChartData(campaignId: string, metricId: string, timeframe: 'daily' | 'weekly' | 'monthly' = 'daily'): Promise<MetricChartData> {
+  async getMetricChartData(campaignId: string, metricId: string, timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'): Promise<MetricChartData> {
     try {
+      // Default to 'daily' if timeframe is not provided
+      const resolvedTimeframe = timeframe || 'daily';
+      
       // Generate 30 days of mock data
       const timeline: ChartDataPoint[] = [];
       const now = new Date();
