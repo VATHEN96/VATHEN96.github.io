@@ -62,42 +62,59 @@ try {
     }
   });
 
-  // Step 4: Create next.config.js to ensure it's CommonJS format
+  // Step 4: Create a simple next.config.js that disables TypeScript and ESLint checks
   console.log(`${colors.yellow}Creating CommonJS next.config.js...${colors.reset}`);
   
-  // Read the existing next.config.mjs
-  let nextConfigContent = '';
-  if (fs.existsSync('next.config.mjs')) {
-    nextConfigContent = fs.readFileSync('next.config.mjs', 'utf8');
-  } else if (fs.existsSync('next.config.js')) {
-    nextConfigContent = fs.readFileSync('next.config.js', 'utf8');
-  }
-  
-  // Convert to CommonJS format if it's ESM
-  if (nextConfigContent.includes('export default')) {
-    nextConfigContent = nextConfigContent.replace('export default', 'module.exports =');
-  }
-  
-  // Ensure TypeScript and ESLint checks are disabled
-  let nextConfig = `
+  const nextConfigJs = `
 /** @type {import('next').NextConfig} */
-const nextConfig = ${nextConfigContent.includes('nextConfig = {') 
-  ? nextConfigContent.split('nextConfig = {')[1].split('};')[0] + '};'
-  : '{}'
-}
-
-// Add these settings if they don't exist
-if (!nextConfig.typescript) {
-  nextConfig.typescript = { ignoreBuildErrors: true };
-}
-if (!nextConfig.eslint) {
-  nextConfig.eslint = { ignoreDuringBuilds: true };
-}
+const nextConfig = {
+  reactStrictMode: false,
+  typescript: {
+    // Disable TypeScript during build
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    // Disable ESLint during build
+    ignoreDuringBuilds: true,
+  },
+  images: {
+    domains: ['localhost', 'res.cloudinary.com'],
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      }
+    ],
+  },
+  webpack: (config) => {
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      "fs": false,
+      "net": false,
+      "tls": false,
+      "http": "stream-http",
+      "https": "https-browserify",
+      "stream": "stream-browserify",
+      "crypto": "crypto-browserify",
+      "zlib": "browserify-zlib",
+      "path": "path-browserify",
+      "buffer": "buffer",
+      "querystring": "querystring-es3"
+    };
+    
+    return config;
+  },
+};
 
 module.exports = nextConfig;
 `;
 
-  fs.writeFileSync('next.config.js', nextConfig);
+  fs.writeFileSync('next.config.js', nextConfigJs);
   
   // Step 5: Run the Next.js build
   console.log(`${colors.yellow}Building Next.js app without TypeScript checks...${colors.reset}`);

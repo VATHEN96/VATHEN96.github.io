@@ -73,3 +73,8 @@ node_modules
 
 # Hardhat Ignition default folder for deployments against a local node
 ignition/deployments/chain-31337
+
+# Next.js build config files
+next.config.js
+# Keep the original .mjs file
+!next.config.mjs
