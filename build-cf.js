@@ -20,13 +20,14 @@ const colors = {
 console.log(`${colors.bright}${colors.blue}Starting Cloudflare Pages specialized build process...${colors.reset}`);
 
 try {
-  // Step 1: Create a package.json with explicit "type": "commonjs"
+  // Step 1: Create a package.json that preserves ESM compatibility
   console.log(`${colors.yellow}Creating deployment-specific package.json...${colors.reset}`);
   
   // Create a modified package.json for deployment
   const deployPackageJson = {
     ...originalPackageJson,
-    type: "commonjs", // Force CommonJS mode
+    // Preserve the ESM module type - Next.js Route Handlers require it
+    type: "module", 
     packageManager: undefined, // Remove packageManager field entirely
     engines: {
       node: ">=18.18.0"
@@ -43,8 +44,8 @@ try {
   // Write the deployment version
   fs.writeFileSync('package.json', JSON.stringify(deployPackageJson, null, 2));
   
-  // Step 2: Create a tsconfig.json that's CommonJS compatible
-  console.log(`${colors.yellow}Creating CommonJS-compatible tsconfig.json...${colors.reset}`);
+  // Step 2: Create a tsconfig.json that's compatible with both ESM and CommonJS
+  console.log(`${colors.yellow}Creating ESM/CommonJS-compatible tsconfig.json...${colors.reset}`);
   
   // Backup original tsconfig if it exists
   if (fs.existsSync('tsconfig.json')) {
@@ -62,7 +63,7 @@ try {
       "forceConsistentCasingInFileNames": true,
       "noEmit": true,
       "esModuleInterop": true,
-      "module": "esnext",
+      "module": "esnext", // Next.js requires esnext module format
       "moduleResolution": "node",
       "resolveJsonModule": true,
       "isolatedModules": true,
@@ -102,8 +103,8 @@ try {
     }
   });
 
-  // Step 5: Create a simple next.config.js that disables TypeScript and ESLint checks
-  console.log(`${colors.yellow}Creating CommonJS next.config.js...${colors.reset}`);
+  // Step 5: Create a next.config.js file that handles both ESM and CommonJS modules
+  console.log(`${colors.yellow}Creating mixed module format next.config.js...${colors.reset}`);
   
   const nextConfigJs = `
 // @ts-check
@@ -133,22 +134,54 @@ const nextConfig = {
       }
     ],
   },
-  webpack: (config) => {
-    // Handle module formats
-    config.module = {
-      ...config.module,
-      rules: [
-        ...config.module.rules,
-        {
-          test: /\\.m?js$/,
-          resolve: {
-            fullySpecified: false,
+  experimental: {
+    // Enable transpilation of server components
+    serverComponentsExternalPackages: [],
+    // Enable support for mixed modules
+    serverActions: {
+      allowedOrigins: ['localhost:3000']
+    }
+  },
+  webpack: (config, { isServer }) => {
+    // Support import/export in both CommonJS and ESM files
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    
+    // Handle .js files (allow ESM in .js files)
+    config.module.rules.push({
+      test: /\\.js$/,
+      use: [{
+        loader: 'next-swc-loader',
+        options: {
+          jsc: {
+            parser: {
+              syntax: 'ecmascript',
+              jsx: true,
+              dynamicImport: true,
+            },
+            transform: {
+              react: {
+                runtime: 'automatic',
+              },
+            },
           },
         },
-      ],
-    };
+      }],
+      include: [/pages/, /app/, /components/],
+      exclude: /node_modules/,
+    });
     
-    // Add polyfills
+    // Handle .mjs explicitly as ESM
+    config.module.rules.push({
+      test: /\\.mjs$/,
+      type: 'javascript/auto',
+      resolve: {
+        fullySpecified: true,
+      },
+    });
+    
+    // Add necessary polyfills
+    config.resolve = config.resolve || {};
     config.resolve.fallback = {
       ...config.resolve.fallback,
       "fs": false,
@@ -170,21 +203,21 @@ const nextConfig = {
   pageExtensions: ['tsx', 'ts', 'jsx', 'js', 'mjs'],
 };
 
-module.exports = nextConfig;
+export default nextConfig;
 `;
 
-  fs.writeFileSync('next.config.js', nextConfigJs);
+  fs.writeFileSync('next.config.mjs', nextConfigJs);
   
-  // Step 6: Run the Next.js build
-  console.log(`${colors.yellow}Building Next.js app without TypeScript checks...${colors.reset}`);
+  // Step 6: Run the Next.js build with ESM support
+  console.log(`${colors.yellow}Building Next.js app with mixed module support...${colors.reset}`);
   execSync('npm run build', { 
     stdio: 'inherit',
     env: {
       ...process.env,
       NEXT_TELEMETRY_DISABLED: '1',
       NODE_ENV: 'production',
-      NEXT_IGNORE_TYPE_ERROR: 'true',
-      NEXT_IGNORE_ESLINT_ERROR: 'true'
+      NEXT_IGNORE_TYPE_ERROR: '1',
+      NEXT_IGNORE_ESLINT_ERROR: '1'
     }
   });
 
