@@ -43,7 +43,47 @@ try {
   // Write the deployment version
   fs.writeFileSync('package.json', JSON.stringify(deployPackageJson, null, 2));
   
-  // Step 2: Delete any lock files to prevent package manager conflicts
+  // Step 2: Create a tsconfig.json that's CommonJS compatible
+  console.log(`${colors.yellow}Creating CommonJS-compatible tsconfig.json...${colors.reset}`);
+  
+  // Backup original tsconfig if it exists
+  if (fs.existsSync('tsconfig.json')) {
+    fs.copyFileSync('tsconfig.json', 'tsconfig.json.bak');
+  }
+  
+  // Create a deployment-specific tsconfig
+  const tsConfig = {
+    "compilerOptions": {
+      "target": "es5",
+      "lib": ["dom", "dom.iterable", "esnext"],
+      "allowJs": true,
+      "skipLibCheck": true,
+      "strict": false,
+      "forceConsistentCasingInFileNames": true,
+      "noEmit": true,
+      "esModuleInterop": true,
+      "module": "esnext",
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "jsx": "preserve",
+      "incremental": true,
+      "plugins": [
+        {
+          "name": "next"
+        }
+      ],
+      "paths": {
+        "@/*": ["./*"]
+      }
+    },
+    "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+    "exclude": ["node_modules"]
+  };
+  
+  fs.writeFileSync('tsconfig.json', JSON.stringify(tsConfig, null, 2));
+  
+  // Step 3: Delete any lock files to prevent package manager conflicts
   console.log(`${colors.yellow}Removing any existing lock files...${colors.reset}`);
   ['pnpm-lock.yaml', 'yarn.lock'].forEach(file => {
     if (fs.existsSync(file)) {
@@ -52,7 +92,7 @@ try {
     }
   });
 
-  // Step 3: Install dependencies with npm
+  // Step 4: Install dependencies with npm
   console.log(`${colors.yellow}Installing dependencies with npm...${colors.reset}`);
   execSync('npm install --no-audit --no-fund --legacy-peer-deps', {
     stdio: 'inherit',
@@ -62,10 +102,12 @@ try {
     }
   });
 
-  // Step 4: Create a simple next.config.js that disables TypeScript and ESLint checks
+  // Step 5: Create a simple next.config.js that disables TypeScript and ESLint checks
   console.log(`${colors.yellow}Creating CommonJS next.config.js...${colors.reset}`);
   
   const nextConfigJs = `
+// @ts-check
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
@@ -92,6 +134,21 @@ const nextConfig = {
     ],
   },
   webpack: (config) => {
+    // Handle module formats
+    config.module = {
+      ...config.module,
+      rules: [
+        ...config.module.rules,
+        {
+          test: /\\.m?js$/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
+      ],
+    };
+    
+    // Add polyfills
     config.resolve.fallback = {
       ...config.resolve.fallback,
       "fs": false,
@@ -109,6 +166,8 @@ const nextConfig = {
     
     return config;
   },
+  // Support both .js and .mjs files
+  pageExtensions: ['tsx', 'ts', 'jsx', 'js', 'mjs'],
 };
 
 module.exports = nextConfig;
@@ -116,7 +175,7 @@ module.exports = nextConfig;
 
   fs.writeFileSync('next.config.js', nextConfigJs);
   
-  // Step 5: Run the Next.js build
+  // Step 6: Run the Next.js build
   console.log(`${colors.yellow}Building Next.js app without TypeScript checks...${colors.reset}`);
   execSync('npm run build', { 
     stdio: 'inherit',
@@ -124,34 +183,44 @@ module.exports = nextConfig;
       ...process.env,
       NEXT_TELEMETRY_DISABLED: '1',
       NODE_ENV: 'production',
-      DISABLE_ESLINT_PLUGIN: 'true',
-      DISABLE_TYPESCRIPT: 'true'
+      NEXT_IGNORE_TYPE_ERROR: 'true',
+      NEXT_IGNORE_ESLINT_ERROR: 'true'
     }
   });
 
-  // Step 6: Create .nojekyll file for GitHub Pages
+  // Step 7: Create .nojekyll file for GitHub Pages
   console.log(`${colors.yellow}Creating .nojekyll file...${colors.reset}`);
   fs.writeFileSync('.next/.nojekyll', '');
 
-  // Step 7: Restore the original package.json
-  console.log(`${colors.yellow}Restoring original package.json...${colors.reset}`);
+  // Step 8: Restore the original files
+  console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
   if (fs.existsSync('package.json.bak')) {
     fs.copyFileSync('package.json.bak', 'package.json');
     fs.unlinkSync('package.json.bak');
   }
+  
+  if (fs.existsSync('tsconfig.json.bak')) {
+    fs.copyFileSync('tsconfig.json.bak', 'tsconfig.json');
+    fs.unlinkSync('tsconfig.json.bak');
+  }
 
-  // Step 8: Done
+  // Step 9: Done
   console.log(`${colors.bright}${colors.green}Build completed successfully!${colors.reset}`);
   process.exit(0);
 } catch (error) {
   console.error(`${colors.red}Build failed: ${error.message}${colors.reset}`);
   console.error(error.stack);
   
-  // Try to restore original package.json if it exists
+  // Try to restore original files if they exist
+  console.log(`${colors.yellow}Restoring original files after failure...${colors.reset}`);
   if (fs.existsSync('package.json.bak')) {
-    console.log(`${colors.yellow}Restoring original package.json after failure...${colors.reset}`);
     fs.copyFileSync('package.json.bak', 'package.json');
     fs.unlinkSync('package.json.bak');
+  }
+  
+  if (fs.existsSync('tsconfig.json.bak')) {
+    fs.copyFileSync('tsconfig.json.bak', 'tsconfig.json');
+    fs.unlinkSync('tsconfig.json.bak');
   }
   
   process.exit(1);

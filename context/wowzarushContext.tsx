@@ -318,7 +318,7 @@ interface WowzaRushContextType {
   getMetricChartData: (
     campaignId: string, 
     metricId: string, 
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all' = 'weekly'
+    timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'
   ) => Promise<MetricChartData>;
   getMilestonesWithProposals: (campaignId: string) => Promise<MilestoneProgress[]>;
   getCampaignAnalytics: (campaignId: string) => Promise<CampaignAnalytics>;
@@ -1367,12 +1367,14 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
   const getMetricChartData = async (
     campaignId: string,
     metricId: string,
-    timeframe: 'daily' | 'weekly' | 'monthly' | 'all' = 'weekly'
+    timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'
   ): Promise<MetricChartData> => {
     try {
+      // Use default value of 'weekly' if timeframe is not provided
+      const finalTimeframe = timeframe || 'weekly';
       // For actual implementation, we'd call the analytics service
       // For development, we'll use the mock service
-      return await analyticsService.getMetricChartData(campaignId, metricId, timeframe as any);
+      return await analyticsService.getMetricChartData(campaignId, metricId, finalTimeframe as any);
     } catch (error) {
       console.error("Error fetching metric chart data:", error);
       return { 
