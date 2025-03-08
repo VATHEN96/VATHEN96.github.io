@@ -1,6 +1,6 @@
 {
     "name": "zugrama-initial",
-    "version": "0.1.0-${new Date().toISOString().replace(/:/g, '-')}",
+    "version": "0.1.0-2025-03-08-FRESH",
     "private": true,
     "engines": {
         "node": ">=18.18.0"

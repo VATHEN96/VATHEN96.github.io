@@ -379,9 +379,37 @@ NEXT_BUILD_ID=${buildId}
   // Create a _redirects file to help with clean URLs
   const redirectsContent = `
 # Redirects and rewrites
-/*    /index.html   200
+/api/*  /api/:splat  200
 `;
   fs.writeFileSync('.next/_redirects', redirectsContent);
+
+  // Create a visible marker file to confirm new deployment
+  console.log(`${colors.yellow}Creating deployment verification file...${colors.reset}`);
+  const verificationContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fresh Deployment Verification</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    h1 { color: #0070f3; }
+    .info { background: #f0f0f0; padding: 15px; border-radius: 5px; margin: 15px 0; }
+    .timestamp { font-weight: bold; color: #d400ff; }
+  </style>
+</head>
+<body>
+  <h1>Deployment Verification</h1>
+  <div class="info">
+    <p>This file confirms you are viewing the latest deployment.</p>
+    <p>Build Timestamp: <span class="timestamp">${new Date().toString()}</span></p>
+    <p>Build ID: <span class="timestamp">${buildId}</span></p>
+    <p>If this timestamp matches what you expect, your deployment is fresh.</p>
+  </div>
+  <p>Return to <a href="/">homepage</a></p>
+</body>
+</html>
+`;
+  fs.writeFileSync('.next/verify.html', verificationContent);
 
   // Step 15: Restore the original files
   console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
