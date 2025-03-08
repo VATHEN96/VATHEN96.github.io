@@ -1,12 +1,26 @@
 {
   "version": 1,
-  "include": ["/*"],
+  "include": [
+    "/*"
+  ],
   "exclude": [
-    "/_next/*",
-    "/api/*",
-    "/_static/*",
-    "/_vercel/*",
-    "/node_modules/*",
-    "/favicon.ico"
+    "/_next/static/*",
+    "/api/*"
+  ],
+  "routes": [
+    {
+      "src": "/_next/static/(.*)",
+      "dest": "/_next/static/$1",
+      "continue": true
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1",
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
   ]
 } 
