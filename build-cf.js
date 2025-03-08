@@ -20,6 +20,26 @@ const colors = {
 console.log(`${colors.bright}${colors.blue}Starting Cloudflare Pages specialized build process...${colors.reset}`);
 
 try {
+  // Get the current Git commit hash and timestamp to force a fresh build
+  console.log(`${colors.yellow}Generating build version information...${colors.reset}`);
+  let buildId = new Date().toISOString();
+  try {
+    const gitCommit = execSync('git rev-parse HEAD').toString().trim();
+    buildId = `${buildId}_${gitCommit.substring(0, 8)}`;
+    console.log(`${colors.green}Build ID: ${buildId}${colors.reset}`);
+  } catch (err) {
+    console.log(`${colors.yellow}Unable to get git commit, using timestamp only${colors.reset}`);
+  }
+
+  // Step 0: Clean any existing build files completely
+  console.log(`${colors.yellow}Cleaning previous build artifacts...${colors.reset}`);
+  ['.next', '.next-cf', '.vercel', 'out'].forEach(dir => {
+    if (fs.existsSync(dir)) {
+      console.log(`${colors.green}Removing ${dir} directory${colors.reset}`);
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   // Step 1: Create a simplified package.json for deployment
   console.log(`${colors.yellow}Creating deployment-specific package.json...${colors.reset}`);
   
@@ -28,6 +48,7 @@ try {
     ...originalPackageJson,
     // Keep type module for ESM compatibility
     type: "module",
+    version: `${originalPackageJson.version}-${new Date().toISOString().split('T')[0]}`,
     packageManager: undefined, // Remove packageManager field entirely
     engines: {
       node: ">=18.18.0"
@@ -86,7 +107,7 @@ try {
   
   // Step 3: Delete any lock files to prevent package manager conflicts
   console.log(`${colors.yellow}Removing any existing lock files...${colors.reset}`);
-  ['pnpm-lock.yaml', 'yarn.lock'].forEach(file => {
+  ['pnpm-lock.yaml', 'yarn.lock', 'package-lock.json'].forEach(file => {
     if (fs.existsSync(file)) {
       fs.unlinkSync(file);
       console.log(`${colors.green}Removed ${file}${colors.reset}`);
@@ -132,7 +153,18 @@ try {
     fs.writeFileSync('components/navbar.tsx', navbarContent);
   }
 
-  // Step 6: Install dependencies with npm
+  // Step 6: Create a build version file
+  console.log(`${colors.yellow}Creating build version file...${colors.reset}`);
+  const versionInfo = {
+    buildId,
+    timestamp: new Date().toISOString(),
+    version: deployPackageJson.version,
+    commit: buildId.split('_')[1] || 'unknown'
+  };
+  
+  fs.writeFileSync('BUILD_INFO.json', JSON.stringify(versionInfo, null, 2));
+
+  // Step 7: Install dependencies with npm
   console.log(`${colors.yellow}Installing dependencies with npm...${colors.reset}`);
   execSync('npm install --no-audit --no-fund --legacy-peer-deps', {
     stdio: 'inherit',
@@ -142,7 +174,7 @@ try {
     }
   });
 
-  // Step 7: Create a simplified next.config.js file
+  // Step 8: Create a simplified next.config.js file
   console.log(`${colors.yellow}Creating simplified next.config.mjs...${colors.reset}`);
   
   const nextConfigJs = `
@@ -205,6 +237,10 @@ const nextConfig = {
   distDir: '.next-cf',
   // Preserve dynamic API routes
   output: 'standalone',
+  // Add custom build ID to force fresh builds
+  generateBuildId: async () => {
+    return "${buildId}";
+  },
 };
 
 export default nextConfig;
@@ -212,7 +248,7 @@ export default nextConfig;
 
   fs.writeFileSync('next.config.mjs', nextConfigJs);
   
-  // Step 8: Create a .env file with key settings
+  // Step 9: Create a .env file with key settings
   console.log(`${colors.yellow}Creating build-specific .env file...${colors.reset}`);
   
   const envContent = `
@@ -221,6 +257,8 @@ NODE_ENV=production
 NEXT_TELEMETRY_DISABLED=1
 NEXT_IGNORE_TYPE_ERROR=1
 NEXT_IGNORE_ESLINT_ERROR=1
+# Force fresh build cache
+NEXT_BUILD_ID=${buildId}
 `;
 
   // Backup original .env if it exists
@@ -230,7 +268,7 @@ NEXT_IGNORE_ESLINT_ERROR=1
   
   fs.writeFileSync('.env', envContent);
   
-  // Step 9: Run the Next.js build with simplified config
+  // Step 10: Run the Next.js build with simplified config
   console.log(`${colors.yellow}Building Next.js app without TypeScript checks...${colors.reset}`);
   execSync('npm run build', { 
     stdio: 'inherit',
@@ -239,15 +277,19 @@ NEXT_IGNORE_ESLINT_ERROR=1
       NEXT_TELEMETRY_DISABLED: '1',
       NODE_ENV: 'production',
       NEXT_IGNORE_TYPE_ERROR: '1',
-      NEXT_IGNORE_ESLINT_ERROR: '1'
+      NEXT_IGNORE_ESLINT_ERROR: '1',
+      NEXT_BUILD_ID: buildId
     }
   });
 
-  // Step 10: Create .nojekyll file for GitHub Pages
+  // Step 11: Create .nojekyll file for GitHub Pages
   console.log(`${colors.yellow}Creating .nojekyll file...${colors.reset}`);
   fs.writeFileSync('.next-cf/.nojekyll', '');
+  
+  // Copy the build info file to the build directory
+  fs.copyFileSync('BUILD_INFO.json', '.next-cf/BUILD_INFO.json');
 
-  // Step 11: Clean up webpack cache to reduce size
+  // Step 12: Clean up webpack cache to reduce size
   console.log(`${colors.yellow}Cleaning up webpack cache to reduce size...${colors.reset}`);
   const cacheDir = path.join('.next-cf', 'cache');
   if (fs.existsSync(cacheDir)) {
@@ -260,7 +302,7 @@ NEXT_IGNORE_ESLINT_ERROR=1
     }
   }
 
-  // Step 12: Copy built files to .next for Cloudflare Pages
+  // Step 13: Copy built files to .next for Cloudflare Pages
   console.log(`${colors.yellow}Copying optimized build to .next for Cloudflare Pages...${colors.reset}`);
   
   // First, clean up existing .next directory
@@ -303,8 +345,14 @@ NEXT_IGNORE_ESLINT_ERROR=1
   }
   
   copyRecursive('.next-cf', '.next');
+  
+  // Add the build info file to the final build directory as well
+  fs.copyFileSync('BUILD_INFO.json', '.next/BUILD_INFO.json');
 
-  // Step 13: Restore the original files
+  // Step 14: Create a VERSION file to ensure Cloudflare detects changes
+  fs.writeFileSync('.next/VERSION', buildId);
+
+  // Step 15: Restore the original files
   console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
   if (fs.existsSync('package.json.bak')) {
     fs.copyFileSync('package.json.bak', 'package.json');
@@ -334,9 +382,15 @@ NEXT_IGNORE_ESLINT_ERROR=1
   if (fs.existsSync('next.config.mjs') && !fs.existsSync('next.config.mjs.bak')) {
     fs.rmSync('next.config.mjs');
   }
+  
+  // Clean up the temporary build info file
+  if (fs.existsSync('BUILD_INFO.json')) {
+    fs.unlinkSync('BUILD_INFO.json');
+  }
 
-  // Step 14: Done
+  // Step 16: Done
   console.log(`${colors.bright}${colors.green}Build completed successfully!${colors.reset}`);
+  console.log(`${colors.bright}${colors.green}Build ID: ${buildId}${colors.reset}`);
   process.exit(0);
 } catch (error) {
   console.error(`${colors.red}Build failed: ${error.message}${colors.reset}`);
@@ -367,6 +421,10 @@ NEXT_IGNORE_ESLINT_ERROR=1
   if (fs.existsSync('components/navbar.tsx.bak')) {
     fs.copyFileSync('components/navbar.tsx.bak', 'components/navbar.tsx');
     fs.unlinkSync('components/navbar.tsx.bak');
+  }
+  
+  if (fs.existsSync('BUILD_INFO.json')) {
+    fs.unlinkSync('BUILD_INFO.json');
   }
   
   process.exit(1);

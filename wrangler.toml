@@ -19,7 +19,15 @@ format = "directory"
 [env.production]
 pages_build_output_dir = ".next"
 compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
+node_compat = true
 
 [env.preview]
 pages_build_output_dir = ".next"
 compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
+node_compat = true
+
+# Ensure we're using server-compatible options for Next.js API routes
+[miniflare]
+kv_persist = true
+cache_persist = true
+durable_objects_persist = true
