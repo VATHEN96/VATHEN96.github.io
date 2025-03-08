@@ -1,6 +1,7 @@
 # Simple Cloudflare Pages configuration
 name = "wowzarush"
 compatibility_date = "2023-12-01"
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
 
 # Command to run
 [build]
@@ -17,6 +18,8 @@ format = "directory"
 # Environment settings
 [env.production]
 pages_build_output_dir = ".next"
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
 
 [env.preview]
 pages_build_output_dir = ".next"
+compatibility_flags = ["nodejs_compat", "streams_enable_constructors", "transformstream_enable_standard_constructor"]
