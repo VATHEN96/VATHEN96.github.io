@@ -201,9 +201,10 @@ const nextConfig = {
   },
   // Support both .js and .mjs files
   pageExtensions: ['tsx', 'ts', 'jsx', 'js', 'mjs'],
-  // Customize output directory structure to reduce size
-  output: 'export', // Use static export for Cloudflare
-  distDir: '.next-cf', // Use a different directory to avoid conflicting with dev
+  // Use .next-cf as the build directory
+  distDir: '.next-cf',
+  // Preserve dynamic API routes
+  output: 'standalone',
 };
 
 export default nextConfig;
