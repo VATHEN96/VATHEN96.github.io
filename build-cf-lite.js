@@ -26,6 +26,33 @@ try {
     }
   });
 
+  // Read package.json to extract optional dependencies
+  log("Reading package.json to extract optional dependencies...");
+  const packageJson = require('./package.json');
+  const optionalDeps = packageJson.optionalDependencies || {};
+
+  // Install optional dependencies in small batches to avoid "too many open files" error
+  log("Installing optional dependencies in batches...");
+  const batchSize = 5;
+  const depEntries = Object.entries(optionalDeps);
+  for (let i = 0; i < depEntries.length; i += batchSize) {
+    const batch = depEntries.slice(i, i + batchSize);
+    const batchDepsList = batch.map(([pkg, version]) => `${pkg}@${version}`).join(' ');
+    
+    log(`Installing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(depEntries.length/batchSize)}: ${batch.map(([pkg]) => pkg).join(', ')}`);
+    try {
+      execSync(`npm install --no-fund --no-audit --prefer-offline ${batchDepsList}`, { 
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          NODE_ENV: 'development'
+        }
+      });
+    } catch (error) {
+      log(`Warning: Failed to install batch. Will continue with build: ${error.message}`);
+    }
+  }
+
   // Check if we have a simplified package.json
   if (fs.existsSync('cloudflare-package.json')) {
     log("Using optimized package.json for Cloudflare...");
@@ -101,7 +128,7 @@ NEXT_BUILD_ID=${buildId}
   
   // Run the Next.js build with simplified config
   log("Building Next.js app without TypeScript checks...");
-  execSync('npm run build', { 
+  execSync('npx next build', { 
     stdio: 'inherit',
     env: {
       ...process.env,
