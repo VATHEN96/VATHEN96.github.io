@@ -20,14 +20,14 @@ const colors = {
 console.log(`${colors.bright}${colors.blue}Starting Cloudflare Pages specialized build process...${colors.reset}`);
 
 try {
-  // Step 1: Create a package.json that preserves ESM compatibility
+  // Step 1: Create a simplified package.json for deployment
   console.log(`${colors.yellow}Creating deployment-specific package.json...${colors.reset}`);
   
   // Create a modified package.json for deployment
   const deployPackageJson = {
     ...originalPackageJson,
-    // Preserve the ESM module type - Next.js Route Handlers require it
-    type: "module", 
+    // Keep type module for ESM compatibility
+    type: "module",
     packageManager: undefined, // Remove packageManager field entirely
     engines: {
       node: ">=18.18.0"
@@ -44,8 +44,8 @@ try {
   // Write the deployment version
   fs.writeFileSync('package.json', JSON.stringify(deployPackageJson, null, 2));
   
-  // Step 2: Create a tsconfig.json that's compatible with both ESM and CommonJS
-  console.log(`${colors.yellow}Creating ESM/CommonJS-compatible tsconfig.json...${colors.reset}`);
+  // Step 2: Create a basic tsconfig.json
+  console.log(`${colors.yellow}Creating simplified tsconfig.json...${colors.reset}`);
   
   // Backup original tsconfig if it exists
   if (fs.existsSync('tsconfig.json')) {
@@ -63,7 +63,7 @@ try {
       "forceConsistentCasingInFileNames": true,
       "noEmit": true,
       "esModuleInterop": true,
-      "module": "esnext", // Next.js requires esnext module format
+      "module": "esnext",
       "moduleResolution": "node",
       "resolveJsonModule": true,
       "isolatedModules": true,
@@ -103,8 +103,8 @@ try {
     }
   });
 
-  // Step 5: Create a next.config.js file that handles both ESM and CommonJS modules
-  console.log(`${colors.yellow}Creating mixed module format next.config.js...${colors.reset}`);
+  // Step 5: Create a simplified next.config.js file
+  console.log(`${colors.yellow}Creating simplified next.config.mjs...${colors.reset}`);
   
   const nextConfigJs = `
 // @ts-check
@@ -113,11 +113,11 @@ try {
 const nextConfig = {
   reactStrictMode: false,
   typescript: {
-    // Disable TypeScript during build
+    // Disable TypeScript checking during build
     ignoreBuildErrors: true,
   },
   eslint: {
-    // Disable ESLint during build
+    // Disable ESLint checking during build
     ignoreDuringBuilds: true,
   },
   images: {
@@ -135,51 +135,12 @@ const nextConfig = {
     ],
   },
   experimental: {
-    // Enable transpilation of server components
-    serverComponentsExternalPackages: [],
-    // Enable support for mixed modules
+    // Enable server actions
     serverActions: {
       allowedOrigins: ['localhost:3000']
-    }
+    },
   },
-  webpack: (config, { isServer }) => {
-    // Support import/export in both CommonJS and ESM files
-    config.module = config.module || {};
-    config.module.rules = config.module.rules || [];
-    
-    // Handle .js files (allow ESM in .js files)
-    config.module.rules.push({
-      test: /\\.js$/,
-      use: [{
-        loader: 'next-swc-loader',
-        options: {
-          jsc: {
-            parser: {
-              syntax: 'ecmascript',
-              jsx: true,
-              dynamicImport: true,
-            },
-            transform: {
-              react: {
-                runtime: 'automatic',
-              },
-            },
-          },
-        },
-      }],
-      include: [/pages/, /app/, /components/],
-      exclude: /node_modules/,
-    });
-    
-    // Handle .mjs explicitly as ESM
-    config.module.rules.push({
-      test: /\\.mjs$/,
-      type: 'javascript/auto',
-      resolve: {
-        fullySpecified: true,
-      },
-    });
-    
+  webpack: (config) => {
     // Add necessary polyfills
     config.resolve = config.resolve || {};
     config.resolve.fallback = {
@@ -208,8 +169,36 @@ export default nextConfig;
 
   fs.writeFileSync('next.config.mjs', nextConfigJs);
   
-  // Step 6: Run the Next.js build with ESM support
-  console.log(`${colors.yellow}Building Next.js app with mixed module support...${colors.reset}`);
+  // Step 6: Create .babelrc to ensure proper module handling
+  console.log(`${colors.yellow}Creating .babelrc for module compatibility...${colors.reset}`);
+  
+  const babelConfig = {
+    "presets": ["next/babel"],
+    "plugins": []
+  };
+  
+  fs.writeFileSync('.babelrc', JSON.stringify(babelConfig, null, 2));
+  
+  // Step 7: Create a .env file with key settings
+  console.log(`${colors.yellow}Creating build-specific .env file...${colors.reset}`);
+  
+  const envContent = `
+# Build environment settings
+NODE_ENV=production
+NEXT_TELEMETRY_DISABLED=1
+NEXT_IGNORE_TYPE_ERROR=1
+NEXT_IGNORE_ESLINT_ERROR=1
+`;
+
+  // Backup original .env if it exists
+  if (fs.existsSync('.env')) {
+    fs.copyFileSync('.env', '.env.bak');
+  }
+  
+  fs.writeFileSync('.env', envContent);
+  
+  // Step 8: Run the Next.js build with simplified config
+  console.log(`${colors.yellow}Building Next.js app without TypeScript checks...${colors.reset}`);
   execSync('npm run build', { 
     stdio: 'inherit',
     env: {
@@ -221,11 +210,11 @@ export default nextConfig;
     }
   });
 
-  // Step 7: Create .nojekyll file for GitHub Pages
+  // Step 9: Create .nojekyll file for GitHub Pages
   console.log(`${colors.yellow}Creating .nojekyll file...${colors.reset}`);
   fs.writeFileSync('.next/.nojekyll', '');
 
-  // Step 8: Restore the original files
+  // Step 10: Restore the original files
   console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
   if (fs.existsSync('package.json.bak')) {
     fs.copyFileSync('package.json.bak', 'package.json');
@@ -236,8 +225,13 @@ export default nextConfig;
     fs.copyFileSync('tsconfig.json.bak', 'tsconfig.json');
     fs.unlinkSync('tsconfig.json.bak');
   }
+  
+  if (fs.existsSync('.env.bak')) {
+    fs.copyFileSync('.env.bak', '.env');
+    fs.unlinkSync('.env.bak');
+  }
 
-  // Step 9: Done
+  // Step 11: Done
   console.log(`${colors.bright}${colors.green}Build completed successfully!${colors.reset}`);
   process.exit(0);
 } catch (error) {
@@ -254,6 +248,11 @@ export default nextConfig;
   if (fs.existsSync('tsconfig.json.bak')) {
     fs.copyFileSync('tsconfig.json.bak', 'tsconfig.json');
     fs.unlinkSync('tsconfig.json.bak');
+  }
+  
+  if (fs.existsSync('.env.bak')) {
+    fs.copyFileSync('.env.bak', '.env');
+    fs.unlinkSync('.env.bak');
   }
   
   process.exit(1);
