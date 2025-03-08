@@ -1,24 +1,20 @@
-# Wrangler configuration for Cloudflare Pages
+# Simple Cloudflare Pages configuration
 name = "wowzarush"
 compatibility_date = "2023-12-01"
 
-# Build output configuration
+# Command to run
 [build]
-command = "npm run cloudflare-build"
+command = "node build-cf.js"
 
-[build.environment]
-NODE_ENV = "production"
-NEXT_TELEMETRY_DISABLED = "1"
-
-# Pages specific configuration
+# Output directory
 [site]
 bucket = ".next"
 
-# This is the key property Cloudflare Pages is looking for
+# Pages build output directory
 [build.upload]
 format = "directory"
 
-# Environment-specific configurations
+# Environment settings
 [env.production]
 pages_build_output_dir = ".next"
 
