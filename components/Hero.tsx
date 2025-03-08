@@ -25,7 +25,7 @@ export default function Hero() {
 
   return (
     <section className="pt-32 pb-16">
-      <div className="container mx-auto px-4">
+      <div className="w-full px-4">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           {/* Left Column */}
           <motion.div
@@ -101,7 +101,7 @@ export default function Hero() {
                     width={500}
                     height={180} 
                     priority 
-                    className="transform group-hover:scale-105 transition-all duration-500 logo-glow invert dark:invert-0" 
+                    className="transform group-hover:scale-105 transition-all duration-500 logo-glow" 
                   />
                 </div>
               </div>

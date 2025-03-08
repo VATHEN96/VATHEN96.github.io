@@ -63,7 +63,7 @@ export default function ProfilePage() {
   
   if (!isWalletConnected) {
     return (
-      <div className="container py-8 max-w-7xl">
+      <div className="w-full py-8">
         <Navbar />
         <div className="text-center py-16">
           <h1 className="text-2xl font-bold mb-4">Profile</h1>
@@ -76,7 +76,7 @@ export default function ProfilePage() {
   
   if (loading) {
     return (
-      <div className="container py-8 max-w-7xl">
+      <div className="w-full py-8">
         <Navbar />
         <div className="flex justify-center items-center min-h-[50vh]">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -86,10 +86,10 @@ export default function ProfilePage() {
   }
   
   return (
-    <div className="container py-8 max-w-7xl">
+    <div className="w-full py-8">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-6">
+      <div className="w-full px-4 py-6">
         {!isWalletConnected ? (
           <Card className="mt-8">
             <CardContent className="flex flex-col items-center justify-center py-12">

@@ -8,6 +8,15 @@ export default {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    // Customize breakpoints for better mobile support
+    screens: {
+      'xs': '375px',    // Small mobile devices
+      'sm': '640px',    // Medium-sized mobile devices
+      'md': '768px',    // Large mobile devices / Tablets
+      'lg': '1024px',   // Laptops / Desktops
+      'xl': '1280px',   // Large desktops
+      '2xl': '1536px',  // Extra large screens
+    },
   	extend: {
   		colors: {
   			background: 'hsl(var(--background))',
@@ -55,7 +64,14 @@ export default {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
-  		}
+  		},
+      // Add spacing utilities for responsive design
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
   	}
   },
   plugins: [require("tailwindcss-animate")],

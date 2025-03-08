@@ -43,7 +43,7 @@ export default function ProfileViewPage() {
 
   if (!address) {
     return (
-      <div className="container max-w-4xl mx-auto py-8 px-4">
+      <div className="w-full px-4 py-8">
         <Alert variant="destructive" className="mb-6">
           <AlertDescription>
             No wallet address provided. Please specify a wallet address to view a profile.
@@ -57,7 +57,7 @@ export default function ProfileViewPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
+    <div className="w-full px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">User Profile</h1>
       
       {isLoading ? (

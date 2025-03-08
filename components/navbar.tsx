@@ -152,7 +152,7 @@ export default function Navbar() {
         isScrolled ? 'bg-white/95 dark:bg-black/95 backdrop-blur-sm shadow-sm border-b border-black dark:border-white' : 'bg-white dark:bg-black'
       }`}
     >
-      <div className="container flex h-16 items-center justify-between px-4 md:px-6">
+      <div className="w-full flex h-16 items-center justify-between px-4 md:px-6">
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="mr-2 md:hidden text-black dark:text-white">
@@ -166,7 +166,7 @@ export default function Navbar() {
         </Sheet>
         
         <Link href="/" className="flex items-center gap-2">
-          <ClientImage src="/logo.svg" alt="WowZaRush Logo" width={32} height={32} className="dark:invert" />
+          <ClientImage src="/logo.svg" alt="WowZaRush Logo" width={32} height={32} />
           <span className="font-bold text-lg hidden md:inline-block text-black dark:text-white">WowZaRush</span>
         </Link>
         

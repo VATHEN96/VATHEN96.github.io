@@ -32,7 +32,9 @@ export default function ClientLayout({
             <WowzaRushProvider>
                 <ClientProviderWrapper contractAddress="0xf97cB339e663EB826093e44baFd1383615C48Ae1">
                     <ReminderSystemProvider>
-                        {children}
+                        <div className="w-full min-h-screen">
+                            {children}
+                        </div>
                     </ReminderSystemProvider>
                 </ClientProviderWrapper>
                 <Toaster position="top-right" richColors closeButton />

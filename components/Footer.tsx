@@ -14,7 +14,7 @@ export default function Footer() {
 
   return (
     <footer className="bg-black dark:bg-white text-white dark:text-black py-20">
-      <div className="container mx-auto px-4">
+      <div className="w-full px-4">
         <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-12">
           <div className="lg:col-span-2">
             <motion.div

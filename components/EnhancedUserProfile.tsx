@@ -311,30 +311,30 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
     if (!profile) return null;
     
     switch (profile.verificationLevel) {
-      case VerificationLevel.ESTABLISHED:
-        return (
-          <Badge className="bg-purple-500 hover:bg-purple-600 flex items-center gap-1">
-            <Award className="h-3 w-3" />
-            Established
-          </Badge>
-        );
       case VerificationLevel.VERIFIED:
         return (
-          <Badge className="bg-green-500 hover:bg-green-600 flex items-center gap-1">
-            <Shield className="h-3 w-3" />
+          <Badge className="text-green-500 flex items-center gap-1">
+            <CircleCheck className="h-3 w-3" />
             Verified
+          </Badge>
+        );
+      case VerificationLevel.ESTABLISHED:
+        return (
+          <Badge className="text-blue-500 flex items-center gap-1">
+            <Shield className="h-3 w-3" />
+            Established
           </Badge>
         );
       case VerificationLevel.BASIC:
         return (
-          <Badge className="bg-blue-500 hover:bg-blue-600 flex items-center gap-1">
-            <CircleCheck className="h-3 w-3" />
+          <Badge className="text-purple-500 flex items-center gap-1">
+            <Award className="h-3 w-3" />
             Basic
           </Badge>
         );
       default:
         return (
-          <Badge variant="outline" className="text-gray-500 flex items-center gap-1">
+          <Badge className="text-gray-500 flex items-center gap-1">
             <CircleAlert className="h-3 w-3" />
             Unverified
           </Badge>
@@ -501,24 +501,24 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
   };
   
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* Profile Header */}
-      <Card className="overflow-hidden">
+      <Card className="w-full overflow-hidden">
         {/* Cover Image */}
         <div 
-          className="h-48 bg-gradient-to-r from-blue-500 to-purple-600 relative"
+          className="h-48 w-full bg-gradient-to-r from-blue-500 to-purple-600 relative"
           style={displayProfile.coverImage ? { backgroundImage: `url(${displayProfile.coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
         >
           {isOwnProfile && !isViewOnly && (
             <div className="absolute top-4 right-4">
-              <Button asChild variant="secondary" size="sm">
+              <Button asChild size="sm">
                 <Link href="/profile/edit">Edit Profile</Link>
               </Button>
             </div>
           )}
         </div>
         
-        <CardContent className="pt-0 relative">
+        <CardContent className="pt-0 relative w-full">
           <div className="flex flex-col md:flex-row gap-6 -mt-12">
             {/* Avatar */}
             <div className="flex-shrink-0">
@@ -550,12 +550,11 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
                   <div className="mt-4 md:mt-0">
                     {isFollowingCreator ? (
                       <Button 
-                        variant="outline" 
                         onClick={handleUnfollow}
                         disabled={isLoadingFollow}
                       >
-                        {isLoadingFollow ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                        Following
+                        {isLoadingFollow ? <Loader2 className="h-4 w-4 animate.spin" /> : null}
+                        Unfollow
                       </Button>
                     ) : (
                       <Button 
@@ -577,7 +576,7 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
               {displayProfile.badges && displayProfile.badges.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
                   {displayProfile.badges.map((badge: any) => (
-                    <Badge key={badge.id} variant="secondary" className="px-2 py-1">
+                    <Badge key={badge.id} className="px-2 py-1">
                       <span className="mr-1">{badge.icon}</span>
                       {badge.name}
                     </Badge>
@@ -589,7 +588,7 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
               {displayProfile.skills && displayProfile.skills.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-4">
                   {displayProfile.skills.map((skill: string, index: number) => (
-                    <Badge key={index} variant="outline" className="px-2 py-1">
+                    <Badge key={index} className="px-2 py-1">
                       {skill}
                     </Badge>
                   ))}
@@ -682,250 +681,208 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
       </div>
       
       {/* Tabs for different sections */}
-      <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="backed">Backed</TabsTrigger>
-          <TabsTrigger value="activity">Activity</TabsTrigger>
-        </TabsList>
-        
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>About {displayProfile.displayName}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-700">{displayProfile.bio}</p>
-              
-              <Separator className="my-6" />
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold mb-3">Achievements</h3>
-                  <ul className="space-y-3">
-                    <li className="flex items-start gap-2">
-                      <Award className="h-5 w-5 text-yellow-500 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Top Creator</p>
-                        <p className="text-sm text-gray-500">Raised over $10,000 in campaigns</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Star className="h-5 w-5 text-purple-500 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Early Adopter</p>
-                        <p className="text-sm text-gray-500">Joined WowzaRush in its early days</p>
-                      </div>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Gift className="h-5 w-5 text-red-500 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Generous Backer</p>
-                        <p className="text-sm text-gray-500">Backed {displayProfile.totalBacked} campaigns</p>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
+      {showTabs && (
+        <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
+          <TabsList className="w-full grid grid-cols-4">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger value="backed">Backed</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
+          </TabsList>
+          
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>About {displayProfile.displayName}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700">{displayProfile.bio}</p>
                 
-                <div>
-                  <h3 className="font-semibold mb-3">Expertise</h3>
-                  <ul className="space-y-3">
-                    {displayProfile.skills.map((skill: string, index: number) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                        <span>{skill}</span>
+                <Separator className="my-6" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold mb-3">Achievements</h3>
+                    <ul className="space-y-3">
+                      <li className="flex items-start gap-2">
+                        <Award className="h-5 w-5 text-yellow-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Top Creator</p>
+                          <p className="text-sm text-gray-500">Raised over $10,000 in campaigns</p>
+                        </div>
                       </li>
-                    ))}
-                  </ul>
+                      <li className="flex items-start gap-2">
+                        <Star className="h-5 w-5 text-purple-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Early Adopter</p>
+                          <p className="text-sm text-gray-500">Joined WowzaRush in its early days</p>
+                        </div>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Gift className="h-5 w-5 text-red-500 mt-0.5" />
+                        <div>
+                          <p className="font-medium">Generous Backer</p>
+                          <p className="text-sm text-gray-500">Backed {displayProfile.totalBacked} campaigns</p>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h3 className="font-semibold mb-3">Expertise</h3>
+                    <ul className="space-y-3">
+                      {displayProfile.skills.map((skill: string, index: number) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                          <span>{skill}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Campaigns Tab */}
-        <TabsContent value="campaigns" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Created Campaigns</CardTitle>
-              <CardDescription>
-                Campaigns created by {displayProfile.displayName}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {campaigns.length === 0 ? (
-                <p className="text-center py-6 text-gray-500">
-                  No campaigns created yet.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {campaigns.map((campaign: any) => (
-                    <Card key={campaign.id} className="overflow-hidden">
-                      <div className="h-40 bg-gray-200 relative">
-                        {campaign.mainImage && (
-                          <img 
-                            src={campaign.mainImage} 
-                            alt={campaign.title} 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
-                      <CardContent className="pt-4">
-                        <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {campaign.description.substring(0, 100)}...
-                        </p>
-                        <div className="mt-3 flex justify-between items-center">
-                          <div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Campaigns Tab */}
+          <TabsContent value="campaigns" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Created Campaigns</CardTitle>
+                <CardDescription>
+                  Campaigns created by {displayProfile.displayName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {campaigns.length === 0 ? (
+                  <p className="text-center py-6 text-gray-500">
+                    No campaigns created yet.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {campaigns.map((campaign: any) => (
+                      <Card key={campaign.id} className="overflow-hidden">
+                        <div className="h-40 bg-gray-200 relative">
+                          {campaign.mainImage && (
+                            <img 
+                              src={campaign.mainImage} 
+                              alt={campaign.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                        <CardContent className="pt-4">
+                          <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {campaign.description.substring(0, 100)}...
+                          </p>
+                          <div className="mt-3 flex justify-between items-center">
+                            <div>
+                              <p className="text-sm font-medium">${campaign.currentAmount} raised</p>
+                              <Progress value={(campaign.currentAmount / campaign.goalAmount) * 100} className="h-2 mt-1" />
+                            </div>
+                            <Badge>
+                              {campaign.status}
+                            </Badge>
+                          </div>
+                        </CardContent>
+                        <CardFooter className="pt-0">
+                          <Button asChild className="w-full">
+                            <Link href={`/campaign/${campaign.id}`}>View Campaign</Link>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Backed Tab */}
+          <TabsContent value="backed" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Backed Campaigns</CardTitle>
+                <CardDescription>
+                  Campaigns {displayProfile.displayName} has supported
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {backedCampaigns.length === 0 ? (
+                  <p className="text-center py-6 text-gray-500">
+                    No backed campaigns yet.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {backedCampaigns.map((campaign: any) => (
+                      <Card key={campaign.id} className="overflow-hidden">
+                        <div className="h-40 bg-gray-200 relative">
+                          {campaign.mainImage && (
+                            <img 
+                              src={campaign.mainImage} 
+                              alt={campaign.title} 
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                        <CardContent className="pt-4">
+                          <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
+                          <p className="text-sm text-gray-500 mt-1">
+                            by {campaign.creatorName || `${campaign.creatorId.substring(0, 6)}...`}
+                          </p>
+                          <div className="mt-3">
                             <p className="text-sm font-medium">${campaign.currentAmount} raised</p>
                             <Progress value={(campaign.currentAmount / campaign.goalAmount) * 100} className="h-2 mt-1" />
                           </div>
-                          <Badge variant={campaign.status === 'active' ? 'default' : 'secondary'}>
-                            {campaign.status}
-                          </Badge>
-                        </div>
-                      </CardContent>
-                      <CardFooter className="pt-0">
-                        <Button asChild variant="outline" className="w-full">
-                          <Link href={`/campaign/${campaign.id}`}>View Campaign</Link>
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Backed Tab */}
-        <TabsContent value="backed" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Backed Campaigns</CardTitle>
-              <CardDescription>
-                Campaigns {displayProfile.displayName} has supported
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {backedCampaigns.length === 0 ? (
-                <p className="text-center py-6 text-gray-500">
-                  No backed campaigns yet.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {backedCampaigns.map((campaign: any) => (
-                    <Card key={campaign.id} className="overflow-hidden">
-                      <div className="h-40 bg-gray-200 relative">
-                        {campaign.mainImage && (
-                          <img 
-                            src={campaign.mainImage} 
-                            alt={campaign.title} 
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                        </CardContent>
+                        <CardFooter className="pt-0">
+                          <Button asChild className="w-full">
+                            <Link href={`/campaign/${campaign.id}`}>View Campaign</Link>
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          {/* Achievements Tab */}
+          <TabsContent value="achievements" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Achievements</CardTitle>
+                <CardDescription>
+                  Achievements earned by {displayProfile.displayName}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {achievements.map((achievement: Achievement) => (
+                    <div key={achievement.id} className="flex gap-4 items-start">
+                      <div className="bg-gray-100 p-2 rounded-full">
+                        {achievement.icon}
                       </div>
-                      <CardContent className="pt-4">
-                        <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                          by {campaign.creatorName || `${campaign.creatorId.substring(0, 6)}...`}
+                      <div className="flex-1">
+                        <p className="font-medium">{achievement.title}</p>
+                        <p className="text-sm text-gray-500">
+                          {achievement.description}
                         </p>
-                        <div className="mt-3">
-                          <p className="text-sm font-medium">${campaign.currentAmount} raised</p>
-                          <Progress value={(campaign.currentAmount / campaign.goalAmount) * 100} className="h-2 mt-1" />
-                        </div>
-                      </CardContent>
-                      <CardFooter className="pt-0">
-                        <Button asChild variant="outline" className="w-full">
-                          <Link href={`/campaign/${campaign.id}`}>View Campaign</Link>
-                        </Button>
-                      </CardFooter>
-                    </Card>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {formatDistanceToNow(achievement.earnedAt || 0, { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
                   ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        {/* Activity Tab */}
-        <TabsContent value="activity" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>
-                Recent actions and updates from {displayProfile.displayName}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Mock activity items - in a real app, these would come from the backend */}
-                <div className="flex gap-4 items-start">
-                  <div className="bg-blue-100 p-2 rounded-full">
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Created a new campaign</p>
-                    <p className="text-sm text-gray-500">
-                      "Decentralized Finance Platform" was launched
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDistanceToNow(Date.now() - 1000 * 60 * 60 * 24 * 2, { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-4 items-start">
-                  <div className="bg-green-100 p-2 rounded-full">
-                    <Gift className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Backed a campaign</p>
-                    <p className="text-sm text-gray-500">
-                      Contributed $250 to "Web3 Educational Platform"
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDistanceToNow(Date.now() - 1000 * 60 * 60 * 24 * 5, { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-4 items-start">
-                  <div className="bg-purple-100 p-2 rounded-full">
-                    <MessageSquare className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Commented on a campaign</p>
-                    <p className="text-sm text-gray-500">
-                      "This looks promising! I'm excited to see how it develops."
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDistanceToNow(Date.now() - 1000 * 60 * 60 * 24 * 7, { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-4 items-start">
-                  <div className="bg-yellow-100 p-2 rounded-full">
-                    <Award className="h-5 w-5 text-yellow-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium">Reached a milestone</p>
-                    <p className="text-sm text-gray-500">
-                      Successfully completed their first campaign
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDistanceToNow(Date.now() - 1000 * 60 * 60 * 24 * 14, { addSuffix: true })}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }; 

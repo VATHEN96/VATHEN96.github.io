@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     icons: {
         icon: '/favicon.ico',
     },
+    viewport: "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0",
 };
 
 export default function RootLayout({
@@ -29,13 +30,19 @@ export default function RootLayout({
     children: React.ReactNode;
 }) {
     return (
-        <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable}`}>
+        <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} w-full h-full`}>
             <head>
                 <link rel="icon" href="/favicon.ico" sizes="any" />
+                <meta name="theme-color" content="#000000" />
+                <meta name="apple-mobile-web-app-capable" content="yes" />
+                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+                <meta name="format-detection" content="telephone=no" />
             </head>
-            <body suppressHydrationWarning>
+            <body suppressHydrationWarning className="w-full h-full overflow-fix mobile-viewport">
                 <ClientLayout>
-                    {children}
+                    <div className="w-full">
+                        {children}
+                    </div>
                 </ClientLayout>
             </body>
         </html>

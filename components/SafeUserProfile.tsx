@@ -570,374 +570,376 @@ export const SafeUserProfile: React.FC<SafeUserProfileProps> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Profile Header - Improved */}
-      <div className="relative rounded-xl overflow-hidden mb-8 shadow-lg border border-gray-700">
-        {userData.coverImage ? (
-          <div className="h-72 md:h-80 w-full relative">
-            <Image 
-              src={userData.coverImage}
-              fill
-              alt="Cover"
-              className="object-cover"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-          </div>
-        ) : (
-          <div className="h-72 md:h-80 w-full bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 relative">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_#ffffff_0%,_transparent_70%)]"></div>
-          </div>
-        )}
-        
-        {/* Improved avatar with better positioning and border */}
-        <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 md:-bottom-20 md:left-8 md:transform-none border-4 border-gray-800 dark:border-gray-900 rounded-full overflow-hidden bg-gray-800 shadow-xl">
-          <Avatar className="h-32 w-32 md:h-40 md:w-40 ring-4 ring-blue-500/20">
-            <AvatarImage src={userData.avatar} />
-            <AvatarFallback className="text-4xl bg-gradient-to-br from-blue-600 to-purple-700 text-white">
-              {userData.displayName.substring(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </div>
-      </div>
-      
-      {/* Profile Info - Enhanced grid layout */}
-      <div className="mt-24 md:mt-28 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-        <div className="md:col-span-1">
-          <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm shadow-lg">
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-                    {userData.displayName}
-                  </CardTitle>
-                  <CardDescription className="text-sm mt-1 flex items-center text-gray-300">
-                    {address.substring(0, 6)}...{address.substring(address.length - 4)}
-                  </CardDescription>
-                </div>
-                {getVerificationBadge()}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Bio</h3>
-                <p className="text-sm text-gray-200">{userData.bio}</p>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Trust Score</h3>
-                <div className="flex items-center space-x-2">
-                  <span className={`text-xl font-bold ${getTrustScoreColor()}`}>{trustScore}</span>
-                  <Progress value={trustScore || 0} className="h-2 flex-1 bg-gray-700" />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4 bg-gray-700/30 rounded-lg p-4">
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-300">Following</p>
-                  <p className="text-lg font-bold text-white">{userData.following}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-300">Followers</p>
-                  <p className="text-lg font-bold text-white">{userData.followers}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-300">Campaigns</p>
-                  <p className="text-lg font-bold text-white">{userData.successfulCampaigns}</p>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Badges</h3>
-                <div className="flex flex-wrap gap-2">
-                  {userData.badges.map((badge, index) => {
-                    // Handle both string badges and object badges
-                    if (typeof badge === 'string') {
-                      return (
-                        <Badge key={index} variant="outline" className="px-2 py-1 bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700">
-                          {badge}
-                        </Badge>
-                      );
-                    } else {
-                      return (
-                        <Badge key={badge.id || index} variant="outline" className="px-2 py-1 bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700">
-                          <span className="mr-1">{badge.icon}</span> {badge.name}
-                        </Badge>
-                      );
-                    }
-                  })}
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-gray-300 mb-2">Skills</h3>
-                <div className="flex flex-wrap gap-2">
-                  {userData.skills.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="px-2 py-1 bg-blue-900/30 hover:bg-blue-800/40 text-blue-200">
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between pt-2">
-              {!isOwnProfile && account ? (
-                isFollowingCreator ? (
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-gray-600 hover:bg-gray-700 hover:text-gray-200" 
-                    onClick={handleUnfollow} 
-                    disabled={isFollowLoading}
-                  >
-                    {isFollowLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Unfollowing...
-                      </>
-                    ) : (
-                      'Unfollow'
-                    )}
-                  </Button>
-                ) : (
-                  <Button 
-                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
-                    onClick={handleFollow} 
-                    disabled={isFollowLoading}
-                  >
-                    {isFollowLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Following...
-                      </>
-                    ) : (
-                      'Follow'
-                    )}
-                  </Button>
-                )
-              ) : isOwnProfile ? (
-                <Button variant="outline" className="w-full border-gray-600 hover:bg-gray-700 hover:text-gray-200" asChild>
-                  <Link href="/profile/edit">
-                    <Edit className="h-4 w-4 mr-2" /> Edit Profile
-                  </Link>
+    <div className="w-full">
+      {/* Profile Content */}
+      <div className="w-full space-y-6">
+        {/* Profile Header */}
+        <Card className="w-full overflow-hidden">
+          {/* Cover Image */}
+          <div 
+            className="w-full h-48 bg-gradient-to-r from-blue-500 to-purple-600 relative"
+            style={userData.coverImage ? { backgroundImage: `url(${userData.coverImage})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+          >
+            {isOwnProfile && !isViewOnly && (
+              <div className="absolute top-4 right-4 z-10">
+                <Button asChild>
+                  <Link href="/profile/edit">Edit Profile</Link>
                 </Button>
-              ) : null}
-            </CardFooter>
-          </Card>
-        </div>
-        
-        <div className="md:col-span-2">
-          {showTabs && (
-            <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-4 mb-8 bg-gray-800 p-1">
-                <TabsTrigger value="overview" className="data-[state=active]:bg-blue-900/70 data-[state=active]:text-white">Overview</TabsTrigger>
-                <TabsTrigger value="campaigns" className="data-[state=active]:bg-blue-900/70 data-[state=active]:text-white">Campaigns</TabsTrigger>
-                <TabsTrigger value="backed" className="data-[state=active]:bg-blue-900/70 data-[state=active]:text-white">Backed</TabsTrigger>
-                <TabsTrigger value="achievements" className="data-[state=active]:bg-blue-900/70 data-[state=active]:text-white">Achievements</TabsTrigger>
-              </TabsList>
+              </div>
+            )}
+          </div>
+          
+          <CardContent className="pt-0 relative w-full">
+            {/* Improved avatar with better positioning and border */}
+            <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 md:-bottom-20 md:left-8 md:transform-none border-4 border-gray-800 dark:border-gray-900 rounded-full overflow-hidden bg-gray-800 shadow-xl">
+              <Avatar className="h-32 w-32 md:h-40 md:w-40 ring-4 ring-blue-500/20">
+                <AvatarImage src={userData.avatar} />
+                <AvatarFallback className="text-4xl bg-gradient-to-br from-blue-600 to-purple-700 text-white">
+                  {userData.displayName.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Tab content sections with improved styling */}
-              <TabsContent value="overview" className="space-y-8">
-                <Card className="border-gray-700 bg-gray-800/70 shadow-md">
-                  <CardHeader className="border-b border-gray-700">
-                    <CardTitle className="text-xl text-white">Achievements</CardTitle>
-                    <CardDescription className="text-gray-300">Recent achievements earned by this creator</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {achievements
-                        .filter(achievement => achievement.earned)
-                        .slice(0, 3)
-                        .map(achievement => (
-                          <Card key={achievement.id} className="bg-gray-700/50 border-gray-600 hover:bg-gray-700/70 transition-colors">
-                            <CardContent className="p-4 flex items-center space-x-4">
-                              <div className="bg-gray-900 rounded-full p-2 shadow-inner">
-                                {achievement.icon}
-                              </div>
-                              <div>
-                                <h4 className="font-medium text-gray-100">{achievement.title}</h4>
-                                <p className="text-xs text-gray-300">{achievement.description}</p>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
+        {/* Profile Info - Enhanced grid layout */}
+        <div className="mt-24 md:mt-28 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="md:col-span-1">
+            <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm shadow-lg">
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                      {userData.displayName}
+                    </CardTitle>
+                    <CardDescription className="text-sm mt-1 flex items-center text-gray-300">
+                      {address.substring(0, 6)}...{address.substring(address.length - 4)}
+                    </CardDescription>
+                  </div>
+                  {getVerificationBadge()}
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">Bio</h3>
+                  <p className="text-sm text-gray-200">{userData.bio}</p>
+                </div>
                 
-                <Card className="border-gray-700 bg-gray-800/70 shadow-md">
-                  <CardHeader className="border-b border-gray-700">
-                    <CardTitle className="text-xl text-white">Recent Activity</CardTitle>
-                    <CardDescription className="text-gray-300">Latest actions from this creator</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    <div className="space-y-4">
-                      {activities.slice(0, 3).map(activity => (
-                        <div key={activity.id} className="flex items-start space-x-4">
-                          <div className="bg-gray-700 rounded-full p-2">
-                            {getActivityIcon(activity.type)}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between">
-                              <h4 className="font-medium text-gray-100">{activity.title}</h4>
-                              <span className="text-xs text-gray-300">{formatActivityTime(activity.timestamp)}</span>
-                            </div>
-                            <p className="text-sm text-gray-200">{activity.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <div>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">Trust Score</h3>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xl font-bold ${getTrustScoreColor()}`}>{trustScore}</span>
+                    <Progress value={trustScore || 0} className="h-2 flex-1 bg-gray-700" />
+                  </div>
+                </div>
                 
-                <Card className="border-gray-700 bg-gray-800/70 shadow-md">
-                  <CardHeader className="border-b border-gray-700">
-                    <CardTitle className="text-xl text-white">Campaigns</CardTitle>
-                    <CardDescription className="text-gray-300">Created by this user</CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-6">
-                    {campaigns.length > 0 ? (
+                <div className="grid grid-cols-3 gap-4 bg-gray-700/30 rounded-lg p-4">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-300">Following</p>
+                    <p className="text-lg font-bold text-white">{userData.following}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-300">Followers</p>
+                    <p className="text-lg font-bold text-white">{userData.followers}</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-300">Campaigns</p>
+                    <p className="text-lg font-bold text-white">{userData.successfulCampaigns}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">Badges</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userData.badges.map((badge, index) => {
+                      // Handle both string badges and object badges
+                      if (typeof badge === 'string') {
+                        return (
+                          <Badge key={index} variant="outline" className="px-2 py-1 bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700">
+                            {badge}
+                          </Badge>
+                        );
+                      } else {
+                        return (
+                          <Badge key={badge.id || index} variant="outline" className="px-2 py-1 bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700">
+                            <span className="mr-1">{badge.icon}</span> {badge.name}
+                          </Badge>
+                        );
+                      }
+                    })}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium text-gray-300 mb-2">Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userData.skills.map((skill, index) => (
+                      <Badge key={index} variant="secondary" className="px-2 py-1 bg-blue-900/30 hover:bg-blue-800/40 text-blue-200">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="flex justify-between pt-2">
+                {!isOwnProfile && account ? (
+                  isFollowingCreator ? (
+                    <Button 
+                      variant="outline" 
+                      className="w-full border-gray-600 hover:bg-gray-700 hover:text-gray-200" 
+                      onClick={handleUnfollow} 
+                      disabled={isFollowLoading}
+                    >
+                      {isFollowLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Unfollowing...
+                        </>
+                      ) : (
+                        'Unfollow'
+                      )}
+                    </Button>
+                  ) : (
+                    <Button 
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700" 
+                      onClick={handleFollow} 
+                      disabled={isFollowLoading}
+                    >
+                      {isFollowLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Following...
+                        </>
+                      ) : (
+                        'Follow'
+                      )}
+                    </Button>
+                  )
+                ) : isOwnProfile ? (
+                  <Button variant="outline" className="w-full border-gray-600 hover:bg-gray-700 hover:text-gray-200" asChild>
+                    <Link href="/profile/edit">
+                      <Edit className="h-4 w-4 mr-2" /> Edit Profile
+                    </Link>
+                  </Button>
+                ) : null}
+              </CardFooter>
+            </Card>
+          </div>
+          
+          <div className="md:col-span-2">
+            {showTabs && (
+              <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="w-full grid grid-cols-4">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+                  <TabsTrigger value="backed">Backed</TabsTrigger>
+                  <TabsTrigger value="achievements">Achievements</TabsTrigger>
+                </TabsList>
+
+                {/* Tab content sections with improved styling */}
+                <TabsContent value="overview" className="space-y-8">
+                  <Card className="border-gray-700 bg-gray-800/70 shadow-md">
+                    <CardHeader className="border-b border-gray-700">
+                      <CardTitle className="text-xl text-white">Achievements</CardTitle>
+                      <CardDescription className="text-gray-300">Recent achievements earned by this creator</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {achievements
+                          .filter(achievement => achievement.earned)
+                          .slice(0, 3)
+                          .map(achievement => (
+                            <Card key={achievement.id} className="bg-gray-700/50 border-gray-600 hover:bg-gray-700/70 transition-colors">
+                              <CardContent className="p-4 flex items-center space-x-4">
+                                <div className="bg-gray-900 rounded-full p-2 shadow-inner">
+                                  {achievement.icon}
+                                </div>
+                                <div>
+                                  <h4 className="font-medium text-gray-100">{achievement.title}</h4>
+                                  <p className="text-xs text-gray-300">{achievement.description}</p>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border-gray-700 bg-gray-800/70 shadow-md">
+                    <CardHeader className="border-b border-gray-700">
+                      <CardTitle className="text-xl text-white">Recent Activity</CardTitle>
+                      <CardDescription className="text-gray-300">Latest actions from this creator</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6">
                       <div className="space-y-4">
-                        {campaigns.slice(0, 2).map(campaign => (
-                          <CampaignCard 
-                            key={campaign.id} 
-                            campaign={campaign} 
-                            compact 
-                          />
+                        {activities.slice(0, 3).map(activity => (
+                          <div key={activity.id} className="flex items-start space-x-4">
+                            <div className="bg-gray-700 rounded-full p-2">
+                              {getActivityIcon(activity.type)}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between">
+                                <h4 className="font-medium text-gray-100">{activity.title}</h4>
+                                <span className="text-xs text-gray-300">{formatActivityTime(activity.timestamp)}</span>
+                              </div>
+                              <p className="text-sm text-gray-200">{activity.description}</p>
+                            </div>
+                          </div>
                         ))}
                       </div>
-                    ) : (
-                      <p className="text-center py-8 text-gray-500">
-                        No campaigns created yet
-                      </p>
-                    )}
-                  </CardContent>
-                  {campaigns.length > 2 && (
-                    <CardFooter className="border-t border-gray-700">
-                      <Button variant="outline" className="w-full" onClick={() => setActiveTab('campaigns')}>
-                        View All Campaigns
-                      </Button>
-                    </CardFooter>
-                  )}
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="campaigns" className="space-y-6">
-                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Created Campaigns</h2>
-                {campaigns.length > 0 ? (
-                  <div className="space-y-6">
-                    {campaigns.map(campaign => (
-                      <CampaignCard 
-                        key={campaign.id} 
-                        campaign={campaign} 
-                      />
-                    ))}
-                  </div>
-                ) : (
+                    </CardContent>
+                  </Card>
+                  
                   <Card className="border-gray-700 bg-gray-800/70 shadow-md">
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <Sparkles className="h-12 w-12 text-gray-300 mb-4" />
-                      <h3 className="text-xl font-medium text-gray-200 mb-2">No Campaigns Created</h3>
-                      <p className="text-gray-400 text-center max-w-md mb-6">
-                        This user hasn't created any campaigns yet. Check back later!
-                      </p>
-                      {isOwnProfile && (
-                        <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                          <Link href="/create">
-                            Create Campaign
-                          </Link>
-                        </Button>
+                    <CardHeader className="border-b border-gray-700">
+                      <CardTitle className="text-xl text-white">Campaigns</CardTitle>
+                      <CardDescription className="text-gray-300">Created by this user</CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-6">
+                      {campaigns.length > 0 ? (
+                        <div className="space-y-4">
+                          {campaigns.slice(0, 2).map(campaign => (
+                            <CampaignCard 
+                              key={campaign.id} 
+                              campaign={campaign} 
+                              compact 
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-center py-8 text-gray-500">
+                          No campaigns created yet
+                        </p>
                       )}
                     </CardContent>
+                    {campaigns.length > 2 && (
+                      <CardFooter className="border-t border-gray-700">
+                        <Button variant="outline" className="w-full" onClick={() => setActiveTab('campaigns')}>
+                          View All Campaigns
+                        </Button>
+                      </CardFooter>
+                    )}
                   </Card>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="backed" className="space-y-6">
-                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Backed Campaigns</h2>
-                {backedCampaigns.length > 0 ? (
-                  <div className="space-y-6">
-                    {backedCampaigns.map(campaign => (
-                      <CampaignCard 
-                        key={campaign.id} 
-                        campaign={campaign} 
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <Card className="border-gray-700 bg-gray-800/70 shadow-md">
-                    <CardContent className="flex flex-col items-center justify-center py-12">
-                      <Wallet className="h-12 w-12 text-gray-300 mb-4" />
-                      <h3 className="text-xl font-medium text-gray-200 mb-2">No Backed Campaigns</h3>
-                      <p className="text-gray-400 text-center max-w-md mb-6">
-                        This user hasn't backed any campaigns yet. Check back later!
-                      </p>
-                      <Button asChild>
-                        <Link href="/discover" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                          Explore Campaigns
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="achievements" className="space-y-6">
-                <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Achievements</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {achievements.map(achievement => (
-                    <Card 
-                      key={achievement.id} 
-                      className={`border ${achievement.earned ? 'border-gray-700 bg-gray-800/70' : 'border-gray-800 bg-gray-900/30 opacity-60'} shadow-md transition-all duration-200 hover:shadow-lg`}
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-start space-x-4">
-                          <div className={`rounded-full p-3 ${achievement.earned ? 'bg-blue-900/40 text-blue-300 ring-2 ring-blue-500/20' : 'bg-gray-800 text-gray-500'}`}>
-                            {achievement.icon}
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-center mb-2">
-                              <h3 className={`font-bold text-lg ${achievement.earned ? 'text-white' : 'text-gray-400'}`}>
-                                {achievement.title}
-                              </h3>
-                              {achievement.earned && (
-                                <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-800">
-                                  Earned
-                                </Badge>
-                              )}
-                            </div>
-                            <p className={`text-sm ${achievement.earned ? 'text-gray-300' : 'text-gray-500'} mb-3`}>
-                              {achievement.description}
-                            </p>
-                            
-                            {(achievement.progress !== undefined && achievement.total) && (
-                              <div className="mt-3">
-                                <div className="flex justify-between text-xs mb-1">
-                                  <span className={achievement.earned ? 'text-gray-300' : 'text-gray-500'}>Progress</span>
-                                  <span className={achievement.earned ? 'text-gray-300' : 'text-gray-500'}>
-                                    {achievement.progress} / {achievement.total}
-                                  </span>
-                                </div>
-                                <Progress 
-                                  value={(achievement.progress / achievement.total) * 100} 
-                                  className={`h-2 ${achievement.earned ? 'bg-gray-700' : 'bg-gray-800'}`}
-                                />
-                              </div>
-                            )}
-                            
-                            {(achievement.earned && achievement.earnedAt) && (
-                              <p className="text-xs text-gray-400 mt-3">
-                                Earned {new Date(achievement.earnedAt).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+                </TabsContent>
+                
+                <TabsContent value="campaigns" className="space-y-6">
+                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Created Campaigns</h2>
+                  {campaigns.length > 0 ? (
+                    <div className="space-y-6">
+                      {campaigns.map(campaign => (
+                        <CampaignCard 
+                          key={campaign.id} 
+                          campaign={campaign} 
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="border-gray-700 bg-gray-800/70 shadow-md">
+                      <CardContent className="flex flex-col items-center justify-center py-12">
+                        <Sparkles className="h-12 w-12 text-gray-300 mb-4" />
+                        <h3 className="text-xl font-medium text-gray-200 mb-2">No Campaigns Created</h3>
+                        <p className="text-gray-400 text-center max-w-md mb-6">
+                          This user hasn't created any campaigns yet. Check back later!
+                        </p>
+                        {isOwnProfile && (
+                          <Button asChild className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                            <Link href="/create">
+                              Create Campaign
+                            </Link>
+                          </Button>
+                        )}
                       </CardContent>
                     </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          )}
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="backed" className="space-y-6">
+                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Backed Campaigns</h2>
+                  {backedCampaigns.length > 0 ? (
+                    <div className="space-y-6">
+                      {backedCampaigns.map(campaign => (
+                        <CampaignCard 
+                          key={campaign.id} 
+                          campaign={campaign} 
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Card className="border-gray-700 bg-gray-800/70 shadow-md">
+                      <CardContent className="flex flex-col items-center justify-center py-12">
+                        <Wallet className="h-12 w-12 text-gray-300 mb-4" />
+                        <h3 className="text-xl font-medium text-gray-200 mb-2">No Backed Campaigns</h3>
+                        <p className="text-gray-400 text-center max-w-md mb-6">
+                          This user hasn't backed any campaigns yet. Check back later!
+                        </p>
+                        <Button asChild>
+                          <Link href="/discover" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                            Explore Campaigns
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="achievements" className="space-y-6">
+                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">Achievements</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {achievements.map(achievement => (
+                      <Card 
+                        key={achievement.id} 
+                        className={`border ${achievement.earned ? 'border-gray-700 bg-gray-800/70' : 'border-gray-800 bg-gray-900/30 opacity-60'} shadow-md transition-all duration-200 hover:shadow-lg`}
+                      >
+                        <CardContent className="p-6">
+                          <div className="flex items-start space-x-4">
+                            <div className={`rounded-full p-3 ${achievement.earned ? 'bg-blue-900/40 text-blue-300 ring-2 ring-blue-500/20' : 'bg-gray-800 text-gray-500'}`}>
+                              {achievement.icon}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex justify-between items-center mb-2">
+                                <h3 className={`font-bold text-lg ${achievement.earned ? 'text-white' : 'text-gray-400'}`}>
+                                  {achievement.title}
+                                </h3>
+                                {achievement.earned && (
+                                  <Badge variant="outline" className="bg-green-900/20 text-green-400 border-green-800">
+                                    Earned
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className={`text-sm ${achievement.earned ? 'text-gray-300' : 'text-gray-500'} mb-3`}>
+                                {achievement.description}
+                              </p>
+                              
+                              {(achievement.progress !== undefined && achievement.total) && (
+                                <div className="mt-3">
+                                  <div className="flex justify-between text-xs mb-1">
+                                    <span className={achievement.earned ? 'text-gray-300' : 'text-gray-500'}>Progress</span>
+                                    <span className={achievement.earned ? 'text-gray-300' : 'text-gray-500'}>
+                                      {achievement.progress} / {achievement.total}
+                                    </span>
+                                  </div>
+                                  <Progress 
+                                    value={(achievement.progress / achievement.total) * 100} 
+                                    className={`h-2 ${achievement.earned ? 'bg-gray-700' : 'bg-gray-800'}`}
+                                  />
+                                </div>
+                              )}
+                              
+                              {(achievement.earned && achievement.earnedAt) && (
+                                <p className="text-xs text-gray-400 mt-3">
+                                  Earned {new Date(achievement.earnedAt).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </TabsContent>
+              </Tabs>
+            )}
+          </div>
         </div>
       </div>
     </div>

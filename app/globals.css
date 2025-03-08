@@ -119,3 +119,88 @@ body {
 .logo-rotate-reverse {
   animation: rotate 20s linear infinite reverse;
 }
+
+/* Full width container utility to replace 'container mx-auto' */
+.full-width-container {
+  @apply w-full px-4 md:px-6 lg:px-8;
+}
+
+/* Responsive styles for mobile devices */
+@layer utilities {
+  /* Better text readability on small screens */
+  .mobile-text-base {
+    @apply text-base;
+  }
+  
+  .mobile-text-sm {
+    @apply text-sm;
+  }
+  
+  .mobile-text-xs {
+    @apply text-xs;
+  }
+  
+  /* Mobile-friendly padding and spacing */
+  .mobile-container {
+    @apply px-4 sm:px-6 md:px-8;
+  }
+  
+  .mobile-py {
+    @apply py-4 sm:py-6 md:py-8;
+  }
+  
+  .mobile-my {
+    @apply my-4 sm:my-6 md:my-8;
+  }
+  
+  /* Mobile-friendly grid layout */
+  .mobile-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4;
+  }
+  
+  /* Card adjustments for small screens */
+  .mobile-card {
+    @apply w-full flex-shrink-0 overflow-hidden;
+  }
+  
+  /* Fix for content overflow */
+  .overflow-fix {
+    @apply max-w-full overflow-x-hidden;
+  }
+  
+  /* Proper viewport control */
+  .mobile-viewport {
+    width: 100%;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+}
+
+/* Fix iOS input zooming issues */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Fix for fixed position elements on mobile */
+.mobile-fixed {
+  position: fixed;
+  width: 100%;
+  z-index: 50;
+}
+
+/* Responsive tables */
+.responsive-table {
+  @apply w-full overflow-x-auto;
+}
+
+/* Responsive images */
+.responsive-img {
+  @apply max-w-full h-auto;
+}
+
+/* Touch-friendly button sizes */
+.touch-button {
+  @apply min-h-[44px] min-w-[44px];
+}
