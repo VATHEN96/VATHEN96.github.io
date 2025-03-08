@@ -411,6 +411,43 @@ NEXT_BUILD_ID=${buildId}
 `;
   fs.writeFileSync('.next/verify.html', verificationContent);
 
+  // Create Cloudflare Pages specific files
+  console.log('Creating Cloudflare Pages specific files...');
+  fs.writeFileSync('.next/_routes.json', JSON.stringify({
+    "version": 1,
+    "include": ["/*"],
+    "exclude": [
+      "/_next/*",
+      "/api/*",
+      "/_static/*",
+      "/_vercel/*",
+      "/node_modules/*",
+      "/favicon.ico"
+    ]
+  }, null, 2));
+
+  // Create a simple index.html for proper routing
+  fs.writeFileSync('.next/index.html', `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>WowZaRush</title>
+  <meta http-equiv="refresh" content="0;url=/">
+</head>
+<body>
+  <p>Redirecting to WowZaRush application...</p>
+  <script>
+    window.location.href = '/';
+  </script>
+</body>
+</html>`);
+
+  // No-cache headers for Cloudflare
+  fs.writeFileSync('.next/_headers', `/*
+    Cache-Control: no-cache, no-store, must-revalidate
+    Pragma: no-cache
+    Expires: 0`);
+
   // Step 15: Restore the original files
   console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
   if (fs.existsSync('package.json.bak')) {
