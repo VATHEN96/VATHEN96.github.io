@@ -1,6 +1,6 @@
 {
     "name": "zugrama-initial",
-    "version": "0.1.0",
+    "version": "0.1.0-${new Date().toISOString().replace(/:/g, '-')}",
     "private": true,
     "engines": {
         "node": ">=18.18.0"
@@ -11,7 +11,8 @@
         "start": "next start",
         "lint": "next lint",
         "clean-build": "rm -rf .next && next build",
-        "cloudflare-build": "node build-cf.js"
+        "cloudflare-build": "node build-cf.js",
+        "force-deploy": "node deploy.js"
     },
     "dependencies": {
         "@hookform/resolvers": "^4.1.3",

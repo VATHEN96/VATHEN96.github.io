@@ -351,6 +351,37 @@ NEXT_BUILD_ID=${buildId}
 
   // Step 14: Create a VERSION file to ensure Cloudflare detects changes
   fs.writeFileSync('.next/VERSION', buildId);
+  
+  // Create multiple cache-busting files with the current timestamp and random content
+  console.log(`${colors.yellow}Creating cache-busting files...${colors.reset}`);
+  
+  // Create a unique folder name for this build
+  const cacheBustingFolder = path.join('.next', `build_${Date.now()}`);
+  fs.mkdirSync(cacheBustingFolder, { recursive: true });
+  
+  // Create files with random content
+  for (let i = 0; i < 5; i++) {
+    const randomContent = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    fs.writeFileSync(path.join(cacheBustingFolder, `random_${i}.txt`), randomContent);
+  }
+  
+  // Create a _headers file for Cloudflare with cache control directives
+  console.log(`${colors.yellow}Creating Cloudflare cache control headers...${colors.reset}`);
+  const headersContent = `
+# Cloudflare cache control
+/*
+  Cache-Control: no-cache, no-store, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+`;
+  fs.writeFileSync('.next/_headers', headersContent);
+  
+  // Create a _redirects file to help with clean URLs
+  const redirectsContent = `
+# Redirects and rewrites
+/*    /index.html   200
+`;
+  fs.writeFileSync('.next/_redirects', redirectsContent);
 
   // Step 15: Restore the original files
   console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
