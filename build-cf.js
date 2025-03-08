@@ -93,7 +93,51 @@ try {
     }
   });
 
-  // Step 4: Install dependencies with npm
+  // Step 4: Fix duplicate identifiers in context file
+  console.log(`${colors.yellow}Fixing duplicate identifiers in wowzarushContext.tsx...${colors.reset}`);
+  if (fs.existsSync('context/wowzarushContext.tsx')) {
+    let contextContent = fs.readFileSync('context/wowzarushContext.tsx', 'utf8');
+    
+    // Backup the original file
+    fs.writeFileSync('context/wowzarushContext.tsx.bak', contextContent);
+    
+    // Fix the imports that are causing conflicts with local declarations
+    contextContent = contextContent.replace(
+      /import \{\s*CreatorProfile,\s*User,\s*CampaignAnalytics,\s*MetricChartData,\s*MilestoneProgress,\s*LinkedProposal\s*\} from '@\/types';/,
+      "// Types imported from centralized type system\nimport type { CreatorProfile as ExternalCreatorProfile, User as ExternalUser } from '@/types';"
+    );
+    
+    fs.writeFileSync('context/wowzarushContext.tsx', contextContent);
+  }
+  
+  // Step 5: Fix ListItem duplication in navbar.tsx
+  console.log(`${colors.yellow}Fixing ListItem duplication in navbar.tsx...${colors.reset}`);
+  if (fs.existsSync('components/navbar.tsx')) {
+    let navbarContent = fs.readFileSync('components/navbar.tsx', 'utf8');
+    
+    // Backup the original file
+    fs.writeFileSync('components/navbar.tsx.bak', navbarContent);
+    
+    // Rename the imported ListItem to avoid conflict with local component
+    navbarContent = navbarContent.replace(
+      /import \{\s*([^}]*),\s*ListItem,\s*([^}]*)\} from ['"]@\/components\/ui\/navigation-menu['"];/g,
+      "import { $1, ListItem as NavigationListItem, $2 } from '@/components/ui/navigation-menu';"
+    );
+    
+    // Replace all usages of the imported ListItem
+    navbarContent = navbarContent.replace(
+      /<ListItem([^>]*)>/g,
+      "<NavigationListItem$1>"
+    );
+    navbarContent = navbarContent.replace(
+      /<\/ListItem>/g,
+      "</NavigationListItem>"
+    );
+    
+    fs.writeFileSync('components/navbar.tsx', navbarContent);
+  }
+
+  // Step 6: Install dependencies with npm
   console.log(`${colors.yellow}Installing dependencies with npm...${colors.reset}`);
   execSync('npm install --no-audit --no-fund --legacy-peer-deps', {
     stdio: 'inherit',
@@ -103,7 +147,7 @@ try {
     }
   });
 
-  // Step 5: Create a simplified next.config.js file
+  // Step 7: Create a simplified next.config.js file
   console.log(`${colors.yellow}Creating simplified next.config.mjs...${colors.reset}`);
   
   const nextConfigJs = `
@@ -169,17 +213,7 @@ export default nextConfig;
 
   fs.writeFileSync('next.config.mjs', nextConfigJs);
   
-  // Step 6: Create .babelrc to ensure proper module handling
-  console.log(`${colors.yellow}Creating .babelrc for module compatibility...${colors.reset}`);
-  
-  const babelConfig = {
-    "presets": ["next/babel"],
-    "plugins": []
-  };
-  
-  fs.writeFileSync('.babelrc', JSON.stringify(babelConfig, null, 2));
-  
-  // Step 7: Create a .env file with key settings
+  // Step 8: Create a .env file with key settings
   console.log(`${colors.yellow}Creating build-specific .env file...${colors.reset}`);
   
   const envContent = `
@@ -197,7 +231,7 @@ NEXT_IGNORE_ESLINT_ERROR=1
   
   fs.writeFileSync('.env', envContent);
   
-  // Step 8: Run the Next.js build with simplified config
+  // Step 9: Run the Next.js build with simplified config
   console.log(`${colors.yellow}Building Next.js app without TypeScript checks...${colors.reset}`);
   execSync('npm run build', { 
     stdio: 'inherit',
@@ -210,11 +244,11 @@ NEXT_IGNORE_ESLINT_ERROR=1
     }
   });
 
-  // Step 9: Create .nojekyll file for GitHub Pages
+  // Step 10: Create .nojekyll file for GitHub Pages
   console.log(`${colors.yellow}Creating .nojekyll file...${colors.reset}`);
   fs.writeFileSync('.next/.nojekyll', '');
 
-  // Step 10: Restore the original files
+  // Step 11: Restore the original files
   console.log(`${colors.yellow}Restoring original files...${colors.reset}`);
   if (fs.existsSync('package.json.bak')) {
     fs.copyFileSync('package.json.bak', 'package.json');
@@ -230,8 +264,18 @@ NEXT_IGNORE_ESLINT_ERROR=1
     fs.copyFileSync('.env.bak', '.env');
     fs.unlinkSync('.env.bak');
   }
+  
+  if (fs.existsSync('context/wowzarushContext.tsx.bak')) {
+    fs.copyFileSync('context/wowzarushContext.tsx.bak', 'context/wowzarushContext.tsx');
+    fs.unlinkSync('context/wowzarushContext.tsx.bak');
+  }
+  
+  if (fs.existsSync('components/navbar.tsx.bak')) {
+    fs.copyFileSync('components/navbar.tsx.bak', 'components/navbar.tsx');
+    fs.unlinkSync('components/navbar.tsx.bak');
+  }
 
-  // Step 11: Done
+  // Step 12: Done
   console.log(`${colors.bright}${colors.green}Build completed successfully!${colors.reset}`);
   process.exit(0);
 } catch (error) {
@@ -253,6 +297,16 @@ NEXT_IGNORE_ESLINT_ERROR=1
   if (fs.existsSync('.env.bak')) {
     fs.copyFileSync('.env.bak', '.env');
     fs.unlinkSync('.env.bak');
+  }
+  
+  if (fs.existsSync('context/wowzarushContext.tsx.bak')) {
+    fs.copyFileSync('context/wowzarushContext.tsx.bak', 'context/wowzarushContext.tsx');
+    fs.unlinkSync('context/wowzarushContext.tsx.bak');
+  }
+  
+  if (fs.existsSync('components/navbar.tsx.bak')) {
+    fs.copyFileSync('components/navbar.tsx.bak', 'components/navbar.tsx');
+    fs.unlinkSync('components/navbar.tsx.bak');
   }
   
   process.exit(1);
