@@ -146,6 +146,31 @@
 						"type": "uint256"
 					},
 					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "investor",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "InvestmentReceived",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "campaignId",
+						"type": "uint256"
+					},
+					{
 						"indexed": false,
 						"internalType": "uint256",
 						"name": "milestoneIndex",
@@ -196,165 +221,61 @@
 			{
 				"inputs": [
 					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "campaigns",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "id",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "creator",
-						"type": "address"
-					},
-					{
-						"internalType": "string",
-						"name": "title",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "description",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "category",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "goalAmount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "totalFunded",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "duration",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "createdAt",
-						"type": "uint256"
-					},
-					{
-						"internalType": "bool",
-						"name": "isActive",
-						"type": "bool"
-					},
-					{
-						"internalType": "uint256",
-						"name": "currentMilestone",
-						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "proofOfWork",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "beneficiaries",
-						"type": "string"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "string",
-						"name": "title",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "description",
-						"type": "string"
-					},
-					{
-						"internalType": "string",
-						"name": "category",
-						"type": "string"
-					},
-					{
-						"internalType": "uint256",
-						"name": "goalAmount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "duration",
-						"type": "uint256"
-					},
-					{
-						"internalType": "string[]",
-						"name": "media",
-						"type": "string[]"
-					},
-					{
 						"components": [
 							{
 								"internalType": "string",
-								"name": "name",
+								"name": "title",
 								"type": "string"
-							},
-							{
-								"internalType": "uint256",
-								"name": "targetAmount",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bool",
-								"name": "isCompleted",
-								"type": "bool"
-							},
-							{
-								"internalType": "bool",
-								"name": "isFunded",
-								"type": "bool"
 							},
 							{
 								"internalType": "string",
-								"name": "proofOfCompletion",
+								"name": "description",
+								"type": "string"
+							},
+							{
+								"internalType": "string",
+								"name": "category",
 								"type": "string"
 							},
 							{
 								"internalType": "uint256",
-								"name": "fundsReleased",
+								"name": "goalAmount",
 								"type": "uint256"
 							},
 							{
-								"internalType": "bool",
-								"name": "isUnderReview",
-								"type": "bool"
+								"internalType": "uint256",
+								"name": "duration",
+								"type": "uint256"
+							},
+							{
+								"internalType": "string[]",
+								"name": "media",
+								"type": "string[]"
+							},
+							{
+								"internalType": "string[]",
+								"name": "milestoneNames",
+								"type": "string[]"
+							},
+							{
+								"internalType": "uint256[]",
+								"name": "milestoneAmounts",
+								"type": "uint256[]"
+							},
+							{
+								"internalType": "string",
+								"name": "beneficiaries",
+								"type": "string"
+							},
+							{
+								"internalType": "address[]",
+								"name": "stakeholders",
+								"type": "address[]"
 							}
 						],
-						"internalType": "struct WowzaRush.Milestone[]",
-						"name": "milestones",
-						"type": "tuple[]"
-					},
-					{
-						"internalType": "string",
-						"name": "beneficiaries",
-						"type": "string"
-					},
-					{
-						"internalType": "address[]",
-						"name": "stakeholders",
-						"type": "address[]"
+						"internalType": "struct WowzaRush.CampaignCreationParams",
+						"name": "params",
+						"type": "tuple"
 					}
 				],
 				"name": "createCampaign",
@@ -409,7 +330,36 @@
 						"type": "uint256"
 					}
 				],
-				"name": "getCampaign",
+				"name": "getCampaignArrays",
+				"outputs": [
+					{
+						"internalType": "string[]",
+						"name": "media",
+						"type": "string[]"
+					},
+					{
+						"internalType": "address[]",
+						"name": "donors",
+						"type": "address[]"
+					},
+					{
+						"internalType": "address[]",
+						"name": "stakeholders",
+						"type": "address[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "campaignId",
+						"type": "uint256"
+					}
+				],
+				"name": "getCampaignBasicInfo",
 				"outputs": [
 					{
 						"components": [
@@ -462,81 +412,9 @@
 								"internalType": "bool",
 								"name": "isActive",
 								"type": "bool"
-							},
-							{
-								"internalType": "string[]",
-								"name": "media",
-								"type": "string[]"
-							},
-							{
-								"internalType": "address[]",
-								"name": "donors",
-								"type": "address[]"
-							},
-							{
-								"components": [
-									{
-										"internalType": "string",
-										"name": "name",
-										"type": "string"
-									},
-									{
-										"internalType": "uint256",
-										"name": "targetAmount",
-										"type": "uint256"
-									},
-									{
-										"internalType": "bool",
-										"name": "isCompleted",
-										"type": "bool"
-									},
-									{
-										"internalType": "bool",
-										"name": "isFunded",
-										"type": "bool"
-									},
-									{
-										"internalType": "string",
-										"name": "proofOfCompletion",
-										"type": "string"
-									},
-									{
-										"internalType": "uint256",
-										"name": "fundsReleased",
-										"type": "uint256"
-									},
-									{
-										"internalType": "bool",
-										"name": "isUnderReview",
-										"type": "bool"
-									}
-								],
-								"internalType": "struct WowzaRush.Milestone[]",
-								"name": "milestones",
-								"type": "tuple[]"
-							},
-							{
-								"internalType": "uint256",
-								"name": "currentMilestone",
-								"type": "uint256"
-							},
-							{
-								"internalType": "string",
-								"name": "proofOfWork",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "beneficiaries",
-								"type": "string"
-							},
-							{
-								"internalType": "address[]",
-								"name": "stakeholders",
-								"type": "address[]"
 							}
 						],
-						"internalType": "struct WowzaRush.Campaign",
+						"internalType": "struct WowzaRush.CampaignBasicInfo",
 						"name": "",
 						"type": "tuple"
 					}
@@ -599,49 +477,119 @@
 						"type": "uint256"
 					}
 				],
-				"name": "getCampaignMetadata",
+				"name": "getCampaignInvestmentInfo",
 				"outputs": [
 					{
 						"components": [
 							{
-								"internalType": "uint256",
-								"name": "id",
-								"type": "uint256"
-							},
-							{
-								"internalType": "address",
-								"name": "creator",
-								"type": "address"
-							},
-							{
-								"internalType": "string",
-								"name": "title",
-								"type": "string"
-							},
-							{
-								"internalType": "string",
-								"name": "category",
-								"type": "string"
+								"internalType": "uint8",
+								"name": "campaignType",
+								"type": "uint8"
 							},
 							{
 								"internalType": "uint256",
-								"name": "goalAmount",
+								"name": "equityPercentage",
 								"type": "uint256"
 							},
 							{
 								"internalType": "uint256",
-								"name": "totalFunded",
+								"name": "minInvestment",
+								"type": "uint256"
+							}
+						],
+						"internalType": "struct WowzaRush.CampaignInvestmentInfo",
+						"name": "",
+						"type": "tuple"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "campaignId",
+						"type": "uint256"
+					}
+				],
+				"name": "getCampaignMilestones",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "name",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "targetAmount",
 								"type": "uint256"
 							},
 							{
 								"internalType": "bool",
-								"name": "isActive",
+								"name": "isCompleted",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "isFunded",
+								"type": "bool"
+							},
+							{
+								"internalType": "string",
+								"name": "proofOfCompletion",
+								"type": "string"
+							},
+							{
+								"internalType": "uint256",
+								"name": "fundsReleased",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "isUnderReview",
 								"type": "bool"
 							}
 						],
-						"internalType": "struct WowzaRush.CampaignMetadata",
-						"name": "",
-						"type": "tuple"
+						"internalType": "struct WowzaRush.Milestone[]",
+						"name": "milestones",
+						"type": "tuple[]"
+					},
+					{
+						"internalType": "uint256",
+						"name": "currentMilestone",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "campaignId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "investor",
+						"type": "address"
+					}
+				],
+				"name": "getInvestmentDetails",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "investmentAmount",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "equityShare",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -689,6 +637,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [],
+				"name": "getOwner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [
 					{
 						"internalType": "address",
@@ -730,39 +691,13 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "",
+						"name": "campaignId",
 						"type": "uint256"
 					}
 				],
-				"name": "milestoneVotes",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "isUpvote",
-						"type": "bool"
-					},
-					{
-						"internalType": "string",
-						"name": "message",
-						"type": "string"
-					},
-					{
-						"internalType": "address",
-						"name": "voter",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
+				"name": "invest",
+				"outputs": [],
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -809,54 +744,6 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "userCampaigns",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"name": "userDonations",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
 						"internalType": "uint256",
 						"name": "campaignId",
 						"type": "uint256"
@@ -884,6 +771,9 @@
 			}
 		],
 		"devdoc": {
+			"custom:optimization": "enabled",
+			"custom:optimization-runs": "200",
+			"custom:optimization-via-ir": "true",
 			"kind": "dev",
 			"methods": {},
 			"version": 1
@@ -911,11 +801,11 @@
 	},
 	"sources": {
 		"WowzaRush.sol": {
-			"keccak256": "0xa8eb5584680032cfe2e45388d2d97c8f56e259b30af12592f8f7aa9bc1a291fd",
+			"keccak256": "0xca82c74e0227d404c44425d261f05b1d7a99f5bca6a0a871d4ab83d2d2f643cc",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://c21ffb04410cdb0c2664ee455776f619e08efc693760b5ce61abd5b0cec92bb5",
-				"dweb:/ipfs/QmdvPu6G9V1JZkLaAq2s7AD5B5dwgF33EQvhhZZa5kuTeZ"
+				"bzz-raw://e8f66d3fdaf36cfe7a392f859972b0128e291ea77f3293de71ce102d03420a01",
+				"dweb:/ipfs/QmZ24xAm5cpziv5i4Ni9TH2W9WUCoFq19SsQNdNJHHKRt5"
 			]
 		}
 	},

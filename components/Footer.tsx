@@ -2,69 +2,32 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Twitter, Github, DiscIcon as Discord } from 'lucide-react'
+import { Twitter, Github } from 'lucide-react'
 
 export default function Footer() {
-  const links = {
-    Product: ['Features', 'Security', 'Team', 'Enterprise'],
-    Support: ['Documentation', 'Guides', 'API Status', 'Forums'],
-    Company: ['About', 'Blog', 'Careers', 'Press'],
-    Legal: ['Privacy', 'Terms', 'Cookie Policy', 'License']
-  }
-
   return (
     <footer className="bg-black dark:bg-white text-white dark:text-black py-20">
       <div className="w-full px-4">
-        <div className="grid md:grid-cols-2 lg:grid-cols-6 gap-12">
-          <div className="lg:col-span-2">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-            >
-              <h3 className="text-3xl font-bold mb-4">wowzarush</h3>
-              <p className="text-gray-300 dark:text-gray-700 mb-6 max-w-sm">
-                Empowering innovation through transparent, milestone-based crowdfunding on the blockchain.
-              </p>
-              <div className="flex space-x-4">
-                <Link href="#" className="hover:text-gray-400 dark:hover:text-gray-600 transition-colors">
-                  <Twitter className="w-6 h-6" />
-                </Link>
-                <Link href="https://github.com/manovHacksaw/zugrama" className="hover:text-gray-400 dark:hover:text-gray-600 transition-colors">
-                  <Github className="w-6 h-6" />
-                </Link>
-                
-              </div>
-            </motion.div>
-          </div>
-
-          {Object.entries(links).map(([category, items], index) => (
-            <motion.div
-              key={category}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <h4 className="text-lg font-bold mb-4">{category}</h4>
-              <ul className="space-y-2">
-                {items.map((item) => (
-                  <li key={item}>
-                    <Link 
-                      href="#" 
-                      className="text-gray-300 dark:text-gray-700 hover:text-gray-400 dark:hover:text-gray-600 transition-colors"
-                    >
-                      {item}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="mt-12 pt-8 border-t border-gray-800 dark:border-gray-300 text-center text-gray-300 dark:text-gray-700">
-          <p>© 2024 wowzarush. All rights reserved.</p>
+        <div className="flex justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center"
+          >
+            <h3 className="text-3xl font-bold mb-4">wowzarush</h3>
+            <p className="text-gray-300 dark:text-gray-700 mb-6 max-w-sm">
+              Empowering innovation through transparent, milestone-based crowdfunding on the blockchain.
+            </p>
+            <div className="flex justify-center space-x-4">
+              <Link href="#" className="hover:text-gray-400 dark:hover:text-gray-600 transition-colors">
+                <Twitter className="w-6 h-6" />
+              </Link>
+              <Link href="https://github.com/manovHacksaw/zugrama" className="hover:text-gray-400 dark:hover:text-gray-600 transition-colors">
+                <Github className="w-6 h-6" />
+              </Link>
+            </div>
+          </motion.div>
         </div>
       </div>
     </footer>

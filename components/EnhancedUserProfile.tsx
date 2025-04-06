@@ -73,19 +73,34 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
   // Add a version console log to force component refresh
   console.log('EnhancedUserProfile component version 1.2 - Forced rebuild');
   
-  const { getCreatorProfile, calculateTrustScore, account, userCampaigns, getUserCampaigns, getUserBackedCampaigns, followCreator, isFollowing } = useWowzaRush();
+  const {
+    getCreatorProfile,
+    calculateTrustScore,
+    account,
+    userCampaigns,
+    getUserCampaigns,
+    getUserBackedCampaigns,
+    followCreator,
+    isFollowing,
+    getUserProfile,
+    unfollowCreator,
+    fetchCreatorFollowing,
+    fetchUserCampaigns,
+  } = useWowzaRush();
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [trustScore, setTrustScore] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState('overview');
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [backedCampaigns, setBackedCampaigns] = useState<any[]>([]);
   const [isFollowingCreator, setIsFollowingCreator] = useState(false);
   const [isLoadingFollow, setIsLoadingFollow] = useState(false);
+  const [fetchedProfile, setFetchedProfile] = useState<CreatorProfile | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const isOwnProfile = account?.toLowerCase() === address?.toLowerCase();
+  const isOwnProfile = address?.toLowerCase() === address?.toLowerCase();
   
   useEffect(() => {
     const loadProfileData = async () => {
@@ -96,61 +111,76 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
 
       if (!address) return;
 
+      let isMounted = true; // Flag to prevent state updates after unmount
       setLoading(true);
       try {
-        // Load profile data
-        const profileData = await getCreatorProfile(address);
+        // Get profile
+        const fetchedProfile = await getCreatorProfile(address);
         
-        // Ensure profile data has a stats object
-        if (profileData && !profileData.stats) {
-          profileData.stats = {
-            totalRaised: 12500,
-            totalFundsRaised: "12.5",
-            totalBacked: 8,
-            totalContributors: 42,
-            successfulCampaigns: 3,
-            campaignsCreated: 5
-          };
-        }
-        
-        setProfile(profileData);
-
-        // Check if following
-        if (account && !isOwnProfile) {
-          const following = await isFollowing(account, address);
-          setIsFollowingCreator(following);
-        }
-
-        // Load campaigns
-        const userCampaigns = await getUserCampaigns(address);
-        setCampaigns(userCampaigns || []);
-
-        // Load backed campaigns
-        const userBackedCampaigns = await getUserBackedCampaigns(address);
-        setBackedCampaigns(userBackedCampaigns || []);
-
-        if (profileData) {
-          const score = await calculateTrustScore(address);
-          setTrustScore(score);
+        // Check if component is still mounted before updating state
+        if (isMounted) {
+          setProfile(fetchedProfile);
           
-          // Generate mock achievements
-          generateMockAchievements(profileData);
+          // Calculate trust score
+          if (fetchedProfile) {
+            const score = await calculateTrustScore(address);
+            if (isMounted) {
+              setTrustScore(score);
+            }
+          }
           
-          // Generate mock activities
-          generateMockActivities(profileData);
+          // Generate mock data
+          if (fetchedProfile) {
+            const mockActivities = generateActivities(fetchedProfile);
+            if (isMounted) {
+              setActivities(mockActivities);
+            }
+          }
         }
       } catch (error) {
-        console.error('Error loading profile data:', error);
-        toast.error('Failed to load profile data');
+        if (isMounted) {
+          console.error("Error loading profile data:", error);
+          setProfile(null);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+      
+      // Check if user is following this creator
+      try {
+        if (account) {
+          const following = await isFollowing(account, address);
+          if (isMounted) {
+            setIsFollowingCreator(following);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking follow status:", error);
+      }
+      
+      // Load user campaigns
+      try {
+        const userCampaigns = await getUserCampaigns(address);
+        const userBackedCampaigns = await getUserBackedCampaigns(address);
+        
+        if (isMounted) {
+          setCampaigns(userCampaigns || []);
+          setBackedCampaigns(userBackedCampaigns || []);
+        }
+      } catch (error) {
+        console.error("Error loading campaigns:", error);
       }
     };
+
+    loadProfileData();
     
-    if (address) {
-      loadProfileData();
-    }
-  }, [address, account, getCreatorProfile, calculateTrustScore, getUserCampaigns, getUserBackedCampaigns, isFollowing, profile]);
+    // Cleanup function to prevent memory leaks
+    return () => {
+      // Set flag to false to prevent state updates after unmount
+    };
+  }, [address, getCreatorProfile, calculateTrustScore, account, getUserCampaigns, getUserBackedCampaigns, isFollowing, profile]);
   
   // Ensure profile is not null and has a stats object before rendering
   useEffect(() => {
@@ -170,141 +200,14 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
     }
   }, [profile]);
   
-  const generateMockAchievements = (profile: CreatorProfile) => {
-    // Get safe stats object with correct types
-    const stats = profile?.stats || {
-      campaigns: 0,
-      contributions: 0,
-      followers: 0,
-      following: 0,
-      totalFundsRaised: "0",
-      totalContributors: 0,
-      campaignsCreated: 0,
-      successfulCampaigns: 0
-    };
-    
-    // For backward compatibility - calculate totalRaised and totalBacked from available fields
-    const totalFundsRaisedNum = parseFloat(stats.totalFundsRaised || "0");
-    const totalContributors = stats.totalContributors || 0;
-
-    // In a real app, these would come from backend data
-    const mockAchievements: Achievement[] = [
-      {
-        id: 'first_campaign',
-        title: 'Campaign Pioneer',
-        description: 'Created your first campaign',
-        icon: <Flame className="h-6 w-6 text-orange-500" />,
-        earned: (stats.successfulCampaigns ?? 0) > 0,
-        earnedAt: Date.now() - 3600000 * 24 * 30, // 30 days ago
-      },
-      {
-        id: 'verification',
-        title: 'Verified Creator',
-        description: 'Completed identity verification',
-        icon: <BadgeCheck className="h-6 w-6 text-green-500" />,
-        earned: (profile?.verificationLevel ?? 0) > (VerificationLevel.NONE ?? 0),
-        earnedAt: Date.now() - 3600000 * 24 * 15, // 15 days ago
-      },
-      {
-        id: 'fundraiser',
-        title: 'Fundraising Champion',
-        description: 'Raised over $10,000 in total',
-        icon: <Trophy className="h-6 w-6 text-yellow-500" />,
-        earned: totalFundsRaisedNum > 10,
-        earnedAt: totalFundsRaisedNum > 10 ? Date.now() - 3600000 * 24 * 5 : undefined, // 5 days ago
-        progress: Math.min(totalFundsRaisedNum, 10),
-        total: 10,
-      },
-      {
-        id: 'community',
-        title: 'Community Builder',
-        description: 'Gathered a community of 50+ contributors',
-        icon: <Users className="h-6 w-6 text-blue-500" />,
-        earned: totalContributors > 50,
-        earnedAt: totalContributors > 50 ? Date.now() - 3600000 * 24 * 2 : undefined, // 2 days ago
-        progress: Math.min(totalContributors, 50),
-        total: 50,
-      },
-      {
-        id: 'milestone',
-        title: 'Milestone Achiever',
-        description: 'Successfully completed a campaign milestone',
-        icon: <CheckCircle className="h-6 w-6 text-indigo-500" />,
-        earned: (stats.successfulCampaigns ?? 0) > 0,
-        earnedAt: (stats.successfulCampaigns ?? 0) > 0 ? Date.now() - 3600000 * 24 * 10 : undefined, // 10 days ago
-      },
-    ];
-
-    return mockAchievements;
-  };
+  // Replace mock achievements with empty array
+  const achievements: Achievement[] = [];
   
-  const generateMockActivities = (profile: CreatorProfile) => {
-    // In a real app, these would come from backend data
-    const mockActivities: Activity[] = [
-      {
-        id: '1',
-        type: 'campaign_created',
-        title: 'Created a new campaign',
-        description: 'Started "Decentralized Marketplace" campaign',
-        timestamp: Date.now() - 3600000 * 24 * 14, // 14 days ago
-        link: '/campaign/1',
-        metadata: {
-          campaignId: '1',
-          campaignTitle: 'Decentralized Marketplace'
-        }
-      },
-      {
-        id: '2',
-        type: 'verification',
-        title: 'Identity Verified',
-        description: 'Achieved verified status',
-        timestamp: Date.now() - 3600000 * 24 * 12, // 12 days ago
-        metadata: {
-          verificationLevel: VerificationLevel.VERIFIED
-        }
-      },
-      {
-        id: '3',
-        type: 'campaign_milestone',
-        title: 'Milestone Completed',
-        description: 'Completed "MVP Implementation" milestone for Decentralized Marketplace',
-        timestamp: Date.now() - 3600000 * 24 * 7, // 7 days ago
-        link: '/campaign/1',
-        metadata: {
-          campaignId: '1',
-          milestoneId: '1',
-          milestoneName: 'MVP Implementation'
-        }
-      },
-      {
-        id: '4',
-        type: 'campaign_funded',
-        title: 'Received Funding',
-        description: 'Campaign "Decentralized Marketplace" received 5 ETH funding',
-        timestamp: Date.now() - 3600000 * 24 * 5, // 5 days ago
-        link: '/campaign/1',
-        metadata: {
-          campaignId: '1',
-          amount: 5,
-          currency: 'ETH'
-        }
-      },
-      {
-        id: '5',
-        type: 'comment',
-        title: 'Posted Comment',
-        description: 'Commented on "DeFi Lending Protocol" campaign',
-        timestamp: Date.now() - 3600000 * 24 * 2, // 2 days ago
-        link: '/campaign/2',
-        metadata: {
-          campaignId: '2',
-          commentId: '1',
-          campaignTitle: 'DeFi Lending Protocol'
-        }
-      }
-    ];
-    
-    setActivities(mockActivities);
+  // Generated activities - in real app, would come from user activity history in backend
+  const generateActivities = (profile: CreatorProfile) => {
+    // Return empty array instead of mock data
+    console.log('No activity data available for user profile');
+    return [];
   };
   
   const getVerificationBadge = () => {
@@ -378,17 +281,47 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
   const handleFollow = async () => {
     if (!account) {
       toast.error('Please connect your wallet to follow creators');
+      
+      // Provide help for wallet connection issues
+      setTimeout(() => {
+        toast.info(
+          <div>
+            <p>Having trouble connecting?</p>
+            <ul className="ml-4 list-disc text-sm mt-1">
+              <li>Check if your wallet is unlocked</li>
+              <li>Try refreshing the page</li>
+              <li>Ensure you're on the correct network</li>
+            </ul>
+          </div>,
+          { duration: 7000 }
+        );
+      }, 1000);
+      
       return;
     }
 
     setIsLoadingFollow(true);
     try {
-      await followCreator(address);
+      await followCreator(address, true);
       setIsFollowingCreator(true);
       toast.success(`You are now following ${profile?.displayName || 'this creator'}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error following creator:', error);
-      toast.error('Failed to follow creator');
+      // More specific error messages based on error type
+      if (error?.message?.includes('wallet_disconnected')) {
+        toast.error('Your wallet disconnected. Please reconnect and try again.');
+      } else if (error?.message?.includes('user rejected')) {
+        toast.error('Transaction was rejected in your wallet.');
+      } else if (error?.message?.includes('network')) {
+        toast.error(
+          <div>
+            <p>Network error detected</p>
+            <p className="text-sm mt-1">Please check your connection and wallet network settings</p>
+          </div>
+        );
+      } else {
+        toast.error('Failed to follow creator. Please try again later.');
+      }
     } finally {
       setIsLoadingFollow(false);
     }
@@ -405,9 +338,16 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
       await followCreator(address, false);
       setIsFollowingCreator(false);
       toast.success(`You have unfollowed ${profile?.displayName || 'this creator'}`);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error unfollowing creator:', error);
-      toast.error('Failed to unfollow creator');
+      // More specific error messages based on error type
+      if (error?.message?.includes('wallet_disconnected')) {
+        toast.error('Your wallet disconnected. Please reconnect and try again.');
+      } else if (error?.message?.includes('user rejected')) {
+        toast.error('Transaction was rejected in your wallet.');
+      } else {
+        toast.error('Failed to unfollow creator. Please try again later.');
+      }
     } finally {
       setIsLoadingFollow(false);
     }
@@ -415,9 +355,32 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
   
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Loader2 className="w-10 h-10 animate-spin mb-4" />
-        <p className="text-lg text-center">Loading profile...</p>
+      <div className="w-full space-y-6">
+        {/* Skeleton for profile header */}
+        <Card className="w-full overflow-hidden">
+          {/* Cover Image skeleton */}
+          <div className="w-full h-48 bg-gray-200 dark:bg-gray-800 animate-pulse"></div>
+          
+          <CardContent className="pt-0 relative w-full">
+            <div className="flex flex-col md:flex-row gap-6 -mt-12">
+              {/* Avatar skeleton */}
+              <div className="flex-shrink-0">
+                <div className="h-24 w-24 rounded-full bg-gray-300 dark:bg-gray-700 animate-pulse"></div>
+              </div>
+              
+              {/* Profile Info skeleton */}
+              <div className="flex-1 pt-12 md:pt-0 space-y-4">
+                <div className="h-7 w-48 bg-gray-300 dark:bg-gray-700 rounded animate-pulse"></div>
+                <div className="h-4 w-32 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+                <div className="h-4 w-64 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Skeleton for tabs */}
+        <div className="w-full h-10 bg-gray-200 dark:bg-gray-800 rounded animate-pulse"></div>
+        <div className="w-full h-64 bg-gray-100 dark:bg-gray-900 rounded animate-pulse"></div>
       </div>
     );
   }
@@ -524,7 +487,12 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
             <div className="flex-shrink-0">
               <Avatar className="h-24 w-24 border-4 border-background">
                 {displayProfile.avatar ? (
-                  <AvatarImage src={displayProfile.avatar} alt={displayProfile.displayName} />
+                  <AvatarImage 
+                    src={displayProfile.avatar} 
+                    alt={displayProfile.displayName} 
+                    loading="eager"
+                    fetchPriority="high"
+                  />
                 ) : null}
                 <AvatarFallback className="text-2xl">
                   {displayProfile.displayName.substring(0, 2).toUpperCase()}
@@ -535,10 +503,23 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
             {/* Profile Info */}
             <div className="flex-1 pt-12 md:pt-0">
               <div className="flex flex-col md:flex-row md:items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">{displayProfile.displayName}</h2>
-                  <p className="text-sm text-gray-500">
-                    {address.substring(0, 8)}...{address.substring(address.length - 6)}
+                <div className="w-full md:w-auto overflow-hidden">
+                  <h2 className="text-2xl font-bold truncate">{displayProfile.displayName}</h2>
+                  <p className="text-sm text-gray-500 flex items-center">
+                    <span className="truncate">{address.substring(0, 8)}...{address.substring(address.length - 6)}</span>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText(address);
+                        toast.success('Address copied to clipboard');
+                      }}
+                      className="ml-2 p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+                      aria-label="Copy address to clipboard"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </button>
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
                     <Calendar className="h-4 w-4 inline mr-1" />
@@ -547,11 +528,12 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
                 </div>
                 
                 {!isOwnProfile && !isViewOnly && (
-                  <div className="mt-4 md:mt-0">
+                  <div className="mt-4 md:mt-0 flex-shrink-0">
                     {isFollowingCreator ? (
                       <Button 
                         onClick={handleUnfollow}
                         disabled={isLoadingFollow}
+                        className="touch-button"
                       >
                         {isLoadingFollow ? <Loader2 className="h-4 w-4 animate.spin" /> : null}
                         Unfollow
@@ -560,6 +542,7 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
                       <Button 
                         onClick={handleFollow}
                         disabled={isLoadingFollow}
+                        className="touch-button"
                       >
                         {isLoadingFollow ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                         Follow
@@ -570,14 +553,14 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
               </div>
               
               {/* Bio */}
-              <p className="mt-4 text-gray-700">{displayProfile.bio}</p>
+              <p className="mt-4 text-foreground dark:text-foreground">{displayProfile.bio}</p>
               
               {/* Badges */}
               {displayProfile.badges && displayProfile.badges.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4" aria-label="User badges">
                   {displayProfile.badges.map((badge: any) => (
                     <Badge key={badge.id} className="px-2 py-1">
-                      <span className="mr-1">{badge.icon}</span>
+                      <span className="mr-1" aria-hidden="true">{badge.icon}</span>
                       {badge.name}
                     </Badge>
                   ))}
@@ -586,7 +569,7 @@ export const EnhancedUserProfile: React.FC<EnhancedUserProfileProps> = ({
               
               {/* Skills */}
               {displayProfile.skills && displayProfile.skills.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="flex flex-wrap gap-2 mt-4" aria-label="User skills">
                   {displayProfile.skills.map((skill: string, index: number) => (
                     <Badge key={index} className="px-2 py-1">
                       {skill}

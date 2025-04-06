@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, FileImage, ExternalLink, Trash2, Upload, Info, Image as ImageIcon, Film } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FileImage, ExternalLink, Trash2, Upload, Info, Image as ImageIcon, Film, Link as LinkIcon, Check, X, PencilLine, AlertCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Tooltip,
@@ -27,15 +27,21 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
+import FileUpload, { UploadedFile } from '@/components/FileUpload';
+import Link from 'next/link';
 
 // Define the schema for media
 const mediaSchema = z.object({
-  mainImage: z.string().url('Please enter a valid URL').min(1, 'Main image is required'),
-  additionalImages: z.array(z.string().url('Please enter a valid URL')),
+  mainImage: z.string().optional(),
+  mainImageUrl: z.string().optional(),
+  additionalImages: z.array(z.string()),
   videoUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   mediaConsent: z.boolean().refine(value => value === true, {
     message: 'You must confirm that you have the rights to use these media'
   })
+}).refine((data) => data.mainImage || data.mainImageUrl, {
+  message: 'Main image is required',
+  path: ['mainImage']
 });
 
 type MediaFormValues = z.infer<typeof mediaSchema>;
@@ -45,18 +51,27 @@ interface CampaignMediaFormProps {
   onBack: () => void;
   defaultValues?: Partial<MediaFormValues>;
   tips?: string[];
+  campaignId?: string;
 }
 
 export default function CampaignMediaForm({ 
   onNext, 
   onBack, 
   defaultValues,
-  tips = []
+  tips = [],
+  campaignId
 }: CampaignMediaFormProps) {
   const [additionalImageUrl, setAdditionalImageUrl] = useState<string>('');
   const [additionalImagesPreview, setAdditionalImagesPreview] = useState<string[]>(
     defaultValues?.additionalImages || []
   );
+  const [activeTab, setActiveTab] = useState<'url' | 'upload'>('url');
+  const [uploading, setUploading] = useState<boolean>(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const additionalFileInputRef = useRef<HTMLInputElement>(null);
+  const [mainImagePreview, setMainImagePreview] = useState<string>(defaultValues?.mainImage || '');
+  const [mainImageError, setMainImageError] = useState<string>('');
+  const [isCloudinary, setIsCloudinary] = useState<boolean>(false);
 
   // Initialize the form
   const form = useForm<MediaFormValues>({
@@ -108,6 +123,173 @@ export default function CampaignMediaForm({
     setAdditionalImagesPreview(updatedImages);
   };
 
+  // Handle file upload for main image
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Add campaign ID if available
+      if (campaignId) {
+        formData.append('campaignId', campaignId);
+      }
+      
+      // Upload to Cloudinary via our API endpoint
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+      
+      const data = await response.json();
+      
+      // Update form with the Cloudinary URL
+      form.setValue('mainImage', data.url);
+      setMainImagePreview(data.url);
+      setIsCloudinary(isCloudinaryUrl(data.url));
+      
+      console.log('Main image uploaded to Cloudinary:', data);
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setMainImageError('Failed to upload image. Please try again.');
+    }
+  };
+
+  // Handle file upload for additional images
+  const handleAdditionalFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      // Process each file and upload to Cloudinary
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Add campaign ID if available
+        if (campaignId) {
+          formData.append('campaignId', campaignId);
+        }
+        
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to upload ${file.name}`);
+        }
+        
+        return await response.json();
+      });
+
+      // Wait for all uploads to complete
+      const results = await Promise.all(uploadPromises);
+      const urls = results.map(result => result.url);
+      
+      // Update form with the new URLs
+      const existingUrls = form.getValues('additionalImages') || [];
+      const newUrls = [...existingUrls, ...urls];
+      form.setValue('additionalImages', newUrls);
+      setAdditionalImagesPreview(newUrls);
+      
+      console.log('Additional images uploaded to Cloudinary:', urls);
+    } catch (error) {
+      console.error('Error uploading additional files:', error);
+      setMainImageError('Failed to upload one or more additional images.');
+    }
+  };
+
+  // Validate if a URL is a Cloudinary URL
+  const isCloudinaryUrl = (url: string): boolean => {
+    if (!url) return false;
+    const cloudinaryPattern = /^https:\/\/res\.cloudinary\.com\/[^\/]+\//i;
+    return cloudinaryPattern.test(url);
+  };
+
+  // Handle main image upload using FileUpload component
+  const handleMainImageUpload = (uploadedFiles: UploadedFile[]) => {
+    if (uploadedFiles && uploadedFiles.length > 0) {
+      const uploadedFile = uploadedFiles[0];
+      
+      // Set the main image URL in the form
+      form.setValue('mainImage', uploadedFile.url);
+      setMainImagePreview(uploadedFile.url);
+      setMainImageError('');
+      setIsCloudinary(!!uploadedFile.isCloudinary);
+      
+      console.log('Main image uploaded:', uploadedFile.url);
+    }
+  };
+
+  // Handle additional images upload using FileUpload component
+  const handleAdditionalImagesUpload = (uploadedFiles: UploadedFile[]) => {
+    if (uploadedFiles && uploadedFiles.length > 0) {
+      // Get existing additional images
+      const existingUrls = form.getValues('additionalImages') || [];
+      
+      // Add new uploaded URLs
+      const newUrls = [...existingUrls, ...uploadedFiles.map(file => file.url)];
+      
+      // Update form values and preview
+      form.setValue('additionalImages', newUrls);
+      setAdditionalImagesPreview(newUrls);
+      setMainImageError('');
+      
+      console.log('Additional images uploaded:', newUrls);
+    }
+  };
+
+  // Handle removing main image
+  const handleRemoveMainImage = () => {
+    form.setValue('mainImage', '');
+    setMainImagePreview('');
+    setIsCloudinary(false);
+  };
+
+  // Handle direct input of image URLs (for manual entry)
+  const handleMainImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    form.setValue('mainImageUrl', url);
+    setMainImagePreview(url);
+    setIsCloudinary(isCloudinaryUrl(url));
+  };
+
+  // Validate before proceeding to next step
+  const handleNext = () => {
+    const mainImage = form.getValues('mainImage');
+    
+    // Validate main image
+    if (!mainImage) {
+      setMainImageError('A main image is required for your campaign');
+      return;
+    }
+    
+    // Optional: Check if the main image is from Cloudinary
+    if (!isCloudinaryUrl(mainImage)) {
+      setMainImageError('The image URL does not appear to be valid. Please upload using the provided tool.');
+      return;
+    }
+    
+    // Validate additional images
+    const additionalImages = form.getValues('additionalImages') || [];
+    const invalidImages = additionalImages.filter(url => !isCloudinaryUrl(url));
+    if (invalidImages.length > 0) {
+      setMainImageError('Some additional image URLs do not appear to be valid');
+      return;
+    }
+    
+    // All validations passed, proceed to next step
+    onNext(form.getValues() as MediaFormValues);
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       <Card>
@@ -139,60 +321,92 @@ export default function CampaignMediaForm({
                     name="mainImage"
                     render={({ field }) => (
                       <FormItem>
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Main Campaign Image <span className="text-red-500">*</span></FormLabel>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" type="button" className="h-6 w-6">
-                                  <Info className="h-4 w-4" />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="max-w-xs">
-                                  This is the primary image displayed on your campaign card. Recommended size: 1200×675px (16:9)
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
-                        <FormControl>
-                          <Input 
-                            placeholder="https://example.com/your-image.jpg" 
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Enter a URL to your main campaign image
-                        </FormDescription>
-                        <FormMessage />
-                        
-                        {field.value && (
-                          <div className="mt-4 border rounded-md p-2 relative group">
-                            <div className="aspect-video w-full overflow-hidden rounded-md">
+                        <div className="space-y-4 mt-6">
+                          <div className="flex justify-between items-center">
+                            <h3 className="text-lg font-medium">Main Campaign Image</h3>
+                            {isCloudinary && (
+                              <span className="text-xs text-green-600 flex items-center">
+                                <Check className="h-4 w-4 mr-1" /> Cloudinary Optimized
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Main image preview */}
+                          {field.value ? (
+                            <div className="relative rounded-md border overflow-hidden">
                               <img 
                                 src={field.value} 
-                                alt="Main campaign preview" 
-                                className="object-cover w-full h-full"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://placehold.co/1200x675/e2e8f0/64748b?text=Image+Preview';
-                                }}
+                                alt="Main campaign image" 
+                                className="w-full h-auto aspect-video object-cover"
+                                onError={() => setMainImageError('Image URL is invalid or cannot be loaded')}
                               />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <Button 
+                                  variant="destructive" 
+                                  size="sm" 
+                                  onClick={() => {
+                                    field.onChange('');
+                                    setMainImagePreview('');
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-1" /> Remove
+                                </Button>
+                              </div>
                             </div>
-                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                size="sm"
-                                className="gap-1"
-                                onClick={() => form.setValue('mainImage', '')}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                                Remove
-                              </Button>
+                          ) : (
+                            <>
+                              {/* Direct upload option */}
+                              <div className="grid gap-4 md:grid-cols-2">
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium">Upload Image</label>
+                                  <div className="flex items-center gap-2">
+                                    <Input
+                                      type="file"
+                                      id="mainImage"
+                                      ref={fileInputRef}
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={handleFileUpload}
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      onClick={() => fileInputRef.current?.click()}
+                                      className="w-full flex items-center gap-2"
+                                    >
+                                      <Upload className="h-4 w-4" /> Choose Image
+                                    </Button>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Recommended: 16:9 ratio, max 10MB
+                                  </p>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <label className="block text-sm font-medium">Or Enter Image URL</label>
+                                  <Input
+                                    type="url"
+                                    placeholder="https://example.com/image.jpg"
+                                    {...field}
+                                    onChange={(e) => {
+                                      field.onChange(e.target.value);
+                                      setIsCloudinary(isCloudinaryUrl(e.target.value));
+                                    }}
+                                  />
+                                  <p className="text-xs text-muted-foreground">
+                                    Direct image URL (Cloudinary URLs recommended)
+                                  </p>
+                                </div>
+                              </div>
+                            </>
+                          )}
+                          
+                          {mainImageError && (
+                            <div className="bg-destructive/10 text-destructive text-sm p-2 rounded">
+                              {mainImageError}
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -216,49 +430,96 @@ export default function CampaignMediaForm({
                       </TooltipProvider>
                     </div>
                     
-                    <div className="flex gap-2 mb-4">
-                      <Input
-                        placeholder="https://example.com/additional-image.jpg"
-                        value={additionalImageUrl}
-                        onChange={(e) => setAdditionalImageUrl(e.target.value)}
-                      />
-                      <Button 
-                        type="button"
-                        variant="outline"
-                        onClick={handleAddImage}
-                      >
-                        Add
-                      </Button>
-                    </div>
+                    <Tabs defaultValue="url" className="w-full">
+                      <TabsList className="grid grid-cols-2 mb-4">
+                        <TabsTrigger value="url" className="flex items-center gap-2">
+                          <LinkIcon className="h-4 w-4" />
+                          Enter URL
+                        </TabsTrigger>
+                        <TabsTrigger value="upload" className="flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          Upload Files
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="url">
+                        <div className="flex gap-2 mb-4">
+                          <Input
+                            placeholder="https://example.com/additional-image.jpg"
+                            value={additionalImageUrl}
+                            onChange={(e) => setAdditionalImageUrl(e.target.value)}
+                          />
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={handleAddImage}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="upload">
+                        <div className="flex flex-col gap-2">
+                          <input
+                            type="file"
+                            ref={additionalFileInputRef}
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            onChange={handleAdditionalFileUpload}
+                          />
+                          <Button 
+                            type="button"
+                            variant="outline"
+                            onClick={() => additionalFileInputRef.current?.click()}
+                            disabled={uploading}
+                            className="w-full py-6 border-dashed"
+                          >
+                            {uploading ? (
+                              <span className="flex items-center gap-2">
+                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Uploading...
+                              </span>
+                            ) : (
+                              <span className="flex flex-col items-center gap-2">
+                                <Upload className="h-6 w-6" />
+                                <span>Click to select files or drag and drop</span>
+                                <span className="text-xs text-gray-500">Upload multiple images at once</span>
+                              </span>
+                            )}
+                          </Button>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                     
                     <FormMessage>
                       {form.formState.errors.additionalImages?.message}
                     </FormMessage>
                     
                     {additionalImagesPreview.length > 0 && (
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
-                        {additionalImagesPreview.map((image, index) => (
-                          <div key={index} className="border rounded-md p-1 relative group">
-                            <div className="aspect-square w-full overflow-hidden rounded-md">
-                              <img 
-                                src={image} 
-                                alt={`Additional image ${index + 1}`} 
-                                className="object-cover w-full h-full"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://placehold.co/400x400/e2e8f0/64748b?text=Image';
-                                }}
-                              />
-                            </div>
-                            <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-md">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
+                        {additionalImagesPreview.map((url, index) => (
+                          <div key={index} className="relative rounded-md border overflow-hidden">
+                            <img
+                              src={url}
+                              alt={`Additional image ${index + 1}`}
+                              className="w-full h-32 object-cover"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
                               <Button
-                                type="button"
                                 variant="destructive"
                                 size="sm"
-                                className="gap-1"
-                                onClick={() => handleRemoveImage(index)}
+                                onClick={() => {
+                                  const updatedImages = additionalImagesPreview.filter((_, i) => i !== index);
+                                  setAdditionalImagesPreview(updatedImages);
+                                  form.setValue('additionalImages', updatedImages);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4" />
-                                Remove
                               </Button>
                             </div>
                           </div>

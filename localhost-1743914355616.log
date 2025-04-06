@@ -1,0 +1,240 @@
+ Removing unpermitted intrinsics
+ Service Worker not registered in development mode
+ Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+ Initializing BlockchainServiceFixed with config: undefined
+ Initializing web3 storage...
+ Web3 storage already initialized
+ Initializing web3 storage...
+ Web3 storage already initialized
+ Initializing web3 storage...
+ Web3 storage already initialized
+ Initializing web3 storage...
+ Web3 storage already initialized
+ Web3Storage initialized
+ Web3Storage initialized
+ Please ensure that the container has a non-static position, like 'relative', 'fixed', or 'absolute' to ensure scroll offset is calculated correctly.
+warnOnce @ webpack-internal:///…ils/warn-once.mjs:9
+ Image with src "http://localhost:3000/hero-logo.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+warnOnce @ webpack-internal:///…ils/warn-once.js:16
+ Provider has active account: 0xddd61e...
+ Updating wallet connection state from provider
+ Found accounts on initial load: 0xddd61e...
+ Provider has active account: 0xddd61e...
+ Updating wallet connection state from provider
+ Wallet connection checked
+ Initializing web3 storage...
+ Web3 storage already initialized
+ Initializing web3 storage...
+ Web3 storage already initialized
+ Provider has active account: 0xddd61e...
+ Updating wallet connection state from provider
+ Found accounts on initial load: 0xddd61e...
+ Provider has active account: 0xddd61e...
+ Updating wallet connection state from provider
+ Wallet connection checked
+ Initializing BlockchainServiceFixed...
+ Setting up account change listeners
+ Reinitializing contract...
+ Using connected wallet provider
+ Connected to network: unknown Chain ID: 41n
+ Using contract address: 0x15493F1ae7D556e0150D76528dd06d76050caf43
+ Contract bytecode verified at address: 0x15493F1ae7D556e0150D76528dd06d76050caf43
+ [Debug][InitializeContract] Got contract ABI.
+ [Debug][InitializeContract] createCampaign ABI Fragment: {
+  "inputs": [
+    {
+      "internalType": "string",
+      "name": "title",
+      "type": "string"
+    },
+    {
+      "internalType": "string",
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "internalType": "uint256",
+      "name": "goalAmount",
+      "type": "uint256"
+    },
+    {
+      "internalType": "uint256",
+      "name": "deadline",
+      "type": "uint256"
+    },
+    {
+      "components": [
+        {
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "dueDate",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "completed",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "fundsClaimed",
+          "type": "bool"
+        }
+      ],
+      "internalType": "struct WowzaRushStorage.Milestone[]",
+      "name": "milestones",
+      "type": "tuple[]"
+    }
+  ],
+  "name": "createCampaign",
+  "outputs": [
+    {
+      "internalType": "uint256",
+      "name": "campaignId",
+      "type": "uint256"
+    }
+  ],
+  "stateMutability": "nonpayable",
+  "type": "function"
+}
+ Using connected wallet signer with address: 0xddd61ea891b740c9c9397c0c2797013688ea31cd
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1244 Contract initialized with signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1263 Contract methods check: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1282 Warning: No standard campaign access methods found (campaigns, getCampaign, or getCampaignBasicInfo). Some functionality may be limited.
+initializeContract @ E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1282
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1289 Contract initialized without signer - read-only mode
+initializeContract @ E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1289
+E:\wowzarush.io-main\utils\web3-storage.ts:150 [Web3Storage] Initialized successfully
+hot-reloader-client.js:241 [Fast Refresh] rebuilding
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+hot-reloader-client.js:68 [Fast Refresh] done in 1473ms
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:239 Wallet connection status: Object
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:239 Wallet connection status: Object
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\components\campaign\CampaignBasicInfoForm.tsx:103 Campaign Basic Info Form Data: Object
+E:\wowzarush.io-main\components\campaign\CampaignBasicInfoForm.tsx:104 Campaign Duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignBasicInfoForm.tsx:109 Campaign Start Date: Sun Apr 06 2025 11:38:44 GMT+0700 (Indochina Time)
+E:\wowzarush.io-main\components\campaign\CampaignBasicInfoForm.tsx:110 Campaign End Date: Tue May 06 2025 11:38:44 GMT+0700 (Indochina Time)
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+index.es.js:4304 reached
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+index.es.js:4304 reached
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+index.es.js:4304 reached
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:239 Wallet connection status: Object
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+E:\wowzarush.io-main\components\campaign\CampaignMilestonesForm.tsx:121 Campaign duration: 30 days
+index.es.js:4304 reached
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+hot-reloader-client.js:241 [Fast Refresh] rebuilding
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+hot-reloader-client.js:68 [Fast Refresh] done in 377ms
+E:\wowzarush.io-main\components\campaign\CampaignMediaForm.tsx:158 Main image uploaded to Cloudinary: Object
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:452 IPFS Metadata Hash: bafkreicne3qxs4i2n6jxofx5scs6t3cgxsailu4hcfq5kteldyf2ek3ane
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:531 Creating campaign with params: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:485 Raw campaign params: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:501 Creating regular campaign with params:
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:502 Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 1: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 2: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 3: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 4: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 0 structure: {"title":"Initial Milestone","description":"Complete first phase of the project","targetAmount":"7500000000000000000","dueDate":1745037501}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 1 structure: {"title":"Halfway Point","description":"Complete halfway point of the project","targetAmount":"7500000000000000000","dueDate":1745642301}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 2 structure: {"title":"Beta Release","description":"Release a beta version for testing","targetAmount":"7500000000000000000","dueDate":1746247101}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 3 structure: {"title":"Final Release","description":"Deliver the completed project","targetAmount":"7500000000000000000","dueDate":1746506301}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:417 Contract already initialized, using existing instance
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:573 Contract call parameters: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:582 Testing parameter encoding before contract call
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:583 Parameter types: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:596 [Debug] Using hardcoded gasPrice for Telos: 600000000000
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:604 Final sanitized milestones (4):
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 0 structure: ["Initial Milestone","Complete first phase of the project","7500000000000000000",1745037501]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 1 structure: ["Halfway Point","Complete halfway point of the project","7500000000000000000",1745642301]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 2 structure: ["Beta Release","Release a beta version for testing","7500000000000000000",1746247101]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 3 structure: ["Final Release","Deliver the completed project","7500000000000000000",1746506301]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:622 Milestone objects for contract call (5-field): [{"title":"Initial Milestone","description":"Complete first phase of the project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1745037501"},{"title":"Halfway Point","description":"Complete halfway point of the project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1745642301"},{"title":"Beta Release","description":"Release a beta version for testing","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1746247101"},{"title":"Final Release","description":"Deliver the completed project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1746506301"}]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:668 Final parameter types: Object
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1130 Returning active signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1130 Returning active signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:708 [DEBUG] Calculating deadline. params.duration (should be seconds): 2592000, type: number
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:713 [DEBUG] Calling createCampaign with deadline: 1746506408
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. Object
+(anonymous) @ inpage.js:1
+intercept-console-error.js:51 Error during contract call or receipt processing: Error: missing revert data (action="estimateGas", data=null, reason=null, transaction={ "data": "0x65cdb46000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000e0000000000000000000000000000000000000000000000001a055690d9db8000000000000000000000000000000000000000000000000000000000000681992a80000000000000000000000000000000000000000000000000000000000000360000000000000000000000000000000000000000000000000000000000000001d4e4557204c6c616d612034204149205570646174652028465245452129000000000000000000000000000000000000000000000000000000000000000000025957616e742074686520534f503f204a6f696e206d6520696e207468652041492050726f66697420426f617264726f6f6d3a200a0a68747470733a2f2f676f2e6a756c69616e676f6c6469652e636f6d2f61692d70726f6669742e2e2e0a0a4c696b652074686520636f6e74656e743f20436865636b2074686973206f75743a0a0af09f9a8020426f6f6b206120465245452053454f2073747261746567792053657373696f6e20f09f91892068747470733a2f2f676f2e6a756c69616e676f6c6469652e636f6d2f73747261746567792d2e2e2e0a0af09f949720467265652053454f20436f7572736520f09f91892068747470733a2f2f676f2e6a756c69616e676f6c6469652e636f6d2f6f70742d696e2d33362e2e2e0a0af09f92b02057616e74206d6f7265206d6f6e65792c207472616666696320616e642073616c65732066726f6d2053454f3f204a6f696e207468652053454f20456c69746520436972636c6520f09f91892068747470733a2f2f676f2e6a756c69616e676f6c6469652e636f6d2f6275792d6d617374652e2e2e0a0af09fa496204e656564204149204175746f6d6174696f6e2053657276696365733f20426f6f6b20612063616c6c206865726520f09f9189202068747470733a2f2f6a756c69616e676f6c6469652e636f6d2f61692d6175746f6d6174696f2e2e2e0a0af09f8e99efb88f204e657720746f2073747265616d696e67206f72206c6f6f6b696e6720746f206c6576656c2075703f20436865636b206f75742053747265616d5961726420616e64206765742024313020646973636f756e742120f09f988d20000000000000000000000000000000000000000000000000000000000000000000000000000000", "from": "0xDDd61ea891B740C9c9397C0c2797013688ea31cd", "to": "0x15493F1ae7D556e0150D76528dd06d76050caf43" }, invocation=null, revert=null, code=CALL_EXCEPTION, version=6.13.5)
+    at makeError (errors.js:137:21)
+    at getBuiltinCallException (abi-coder.js:120:70)
+    at AbiCoder.getBuiltinCallException (abi-coder.js:221:16)
+    at BrowserProvider.getRpcError (provider-jsonrpc.js:695:76)
+    at BrowserProvider.getRpcError (provider-browser.js:73:22)
+    at eval (provider-jsonrpc.js:321:45)
+error @ intercept-console-error.js:51
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider

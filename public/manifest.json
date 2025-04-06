@@ -1,0 +1,42 @@
+{
+  "name": "WowzaRush",
+  "short_name": "WowzaRush",
+  "description": "Web3 crowdfunding platform with milestone-based funding",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0cHgiIGhlaWdodD0iMTQ0cHgiIHZpZXdCb3g9IjAgMCAxNDQgMTQ0IiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNzIiIGN5PSI3MiIgcj0iNjgiIGZpbGw9IiM0ZjQ2ZTUiIC8+PHRleHQgeD0iNzIiIHk9Ijg2IiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNTQiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LXdlaWdodD0iYm9sZCI+V1I8L3RleHQ+PC9zdmc+",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIzMiIgY3k9IjMyIiByPSIzMCIgZmlsbD0iIzRmNDZlNSIgLz48dGV4dCB4PSIzMiIgeT0iMzgiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtd2VpZ2h0PSJib2xkIj5XUjwvdGV4dD48L3N2Zz4=",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Campaign",
+      "url": "/create-campaign",
+      "description": "Start a new crowdfunding campaign"
+    },
+    {
+      "name": "Explore",
+      "url": "/campaigns",
+      "description": "Discover active campaigns"
+    },
+    {
+      "name": "Profile",
+      "url": "/profile",
+      "description": "View your profile"
+    }
+  ],
+  "related_applications": []
+} 

@@ -23,7 +23,6 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { Proposal as GovernanceProposal } from '@/components/campaign/GovernanceRights';
 
 interface UserGovernanceStats {
   totalVotingPower: number;
@@ -39,7 +38,7 @@ interface UserGovernanceStats {
 }
 
 const DashboardPage = () => {
-  const { account, isWalletConnected, connectWallet, getUserVotingPower, getCampaign, getCampaignProposals } = useWowzaRush();
+  const { userAddress, isWalletConnected, connectWallet, getUserVotingPower, getCampaign, getCampaignProposals } = useWowzaRush();
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>('overview');
@@ -54,7 +53,7 @@ const DashboardPage = () => {
   
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!isWalletConnected || !account) {
+      if (!isWalletConnected || !userAddress) {
         setIsLoading(false);
         return;
       }
@@ -69,7 +68,7 @@ const DashboardPage = () => {
           mockCampaignIds.map(async (campaignId) => {
             const campaign = await getCampaign(campaignId);
             const proposals = await getCampaignProposals(campaignId);
-            const votingPower = await getUserVotingPower(account, campaignId);
+            const votingPower = await getUserVotingPower(userAddress, campaignId);
             
             const activeProposals = proposals.filter(
               p => p.status === 'active' || p.endTime > Date.now()
@@ -102,7 +101,7 @@ const DashboardPage = () => {
           stats.totalProposalsVoted += votedProposals.length;
           
           const createdProposals = proposals.filter(
-            p => p.creatorAddress.toLowerCase() === account.toLowerCase()
+            p => p.creatorAddress.toLowerCase() === userAddress?.toLowerCase()
           );
           stats.totalProposalsCreated += createdProposals.length;
           
@@ -136,7 +135,7 @@ const DashboardPage = () => {
     };
     
     loadDashboardData();
-  }, [account, isWalletConnected, getCampaign, getCampaignProposals, getUserVotingPower]);
+  }, [userAddress, isWalletConnected, getCampaign, getCampaignProposals, getUserVotingPower]);
   
   const calculateProposalProgress = (proposal: Proposal) => {
     const now = Date.now();

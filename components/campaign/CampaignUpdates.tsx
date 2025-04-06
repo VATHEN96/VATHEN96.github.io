@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWowzaRush } from '@/context/wowzarushContext';
-import { CampaignUpdate } from '@/services/NotificationService';
+import { toast } from 'sonner';
+import NotificationService, { CampaignUpdate } from '@/services/NotificationService';
 import { format } from 'date-fns';
 import { FilePlus, PinIcon, Eye, EyeOff, MessageSquare, Heart, Edit, Trash, Image, FileText, FileVideo } from 'lucide-react';
-import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';

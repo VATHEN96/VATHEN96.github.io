@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWowzaRush } from '@/context/wowzarushContext';
-import { DeliveryStatus, DeliveryMilestone } from '@/services/NotificationService';
+import { toast } from 'sonner';
+import NotificationService, { DeliveryStatus, DeliveryMilestone } from '@/services/NotificationService';
 import { format, formatDistance } from 'date-fns';
 import { CheckCircle2, Clock, AlertTriangle, Truck, PackageCheck, Calendar, ArrowRight } from 'lucide-react';
-import { toast } from 'sonner';
 
 import {
   Card,

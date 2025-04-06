@@ -44,6 +44,22 @@ export interface BlockchainRewardTier extends RewardTierCommon {
   name: string; // Used in blockchain service
 }
 
+// Export a simple RewardTier type for use with RewardTierSelector
+export interface RewardTier {
+  id: string;
+  amount: number;
+  minimumAmount?: number;
+  name?: string;
+  title?: string;
+  description: string;
+  maxContributors?: number;
+  contributorsCount?: number;
+  benefits?: string[];
+  isEarlyBird?: boolean;
+  isLimited?: boolean;
+  isPopular?: boolean;
+}
+
 // Delivery tracking types
 export interface DeliveryMilestone {
   id: string;
@@ -243,4 +259,19 @@ export interface Answer {
   creatorName: string;
   upvotes: number;
   isBestAnswer: boolean;
+}
+
+// Add FundingRound interface for Series Funding
+export interface FundingRound {
+  series: number;
+  targetAmount: string | number;
+  minInvestment: string | number;
+  valuation: string | number;
+  equityOffered: number;
+  amountRaised: string | number;
+  startTime: number;
+  endTime: number;
+  isActive: boolean;
+  isComplete: boolean;
+  investorCount: number;
 } 

@@ -1,29 +1,14 @@
 ﻿'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import BlockchainService, { 
-  RewardTier, 
-  CreateProposalParams, 
-  NFTBadgeMetadata 
-} from '@/services/blockchainService';
-import NotificationService, { 
-  CampaignUpdate, 
-  DeliveryStatus, 
-  DeliveryMilestone, 
-  Notification, 
-  NotificationPreferences 
-} from '../services/NotificationService';
-import RiskAssessmentService, { RiskScore, CampaignReport, SpamPreventionRules } from '@/services/RiskAssessmentService';
-import AnalyticsService, {
-  OnChainMetric, 
-  ChartDataPoint, 
-  MetricChartData, 
-  MilestoneProgress, 
-  LinkedProposal, 
-  CampaignAnalytics,
-} from '@/services/AnalyticsService';
+import BlockchainServiceFixedV3Instance, {
+  BlockchainServiceFixed 
+} from '@/services/blockchainServiceFixedV3';
+import NotificationService from '@/services/NotificationService';
+import RiskAssessmentService from '@/services/RiskAssessmentService';
+import AnalyticsService from '@/services/AnalyticsService';
 import { 
   Shield, 
   CircleCheck, 
@@ -63,6 +48,17 @@ import {
   MilestoneProgress,
   LinkedProposal
 } from '@/types';
+import { 
+  initStorage,
+  getQuestions,
+  addQuestion as addStorageQuestion,
+  getUserProfile,
+  updateUserProfile,
+  addComment as addStorageComment,
+  getCampaignUpdates as getStorageUpdates,
+  addCampaignUpdate as addStorageUpdate
+} from '@/utils/web3-storage';
+import * as web3Storage from '@/utils/web3-storage';
 
 // Define the Comment interface
 export interface Comment {
@@ -78,62 +74,12 @@ export interface Comment {
 }
 
 // Create instances of services
-const blockchainService = new BlockchainService();
-// NotificationService is now an object, not a class, so no instantiation needed
-// const notificationService = new NotificationService();
-const riskAssessmentService = new RiskAssessmentService(blockchainService);
+const blockchainService = BlockchainServiceFixedV3Instance;
+const riskAssessmentService = new RiskAssessmentService();
 const analyticsService = new AnalyticsService();
+const notificationService = new NotificationService();
 
-// Mock data for development
-const mockUserCampaigns = [
-  {
-    id: '1',
-    title: 'DeFi Education Platform',
-    description: 'Educational platform for DeFi in emerging markets',
-    creator_address: '0x6fcee09a8079d8db0a462f5df35da7fd5d3c56cd',
-    status: 'active',
-    funds_raised: 12.5,
-    target: 20,
-    end_date: Date.now() + 1000 * 60 * 60 * 24 * 30, // 30 days from now
-    image: '/images/campaign1.jpg'
-  },
-  {
-    id: '2',
-    title: 'Decentralized Identity Solution',
-    description: 'Self-sovereign identity platform for the unbanked',
-    creator_address: '0x6fcee09a8079d8db0a462f5df35da7fd5d3c56cd',
-    status: 'completed',
-    funds_raised: 15,
-    target: 15,
-    end_date: Date.now() - 1000 * 60 * 60 * 24 * 15, // 15 days ago
-    image: '/images/campaign2.jpg'
-  }
-];
-
-const mockBackedCampaigns = [
-  {
-    id: '3',
-    title: 'Community DAO Infrastructure',
-    description: 'Tools for community governance and treasury management',
-    creator_address: '0x8a42d311a97d8436b14d49f6c1e2132f5a875e66',
-    status: 'active',
-    funds_raised: 8.3,
-    target: 12,
-    end_date: Date.now() + 1000 * 60 * 60 * 24 * 20, // 20 days from now
-    image: '/images/campaign3.jpg'
-  },
-  {
-    id: '4',
-    title: 'NFT Marketplace for Artists',
-    description: 'Platform for artists to mint and sell NFTs with low fees',
-    creator_address: '0x9b67f5b9f6b5f5f5f5f5f5f5f5f5f5f5f5f5f5f5',
-    status: 'active',
-    funds_raised: 5.7,
-    target: 10,
-    end_date: Date.now() + 1000 * 60 * 60 * 24 * 25, // 25 days from now
-    image: '/images/campaign4.jpg'
-  }
-];
+// Removed mock data for development - will now use real data
 
 // Add the CreatorProfile interface definition
 export interface CreatorProfile {
@@ -219,28 +165,36 @@ export interface VotingPower {
 
 interface WowzaRushContextType {
   // Wallet connection
-  account: string | null;
+  userAddress: string | null;
   isWalletConnected: boolean;
-  connectWallet: () => Promise<void>;
+  connectWallet: () => Promise<string | null>;
   disconnectWallet: () => void;
+  chainId: number | null;
+  
+  // Blockchain service
+  blockchainService: BlockchainServiceFixed;
   
   // User profile
-  userProfile: any | null;
+  userProfile: CreatorProfile | null;
   
   // Campaign functions
   getCampaign: (id: string) => Promise<any>;
   getCampaignDetails: (id: string) => Promise<any>;
   createCampaign: (campaignData: any) => Promise<string>;
-  contributeToCampaign: (campaignId: string, amount: number) => Promise<boolean>;
+  updateCampaign: (campaignData: any) => Promise<boolean>;
+  contributeToCampaign: (campaignId: string, amount: number, tierId?: string) => Promise<boolean>;
   followCampaign: (campaignId: string) => Promise<boolean>;
   isFollowing: (campaignId: string, address?: string) => Promise<boolean>;
   likeCampaign: (campaignId: string) => Promise<boolean>;
   isUserLiked: (campaignId: string, address?: string) => Promise<boolean>;
   reportCampaign: (campaignId: string, reason: string, details: string, evidence?: string[]) => Promise<boolean>;
-  fetchCampaigns: (forceRefresh?: boolean) => Promise<void>;
+  fetchCampaigns: (forceRefresh?: boolean, page?: number, limit?: number) => Promise<void>;
+  fetchUserCampaigns: (forceRefresh?: boolean, page?: number, limit?: number) => Promise<void>;
   campaigns: any[];
   userCampaigns: any[];
   userContributedCampaigns: any[];
+  allCampaigns: any[];
+  totalUserCampaigns: number;
   loading: boolean;
   error: string | null;
   
@@ -259,7 +213,7 @@ interface WowzaRushContextType {
   likeComment: (commentId: string) => Promise<boolean>;
   reportComment: (commentId: string) => Promise<boolean>;
   getQuestions: (campaignId: string) => Promise<any[]>;
-  addQuestion: (campaignId: string, content: string) => Promise<any>;
+  addQuestion: (campaignId: string, title: string, content: string) => Promise<any>;
   answerQuestion: (questionId: string, answer: string) => Promise<boolean>;
   likeQuestion: (questionId: string) => Promise<boolean>;
   
@@ -292,7 +246,7 @@ interface WowzaRushContextType {
   
   // Campaign updates functions
   getCampaignUpdates: (campaignId: string, includePrivate?: boolean) => Promise<CampaignUpdate[]>;
-  createCampaignUpdate: (updateData: Omit<CampaignUpdate, 'id' | 'createdAt' | 'likes' | 'comments'>) => Promise<CampaignUpdate | null>;
+  createCampaignUpdate: (updateData: any) => Promise<CampaignUpdate | null>;
   updateCampaignUpdate: (updateId: string, updateData: Partial<CampaignUpdate>) => Promise<boolean>;
   deleteCampaignUpdate: (updateId: string) => Promise<boolean>;
   
@@ -341,1655 +295,1461 @@ interface WowzaRushContextType {
   ) => Promise<boolean>;
   getUserContributions: (campaignId?: string) => Promise<any[]>;
 
-  // Fetch campaigns created by the current user
-  fetchUserCampaigns: () => Promise<void>;
-
   // Get campaigns created by a user
-  getUserCampaigns: (address?: string) => Promise<any[]>;
+  getUserCampaigns: (address?: string, page?: number, limit?: number) => Promise<any[]>;
 
   // Get campaigns backed by a user
-  getUserBackedCampaigns: (address?: string) => Promise<any[]>;
+  getUserBackedCampaigns: (address?: string, page?: number, limit?: number) => Promise<any[]>;
 
   // Alias for getUserBackedCampaigns for backward compatibility
   getUserContributedCampaigns: (address?: string) => Promise<any[]>;
 
   // Trust score calculation
   calculateTrustScore: (address: string) => Promise<number>;
+
+  // Web3Storage
+  web3Storage: any;
+
+  // New state variables and their setter functions
+  tryConnectWallet: () => Promise<boolean>;
+  isWalletConnecting: boolean;
+  setIsWalletConnecting: React.Dispatch<React.SetStateAction<boolean>>;
+  walletConnectError: string | null;
+  setWalletConnectError: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-// Create the context with default values
-const WowzaRushContext = createContext<WowzaRushContextType | undefined>(undefined);
+// Create the context
+const WowzaRushContext = createContext<WowzaRushContextType | null>(null);
 
-// Custom hook to use the context
-export const useWowzaRush = () => {
-  const context = useContext(WowzaRushContext);
-  
-  if (context === undefined) {
-    throw new Error('useWowzaRush must be used within a WowzaRushProvider');
-  }
-  
-  return context;
-};
-
-// Props for the provider component
-interface WowzaRushProviderProps {
-  children: ReactNode;
-  contractAddress?: string;
-}
-
-// Provider component
-export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, contractAddress }) => {
-  // State for wallet connection
-  const [account, setAccount] = useState<string | null>(null);
+// Create the provider component
+export function WowzaRushProvider({ children }: { children: ReactNode }) {
+  // State management
   const [isWalletConnected, setIsWalletConnected] = useState<boolean>(false);
-  const router = useRouter();
-  
-  // State for campaigns - initialize with empty array to prevent null reference
+  const [isWalletConnecting, setIsWalletConnecting] = useState<boolean>(false);
+  const [walletConnectError, setWalletConnectError] = useState<string | null>(null);
+  const [userAddress, setUserAddress] = useState<string | null>(null);
+  const [chainId, setChainId] = useState<number | null>(null);
+  const [provider, setProvider] = useState<any>(null);
+  const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [userCampaigns, setUserCampaigns] = useState<any[]>([]);
   const [userContributedCampaigns, setUserContributedCampaigns] = useState<any[]>([]);
+  const [allCampaigns, setAllCampaigns] = useState<any[]>([]); // Added the missing state for allCampaigns
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   
   // User profile state
   const [userProfile, setUserProfile] = useState<User | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [totalUserCampaigns, setTotalUserCampaigns] = useState<number>(0);
+  const router = useRouter();
   
-  // Check if wallet is connected on component mount
+  // Initialize web3Storage on component mount
+  const initWeb3Storage = async () => {
+    try {
+      console.log('Initializing web3 storage...');
+      
+      // Check if we already have a web3Storage instance
+      if (web3Storage && typeof web3Storage.getUserProfile === 'function') {
+        console.log('Web3 storage already initialized');
+        return;
+      }
+      
+      // Import and initialize web3Storage
+      try {
+        await web3Storage.initStorage();
+        console.log('Web3 storage initialized successfully');
+        
+        // Test storage is working
+        const storageTest = await web3Storage.blockchainCache.get('storage-test');
+        if (!storageTest) {
+          // Set a test value to confirm storage is working
+          await web3Storage.blockchainCache.set(
+            'storage-test',
+            { test: 'Storage is working' },
+            1, // chainId - just a placeholder
+            60 * 60 * 1000 // 1 hour TTL
+          );
+          console.log('Storage test successful');
+        }
+      } catch (initError) {
+        console.error('Error initializing web3 storage:', initError);
+        
+        // If initialization failed, try one more time after a delay
+        setTimeout(async () => {
+          try {
+            await web3Storage.initStorage();
+            console.log('Web3 storage initialized successfully on retry');
+          } catch (retryError) {
+            console.error('Failed to initialize web3 storage on retry:', retryError);
+          }
+        }, 2000);
+      }
+    } catch (e) {
+      console.error('Unexpected error in web3 storage initialization:', e);
+    }
+  };
+  
+  // Initialize immediately
+  initWeb3Storage();
+
+  // Cleanup function
   useEffect(() => {
+    return () => {
+      // Any cleanup needed
+    };
+  }, []); // Empty dependency array since we only want to initialize once
+  
+  // Define the checkConnection function to synchronize with blockchain service
+  const checkConnection = async () => {
+    try {
+      // First explicitly check with the window.ethereum provider if available
+      if (window.ethereum) {
+        try {
+          // Force get accounts - this is more reliable than just checking the state
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          
+          // Log whether accounts were found to help with debugging
+          if (accounts && accounts.length > 0) {
+            const currentAccount = accounts[0];
+            console.log('Provider has active account:', currentAccount.substring(0, 8) + '...');
+            
+            // Get current wallet state from blockchain service
+            const currentWalletState = blockchainService.getWalletState();
+            
+            // Update state only if it's different to avoid unnecessary re-renders
+            if (!isWalletConnected || userAddress !== currentAccount) {
+              console.log('Updating wallet connection state from provider');
+              setIsWalletConnected(true);
+              setUserAddress(currentAccount);
+              setChainId(currentWalletState.chainId);
+            }
+            return true;
+          } else {
+            console.log('Provider reports no connected accounts');
+          }
+        } catch (providerError) {
+          console.error('Error checking accounts with provider:', providerError);
+        }
+      }
+      
+      // Fallback to blockchain service if provider check failed or returned no accounts
+      const serviceIsConnected = blockchainService.isConnected();
+      const serviceWalletAddress = blockchainService.getWalletAddress();
+      const serviceWalletState = blockchainService.getWalletState();
+      
+      console.log({
+        serviceIsConnected,
+        serviceWalletAddress: serviceWalletAddress ? `${serviceWalletAddress.substring(0, 8)}...` : null,
+        currentContextIsConnected: isWalletConnected,
+        currentContextWalletAddress: userAddress ? `${userAddress.substring(0, 8)}...` : null
+      });
+      
+      // Update state if service reports different connection state
+      if (serviceIsConnected && serviceWalletAddress) {
+        if (!isWalletConnected || userAddress !== serviceWalletAddress) {
+          console.log('Updating connection state from service:', serviceWalletAddress.substring(0, 8) + '...');
+          setIsWalletConnected(true);
+          setUserAddress(serviceWalletAddress);
+          setChainId(serviceWalletState.chainId);
+        }
+        return true;
+      }
+      
+      // If we get here, no wallet is connected
+      if (isWalletConnected) {
+        console.log('No wallet connected, resetting state');
+        setIsWalletConnected(false);
+        setUserAddress(null);
+        setChainId(null);
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking connection:', error);
+      setIsWalletConnected(false);
+      setUserAddress(null);
+      setChainId(null);
+      return false;
+    }
+  };
+  
+  // Add useEffect for more frequent synchronization during critical operations
+  useEffect(() => {
+    // Initial connection check
     checkConnection();
     
-    // Listen for account changes
-    if (typeof window !== 'undefined' && window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
-        if (accounts.length > 0) {
-          setAccount(accounts[0]);
-          setIsWalletConnected(true);
-        } else {
-          setAccount(null);
-          setIsWalletConnected(false);
-        }
-      });
+    // Set up regular synchronization to ensure state is always up-to-date
+    const syncInterval = setInterval(() => {
+      checkConnection();
+    }, 3000); // Check every 3 seconds (more frequent than before)
+    
+    // Define event handler functions to make cleanup easier
+    const handleAccountsChanged = () => {
+      console.log('Accounts changed, checking connection');
+      checkConnection();
+    };
+    
+    const handleChainChanged = () => {
+      console.log('Chain changed, checking connection');
+      checkConnection();
+    };
+    
+    const handleConnect = () => {
+      console.log('Wallet connected event received');
+      checkConnection();
+    };
+    
+    const handleDisconnect = () => {
+      console.log('Wallet disconnected event received');
+      setIsWalletConnected(false);
+      setUserAddress(null);
+      setChainId(null);
+    };
+    
+    // Set up event listeners for wallet changes
+    if (window.ethereum) {
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+      window.ethereum.on('connect', handleConnect);
+      window.ethereum.on('disconnect', handleDisconnect);
+      
+      // Force an immediate check for accounts
+      window.ethereum.request({ method: 'eth_accounts' })
+        .then((accounts: string[]) => {
+          if (accounts && accounts.length > 0) {
+            console.log('Found accounts on initial load:', accounts[0].substring(0, 8) + '...');
+            const currentWalletState = blockchainService.getWalletState();
+            setIsWalletConnected(true);
+            setUserAddress(accounts[0]);
+            setChainId(currentWalletState.chainId);
+          }
+        })
+        .catch((err: any) => console.error('Error checking accounts:', err));
     }
     
     return () => {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', () => {});
+      // Clean up interval and event listeners
+      clearInterval(syncInterval);
+      
+      if (window.ethereum) {
+        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        window.ethereum.removeListener('chainChanged', handleChainChanged);
+        window.ethereum.removeListener('connect', handleConnect);
+        window.ethereum.removeListener('disconnect', handleDisconnect);
       }
     };
   }, []);
 
-  // Check if wallet is already connected
-  const checkConnection = async () => {
-    try {
-      const isConnected = await blockchainService.isWalletConnected();
-      
-      if (isConnected) {
-        const currentAccount = await blockchainService.getCurrentAccount();
-        
-        if (currentAccount) {
-          setAccount(currentAccount);
+  // Add forceCheckConnection function back
+  const forceCheckConnection = async () => {
+    // Always check with actual wallet provider first
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        if (accounts && accounts.length > 0) {
+          const currentWalletState = blockchainService.getWalletState();
           setIsWalletConnected(true);
+          setUserAddress(accounts[0]);
+          setChainId(currentWalletState.chainId);
+          console.log('Force-updated wallet connection state:', accounts[0]);
+          return true;
         }
+      } catch (error) {
+        console.error('Error in force check connection:', error);
+      }
+    }
+    
+    // If no accounts from provider, check blockchain service
+    try {
+      const serviceIsConnected = blockchainService.isConnected();
+      const serviceWalletAddress = blockchainService.getWalletAddress();
+      const serviceWalletState = blockchainService.getWalletState();
+      
+      if (serviceIsConnected && serviceWalletAddress) {
+        setIsWalletConnected(true);
+        setUserAddress(serviceWalletAddress);
+        setChainId(serviceWalletState.chainId);
+        console.log('Force-updated wallet from blockchain service:', serviceWalletAddress);
+        return true;
       }
     } catch (error) {
-      console.error('Error checking wallet connection:', error);
+      console.error('Error checking service connection:', error);
     }
+    
+    return false;
   };
-  
-  // Connect wallet
-  const connectWallet = async () => {
+
+  // Fix the connectWallet function to handle errors properly
+  async function connectWallet() {
+    console.log('Connecting wallet...');
+    
+    // State for tracking connection flow
+    setIsWalletConnecting(true);
+    setWalletConnectError(null);
+    
     try {
-      const connectedAccount = await blockchainService.connectWallet();
-      
-      if (connectedAccount) {
-        setAccount(connectedAccount);
-        setIsWalletConnected(true);
-        toast.success('Wallet connected successfully');
+      // Verify ethereum is available
+      if (typeof window === 'undefined') {
+        throw new Error('Browser environment not available');
       }
+      
+      if (!window.ethereum) {
+        const errorMsg = 'MetaMask not detected. Please install MetaMask to use this application.';
+        setWalletConnectError(errorMsg);
+        toast.error(errorMsg);
+        setIsWalletConnecting(false);
+        return false;
+      }
+      
+      // First, check if wallet is already connected by querying existing accounts
+      try {
+        const existingAccounts = await window.ethereum.request({
+          method: 'eth_accounts'
+        });
+        
+        if (existingAccounts && existingAccounts.length > 0) {
+          const connectedAddress = existingAccounts[0];
+          console.log('Wallet was already connected:', connectedAddress);
+          
+          // Get chain ID
+          const chainIdHex = await window.ethereum.request({
+            method: 'eth_chainId'
+          });
+          const chainId = parseInt(chainIdHex, 16);
+          
+          // Update state with connected wallet
+          setUserAddress(connectedAddress);
+          setIsWalletConnected(true);
+          setChainId(chainId);
+          setIsWalletConnecting(false);
+          
+          // Initialize blockchain service if it exists
+          if (blockchainService) {
+            try {
+              await blockchainService.connectWallet();
+              console.log('Successfully initialized blockchain service with wallet');
+            } catch (error) {
+              console.warn('Error initializing blockchain service:', error);
+            }
+          }
+          
+          return true;
+        }
+      } catch (checkError) {
+        console.warn('Error checking for existing connection:', checkError);
+        // Continue to explicit connection request
+      }
+      
+      // Request wallet connection (will prompt user if not connected)
+      console.log('Requesting wallet connection...');
+      const accounts = await window.ethereum.request({
+        method: 'eth_requestAccounts'
+      });
+      
+      // Verify we got accounts back
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found. Please check your wallet and try again.');
+      }
+      
+      const connectedAddress = accounts[0];
+      console.log('Wallet connected successfully:', connectedAddress);
+      
+      // Get chain ID
+      const chainIdHex = await window.ethereum.request({
+        method: 'eth_chainId'
+      });
+      const chainId = parseInt(chainIdHex, 16);
+      
+      // Update state with connected wallet
+      setUserAddress(connectedAddress);
+      setIsWalletConnected(true);
+      setChainId(chainId);
+      
+      // Initialize blockchain service with connected wallet
+      if (blockchainService) {
+        try {
+          await blockchainService.connectWallet();
+          console.log('Successfully initialized blockchain service with wallet');
+        } catch (error) {
+          console.warn('Error initializing blockchain service:', error);
+        }
+      }
+      
+      // Update connected wallet in local storage for persistence
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('wallet_connected', 'true');
+        localStorage.setItem('wallet_address', connectedAddress);
+      }
+      
+      toast.success('Wallet connected successfully!');
+      return true;
     } catch (error: any) {
       console.error('Error connecting wallet:', error);
-      toast.error(error.message || 'Failed to connect wallet');
+      
+      // Handle specific error types
+      let errorMessage = 'Failed to connect wallet. Please try again.';
+      
+      if (error.code) {
+        // MetaMask error codes
+        switch (error.code) {
+          case 4001:
+            // User rejected the request
+            errorMessage = 'You declined the connection request. Please try again.';
+            break;
+          case -32002:
+            // Request already pending
+            errorMessage = 'A wallet connection request is already pending. Please check your wallet.';
+            break;
+          case -32603:
+            // Internal JSON-RPC error
+            errorMessage = 'Wallet connection error. Your wallet may be locked or disconnected.';
+            break;
+          default:
+            errorMessage = `Wallet connection error: ${error.message || error}`;
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setWalletConnectError(errorMessage);
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      setIsWalletConnecting(false);
     }
-  };
+  }
   
   // Disconnect wallet
   const disconnectWallet = () => {
-    setAccount(null);
+    setUserAddress(null);
+    setChainId(null);
     setIsWalletConnected(false);
-    toast.success('Wallet disconnected');
-  };
-  
-  // Campaign functions
-  const getCampaign = async (id: string) => {
-    try {
-      // Implement API call to get campaign
-      // For now, return mock data
-      return {
-        id,
-        title: `Campaign ${id}`,
-        description: 'This is a sample campaign description.',
-        creatorAddress: '0x1234567890123456789012345678901234567890',
-        creatorName: 'Creator Name',
-        targetAmount: 10,
-        currentAmount: 5,
-        startDate: Date.now() - 7 * 24 * 60 * 60 * 1000,
-        endDate: Date.now() + 14 * 24 * 60 * 60 * 1000,
-        category: 'Technology',
-        imageUrl: 'https://via.placeholder.com/800x400',
-        likes: 120,
-        followers: 45,
-        updates: 3
-      };
-    } catch (error) {
-      console.error(`Error getting campaign ${id}:`, error);
-      return null;
-    }
-  };
-  
-  const getCampaignDetails = async (id: string) => {
-    // In a real app, this would fetch more detailed information about the campaign
-    return getCampaign(id);
-  };
-  
-  const createCampaign = async (campaignData: any) => {
-    try {
-      // Implement API call to create campaign
-      return `campaign-${Date.now()}`;
-    } catch (error) {
-      console.error('Error creating campaign:', error);
-      throw error;
-    }
-  };
-  
-  const contributeToCampaign = async (campaignId: string, amount: number) => {
-    try {
-      // Implementation would call an API endpoint or blockchain transaction
-      toast.success(`Contributed ${amount} ETH to campaign ${campaignId}`);
-      return true;
-    } catch (error) {
-      console.error(`Error contributing to campaign ${campaignId}:`, error);
-      return false;
-    }
-  };
-  
-  const followCampaign = async (campaignId: string) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Following campaign ${campaignId}`);
-      return true;
-    } catch (error) {
-      console.error(`Error following campaign ${campaignId}:`, error);
-      return false;
-    }
-  };
-  
-  const isFollowing = async (campaignId: string, address?: string) => {
-    try {
-      // Implementation would check if user is following the campaign
-      return Math.random() > 0.5; // Mock result
-    } catch (error) {
-      console.error(`Error checking follow status for campaign ${campaignId}:`, error);
-      return false;
-    }
-  };
-  
-  const likeCampaign = async (campaignId: string) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Liked campaign ${campaignId}`);
-      return true;
-    } catch (error) {
-      console.error(`Error liking campaign ${campaignId}:`, error);
-      return false;
-    }
-  };
-  
-  const isUserLiked = async (campaignId: string, address?: string) => {
-    try {
-      // Implementation would check if user has liked the campaign
-      return Math.random() > 0.5; // Mock result
-    } catch (error) {
-      console.error(`Error checking like status for campaign ${campaignId}:`, error);
-      return false;
-    }
-  };
-  
-  const reportCampaign = async (campaignId: string, reason: string, details: string, evidence?: string[]): Promise<boolean> => {
-    try {
-      if (!account) {
-        toast.error('Please connect your wallet to report a campaign');
-        return false;
-      }
-      
-      const reporterId = userProfile?.id || 'anonymous';
-      return await riskAssessmentService.reportCampaign(
-        campaignId,
-        reporterId,
-        account,
-        reason,
-        details,
-        evidence
-      );
-    } catch (error) {
-      console.error('Error reporting campaign:', error);
-      toast.error('Failed to report campaign. Please try again.');
-      return false;
-    }
-  };
-  
-  // Creator profile functions
-  const getCreatorProfile = async (address?: string) => {
-    try {
-      const userAddress = address || account;
-      
-      if (!userAddress) {
-        throw new Error('No address provided and no wallet connected');
-      }
-      
-      // For now, return mock data
-      return {
-        address: userAddress,
-        name: 'Creator Name',
-        displayName: 'Creator Name',
-        bio: 'This is a sample creator biography.',
-        avatarUrl: 'https://via.placeholder.com/200',
-        profileImageUrl: 'https://via.placeholder.com/200',
-        website: 'https://example.com',
-        social: {
-          twitter: '@creator',
-          github: 'creator',
-          linkedin: 'creator'
-        },
-        verificationLevel: VerificationLevel.BASIC,
-        createdCampaigns: 5,
-        supportedCampaigns: 12,
-        totalContributions: 8.5,
-        stats: {
-          totalRaised: 12500,
-          totalFundsRaised: "12.5",
-          totalBacked: 8,
-          totalContributors: 42,
-          successfulCampaigns: 3,
-          campaignsCreated: 5
-        }
-      };
-    } catch (error) {
-      console.error('Error getting creator profile:', error);
-      return null;
-    }
-  };
-  
-  const updateCreatorProfile = async (profileData: any) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success('Profile updated successfully');
-      return true;
-    } catch (error) {
-      console.error('Error updating creator profile:', error);
-      return false;
-    }
-  };
-  
-  const followCreator = async (creatorAddress: string, shouldFollow?: boolean): Promise<boolean> => {
-    try {
-      if (!account) {
-        toast.error('Please connect your wallet to follow creators');
-        return false;
-      }
-
-      // Default to following if not specified
-      const isFollowing = shouldFollow !== false;
-
-      if (process.env.NEXT_PUBLIC_MOCK_DATA === 'true') {
-        // Mock implementation for development
-        console.log(`${isFollowing ? 'Following' : 'Unfollowing'} creator: ${creatorAddress}`);
-        return true;
-      }
-
-      // In production, this would call your API endpoint
-      // Example: const response = await axios.post('/api/follow-creator', { creatorAddress, shouldFollow: isFollowing, account });
-      
-      // For now, we'll just simulate success
-      return true;
-    } catch (error) {
-      console.error(`Error ${shouldFollow !== false ? 'following' : 'unfollowing'} creator ${creatorAddress}:`, error);
-      return false;
-    }
-  };
-  
-  // Comments functions
-  const getComments = async (campaignId: string) => {
-    try {
-      // For now, return mock data
-      return [
-        {
-          id: 'comment-1',
-          campaignId,
-          userId: '0x1234567890abcdef1234567890abcdef12345678',
-          content: 'This is an amazing campaign!',
-          timestamp: Date.now() - 60 * 60 * 1000,
-          likes: 5,
-          isCreator: true,
-          replies: [
-            {
-              id: 'comment-2',
-              campaignId,
-              userId: '0x2234567890abcdef1234567890abcdef12345678',
-              content: 'I agree, it\'s fantastic!',
-              timestamp: Date.now() - 30 * 60 * 1000,
-              likes: 2,
-              isCreator: false
-            }
-          ]
-        },
-        {
-          id: 'comment-3',
-          campaignId,
-          userId: '0x3234567890abcdef1234567890abcdef12345678',
-          content: 'Looking forward to seeing this project succeed!',
-          timestamp: Date.now() - 120 * 60 * 1000,
-          likes: 3,
-          isCreator: false,
-          replies: []
-        }
-      ] as Comment[];
-    } catch (error) {
-      console.error('Error getting comments:', error);
-      return [];
-    }
-  };
-  
-  const addComment = async (campaignId: string, content: string, parentId?: string) => {
-    try {
-      // Implementation would call an API endpoint
-      const comment: Comment = {
-        id: `comment-${Date.now()}`,
-        campaignId,
-        userId: account || '0x0000000000000000000000000000000000000000',
-        content,
-        timestamp: Date.now(),
-        likes: 0,
-        isCreator: false, // This would be determined by checking if the user is the creator
-        replies: []
-      };
-      
-      toast.success('Comment added successfully');
-      return comment;
-    } catch (error) {
-      console.error(`Error adding comment to campaign ${campaignId}:`, error);
-      throw error;
-    }
-  };
-  
-  const likeComment = async (commentId: string) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Liked comment ${commentId}`);
-      return true;
-    } catch (error) {
-      console.error(`Error liking comment ${commentId}:`, error);
-      return false;
-    }
-  };
-  
-  const reportComment = async (commentId: string) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Comment reported successfully`);
-      return true;
-    } catch (error) {
-      console.error(`Error reporting comment ${commentId}:`, error);
-      return false;
-    }
-  };
-  
-  // Q&A functions
-  const getQuestions = async (campaignId: string) => {
-    try {
-      // For now, return mock data
-      return [
-        {
-          id: 'question-1',
-          content: 'When will the project be completed?',
-          author: {
-            id: 'user-1',
-            name: 'User 1',
-            avatarUrl: 'https://via.placeholder.com/50'
-          },
-          createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
-          likes: 12,
-          userLiked: Math.random() > 0.5,
-          answer: {
-            content: 'We expect to complete the project by the end of Q3 2023.',
-            createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000
-          }
-        },
-        {
-          id: 'question-2',
-          content: 'Will there be international shipping?',
-          author: {
-            id: 'user-2',
-            name: 'User 2',
-            avatarUrl: 'https://via.placeholder.com/50'
-          },
-          createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
-          likes: 8,
-          userLiked: Math.random() > 0.5,
-          answer: null
-        }
-      ];
-    } catch (error) {
-      console.error(`Error getting questions for campaign ${campaignId}:`, error);
-      return [];
-    }
-  };
-  
-  const addQuestion = async (campaignId: string, content: string) => {
-    try {
-      // Implementation would call an API endpoint
-      const question = {
-        id: `question-${Date.now()}`,
-        content,
-        author: {
-          id: account || 'anonymous',
-          name: account ? 'Connected User' : 'Anonymous',
-          avatarUrl: 'https://via.placeholder.com/50'
-        },
-        createdAt: Date.now(),
-        likes: 0,
-        userLiked: false,
-        answer: null
-      };
-      
-      toast.success('Question added successfully');
-      return question;
-    } catch (error) {
-      console.error(`Error adding question to campaign ${campaignId}:`, error);
-      throw error;
-    }
-  };
-  
-  const answerQuestion = async (questionId: string, answer: string) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Answered question ${questionId}`);
-      return true;
-    } catch (error) {
-      console.error(`Error answering question ${questionId}:`, error);
-      return false;
-    }
-  };
-  
-  const likeQuestion = async (questionId: string) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Liked question ${questionId}`);
-      return true;
-    } catch (error) {
-      console.error(`Error liking question ${questionId}:`, error);
-      return false;
-    }
-  };
-  
-  // Reward tiers functions
-  const getCampaignTiers = async (campaignId: string) => {
-    try {
-      return await blockchainService.getCampaignTiers(campaignId);
-    } catch (error) {
-      console.error(`Error getting tiers for campaign ${campaignId}:`, error);
-      // Return mock data as fallback
-      return [
-        {
-          id: 'tier-1',
-          name: 'Early Bird',
-          description: 'Basic supporter tier with early access',
-          amount: 0.01,
-          rewards: ['Early access', 'Thank you email'],
-          nftBadge: true,
-          votingPower: 1,
-          governanceRights: true
-        },
-        {
-          id: 'tier-2',
-          name: 'Silver Supporter',
-          description: 'Silver tier with additional benefits',
-          amount: 0.05,
-          rewards: ['Early access', 'Thank you email', 'Name in credits'],
-          nftBadge: true,
-          votingPower: 5,
-          governanceRights: true
-        },
-        {
-          id: 'tier-3',
-          name: 'Gold Supporter',
-          description: 'Gold tier with significant benefits',
-          amount: 0.1,
-          rewards: [
-            'Early access', 
-            'Thank you email', 
-            'Name in credits', 
-            'Exclusive updates'
-          ],
-          nftBadge: true,
-          votingPower: 10,
-          governanceRights: true
-        },
-        {
-          id: 'tier-4',
-          name: 'Platinum Patron',
-          description: 'Premium tier with all benefits',
-          amount: 0.5,
-          rewards: [
-            'Early access', 
-            'Thank you email', 
-            'Name in credits', 
-            'Exclusive updates',
-            'Private Discord access',
-            'One-on-one meeting with creator'
-          ],
-          nftBadge: true,
-          votingPower: 25,
-          maxContributions: 10,
-          governanceRights: true
-        }
-      ];
-    }
-  };
-  
-  const createTier = async (campaignId: string, tierData: any) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success('Tier created successfully');
-      return `tier-${Date.now()}`;
-    } catch (error) {
-      console.error(`Error creating tier for campaign ${campaignId}:`, error);
-      throw error;
-    }
-  };
-  
-  const updateTier = async (tierId: string, tierData: any) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Tier ${tierId} updated successfully`);
-      return true;
-    } catch (error) {
-      console.error(`Error updating tier ${tierId}:`, error);
-      return false;
-    }
-  };
-  
-  const deleteTier = async (tierId: string) => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Tier ${tierId} deleted successfully`);
-      return true;
-    } catch (error) {
-      console.error(`Error deleting tier ${tierId}:`, error);
-      return false;
-    }
-  };
-  
-  const contributeWithTier = async (campaignId: string, tierId: string, amount: number) => {
-    try {
-      if (!isWalletConnected) {
-        toast.error('Please connect your wallet first');
-        return false;
-      }
-      
-      try {
-        const result = await blockchainService.contributeToCampaign(campaignId, tierId, amount);
-        
-        if (result) {
-          toast.success(`Contributed ${amount} ETH to campaign ${campaignId} with tier ${tierId}`);
-          toast.success(`NFT badge minted! Token ID: ${result.tokenId}`);
-          return true;
-        }
-        return false;
-      } catch (error: any) {
-        console.error(`Error contributing to campaign ${campaignId} with tier ${tierId}:`, error);
-        toast.error(error.message || 'Error contributing to campaign');
-        return false;
-      }
-    } catch (error) {
-      console.error(`Error contributing to campaign ${campaignId} with tier ${tierId}:`, error);
-      return false;
-    }
-  };
-  
-  // NFT badge functions
-  const getUserNFTBadges = async (address: string): Promise<NFTBadge[]> => {
-    try {
-      const userAddress = address || account;
-      
-      if (!userAddress) {
-        throw new Error('No address provided and no wallet connected');
-      }
-      
-      return await blockchainService.getUserNFTBadges(userAddress) as NFTBadge[];
-    } catch (error) {
-      console.error(`Error getting NFT badges for address ${address}:`, error);
-      return [];
-    }
-  };
-  
-  const getCampaignNFTBadges = async (campaignId: string): Promise<NFTBadge[]> => {
-    // This would fetch all possible badge types for a campaign
-    // For now, we'll mock this by getting a user's badges
-    return getUserNFTBadges(account || '');
-  };
-  
-  const mintNFTBadge = async (
-    campaignId: string, 
-    tierId: string, 
-    recipient: string, 
-    metadata: NFTBadgeMetadata
-  ): Promise<string> => {
-    try {
-      const result = await blockchainService.mintNFTBadge(
-          campaignId,
-        tierId,
-        recipient,
-        metadata
-      );
-      
-      toast.success(`NFT badge minted successfully! Token ID: ${result.tokenId}`);
-      return result.tokenId;
-    } catch (error: any) {
-      console.error(`Error minting NFT badge:`, error);
-      toast.error(error.message || 'Error minting NFT badge');
-      throw error;
-    }
-  };
-  
-  // Governance functions
-  const getCampaignProposals = async (campaignId: string): Promise<Proposal[]> => {
-    try {
-      return await blockchainService.getCampaignProposals(campaignId) as Proposal[];
-    } catch (error) {
-      console.error(`Error getting proposals for campaign ${campaignId}:`, error);
-      return [];
-    }
-  };
-  
-  const createProposal = async (proposalData: CreateProposalParams): Promise<string> => {
-    try {
-      if (!isWalletConnected) {
-        toast.error('Please connect your wallet first');
-        throw new Error('Wallet not connected');
-      }
-      
-      const proposalId = await blockchainService.createProposal(proposalData);
-      toast.success('Proposal created successfully');
-      return proposalId;
-      } catch (error: any) {
-      console.error(`Error creating proposal:`, error);
-      toast.error(error.message || 'Error creating proposal');
-      throw error;
-    }
-  };
-  
-  const castVote = async (
-    proposalId: string, 
-    optionId: string, 
-    votingPower: number
-  ): Promise<boolean> => {
-    try {
-      if (!isWalletConnected) {
-        toast.error('Please connect your wallet first');
-        return false;
-      }
-      
-      // In a real implementation, this would call the blockchain service
-      const campaignId = 'campaign-1'; // This would be determined from the proposal
-      const success = await blockchainService.voteOnProposal(
-        campaignId,
-        proposalId,
-        optionId
-      );
-      
-      if (success) {
-        toast.success(`Vote cast successfully with ${votingPower} voting power`);
-      }
-      
-      return success;
-    } catch (error: any) {
-      console.error(`Error casting vote:`, error);
-      toast.error(error.message || 'Error casting vote');
-      return false;
-    }
-  };
-  
-  const getUserVotingPower = async (
-    address: string, 
-    campaignId: string
-  ): Promise<{total: number, breakdown: VotingPower[]}> => {
-    try {
-      const userAddress = address || account;
-      
-      if (!userAddress) {
-        throw new Error('No address provided and no wallet connected');
-      }
-      
-      const votingPower = await blockchainService.getUserVotingPower(userAddress, campaignId);
-      
-      return {
-        total: votingPower.total,
-        breakdown: votingPower.tiers.map((tier: any) => ({
-          tier: tier.tier,
-          power: tier.power
-        }))
-      };
-    } catch (error) {
-      console.error(`Error getting voting power:`, error);
-      return {
-        total: 0,
-        breakdown: []
-      };
-    }
-  };
-  
-  // Notification functions
-  const getUserNotifications = async (userId: string): Promise<Notification[]> => {
-    try {
-      return await NotificationService.getUserNotifications(userId);
-    } catch (error) {
-      console.error(`Error fetching notifications for user ${userId}:`, error);
-        return [];
-    }
-  };
-  
-  const getUnreadNotificationsCount = async (userId: string): Promise<number> => {
-    try {
-      const notifications = await NotificationService.getUserNotifications(userId);
-      return notifications.filter(notification => !notification.isRead).length;
-    } catch (error) {
-      console.error(`Error getting unread notification count for user ${userId}:`, error);
-      return 0;
-    }
-  };
-  
-  const markNotificationAsRead = async (notificationId: string): Promise<boolean> => {
-    try {
-      return await NotificationService.markNotificationAsRead(notificationId);
-    } catch (error) {
-      console.error(`Error marking notification ${notificationId} as read:`, error);
-      return false;
-    }
-  };
-  
-  const markAllNotificationsAsRead = async (userId: string): Promise<boolean> => {
-    try {
-      return await NotificationService.markAllNotificationsAsRead(userId);
-    } catch (error) {
-      console.error(`Error marking all notifications as read for user ${userId}:`, error);
-      return false;
-    }
-  };
-  
-  const deleteNotification = async (notificationId: string): Promise<boolean> => {
-    try {
-      return await NotificationService.deleteNotification(notificationId);
-    } catch (error) {
-      console.error(`Error deleting notification ${notificationId}:`, error);
-      return false;
-    }
-  };
-  
-  const updateNotificationPreferences = async (userId: string, preferences: Partial<NotificationPreferences>): Promise<boolean> => {
-    try {
-      return await NotificationService.updateNotificationPreferences(userId, preferences);
-    } catch (error) {
-      console.error(`Error updating notification preferences for user ${userId}:`, error);
-      return false;
-    }
-  };
-  
-  const getNotificationPreferences = async (userId: string): Promise<NotificationPreferences> => {
-    try {
-      return await NotificationService.getNotificationPreferences(userId);
-    } catch (error) {
-      console.error(`Error getting notification preferences for user ${userId}:`, error);
-      // Return default preferences
-      return {
-        campaignUpdates: true,
-        deliveryUpdates: true,
-        milestoneUpdates: true,
-        commentReplies: true,
-        governanceProposals: true,
-        contributionConfirmations: true,
-        marketingEmails: false,
-        emailNotifications: true,
-        pushNotifications: true
-      };
-    }
-  };
-  
-  // Campaign updates functions
-  const getCampaignUpdates = async (campaignId: string, includePrivate: boolean = false): Promise<CampaignUpdate[]> => {
-    try {
-      // Only campaign creators or admins should be able to see private updates
-      const isCreator = true; // This should be determined based on user role
-      return await NotificationService.getCampaignUpdates(campaignId, isCreator && includePrivate);
-    } catch (error) {
-      console.error(`Error getting updates for campaign ${campaignId}:`, error);
-      return [];
-    }
-  };
-  
-  const createCampaignUpdate = async (updateData: Omit<CampaignUpdate, 'id' | 'createdAt' | 'likes' | 'comments'>): Promise<CampaignUpdate | null> => {
-    try {
-      // Verify the user is the campaign creator or has permission
-      return await NotificationService.createCampaignUpdate(updateData);
-    } catch (error) {
-      console.error('Error creating campaign update:', error);
-      toast.error('Failed to publish campaign update');
-      return null;
-    }
-  };
-  
-  const updateCampaignUpdate = async (updateId: string, updateData: Partial<CampaignUpdate>): Promise<boolean> => {
-    try {
-      // Verify the user is the campaign creator or has permission
-      return await NotificationService.updateCampaignUpdate(updateId, updateData);
-    } catch (error) {
-      console.error(`Error updating campaign update ${updateId}:`, error);
-      toast.error('Failed to edit campaign update');
-      return false;
-    }
-  };
-  
-  const deleteCampaignUpdate = async (updateId: string): Promise<boolean> => {
-    try {
-      // Verify the user is the campaign creator or has permission
-      return await NotificationService.deleteCampaignUpdate(updateId);
-    } catch (error) {
-      console.error(`Error deleting campaign update ${updateId}:`, error);
-      toast.error('Failed to delete campaign update');
-      return false;
-    }
-  };
-  
-  // Delivery tracking functions
-  const getDeliveryStatus = async (campaignId: string, rewardTierId?: string): Promise<DeliveryStatus[]> => {
-    try {
-      return await NotificationService.getDeliveryStatus(campaignId, rewardTierId);
-    } catch (error) {
-      console.error(`Error getting delivery status for campaign ${campaignId}:`, error);
-      return [];
-    }
-  };
-  
-  const updateDeliveryStatus = async (deliveryId: string, updates: Partial<DeliveryStatus>): Promise<boolean> => {
-    try {
-      // Verify the user is the campaign creator or has permission
-      return await NotificationService.updateDeliveryStatus(deliveryId, updates);
-    } catch (error) {
-      console.error(`Error updating delivery status ${deliveryId}:`, error);
-      toast.error('Failed to update delivery status');
-      return false;
-    }
-  };
-  
-  const updateMilestone = async (deliveryId: string, milestoneId: string, updates: Partial<DeliveryMilestone>) => {
-    try {
-      // Verify the user is the campaign creator or has permission
-      return await NotificationService.updateMilestone(deliveryId, milestoneId, updates);
-    } catch (error) {
-      console.error(`Error updating milestone ${milestoneId}:`, error);
-      toast.error('Failed to update milestone');
-      return false;
-    }
-  };
-  
-  // Risk assessment functions
-  const getCampaignRiskScore = async (campaignId: string): Promise<RiskScore> => {
-    try {
-      return await riskAssessmentService.getCampaignRiskScore(campaignId);
-    } catch (error) {
-      console.error('Error getting campaign risk score:', error);
-      toast.error('Failed to fetch risk assessment for this campaign');
-      throw error;
-    }
-  };
-
-  const getCampaignReports = async (campaignId: string, adminOnly: boolean = true): Promise<CampaignReport[]> => {
-    try {
-      // Only admins should see all reports
-      const isAdmin = userProfile?.role === 'admin';
-      if (adminOnly && !isAdmin) {
-        return [];
-      }
-      
-      
-      return await riskAssessmentService.getCampaignReports(campaignId, adminOnly);
-    } catch (error) {
-      console.error('Error getting campaign reports:', error);
-        throw error;
-    }
-  };
-
-  const resolveReport = async (reportId: string, resolution: string): Promise<boolean> => {
-    try {
-      const isAdmin = userProfile?.role === 'admin';
-      if (!isAdmin) {
-        toast.error('Only administrators can resolve reports');
-        return false;
-      }
-      
-      return await riskAssessmentService.resolveReport(reportId, resolution);
-    } catch (error) {
-      console.error('Error resolving report:', error);
-      toast.error('Failed to resolve report');
-      return false;
-    }
-  };
-
-  const flagCampaign = async (campaignId: string, reason?: string): Promise<boolean> => {
-    try {
-      const isAdmin = userProfile?.role === 'admin';
-      if (!isAdmin) {
-        toast.error('Only administrators can manually flag campaigns');
-        return false;
-      }
-      
-      return await riskAssessmentService.flagCampaign(campaignId, 'admin', reason);
-    } catch (error) {
-      console.error('Error flagging campaign:', error);
-      toast.error('Failed to flag campaign');
-      return false;
-    }
-  };
-
-  const unflagCampaign = async (campaignId: string, reason: string): Promise<boolean> => {
-    try {
-      const isAdmin = userProfile?.role === 'admin';
-      if (!isAdmin) {
-        toast.error('Only administrators can unflag campaigns');
-        return false;
-      }
-      
-      const adminId = userProfile?.id || 'unknown';
-      return await riskAssessmentService.unflagCampaign(campaignId, adminId, reason);
-    } catch (error) {
-      console.error('Error unflagging campaign:', error);
-      toast.error('Failed to unflag campaign');
-      return false;
-    }
-  };
-
-  // Anti-spam functions
-  const canPerformAction = async (actionType: 'create' | 'comment' | 'report'): Promise<boolean> => {
-    try {
-      if (!account) {
-        toast.error('Please connect your wallet first');
-        return false;
-      }
-      
-      return await riskAssessmentService.canUserPerformAction(account, actionType);
-    } catch (error) {
-      console.error(`Error checking if user can perform ${actionType}:`, error);
-      return false;
-    }
-  };
-
-  const getSpamRules = (): SpamPreventionRules => {
-    return riskAssessmentService.getSpamRules();
-  };
-
-  const updateSpamRules = async (rules: Partial<SpamPreventionRules>): Promise<boolean> => {
-    try {
-      const isAdmin = userProfile?.role === 'admin';
-      if (!isAdmin) {
-        toast.error('Only administrators can update spam prevention rules');
-        return false;
-      }
-      
-      return await riskAssessmentService.updateSpamRules(rules);
-    } catch (error) {
-      console.error('Error updating spam prevention rules:', error);
-      toast.error('Failed to update spam prevention rules');
-      return false;
-    }
-  };
-  
-  // Analytics functions
-  const getCampaignMetrics = async (campaignId: string): Promise<OnChainMetric[]> => {
-    try {
-      return await analyticsService.getCampaignMetrics(campaignId);
-    } catch (error) {
-      console.error('Error getting campaign metrics:', error);
-      toast.error('Failed to fetch on-chain metrics');
-      return [];
-    }
-  };
-
-  const getMetricChartData = async (
-    campaignId: string,
-    metricId: string,
-    timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'
-  ): Promise<MetricChartData> => {
-    try {
-      // For actual implementation, we'd call the analytics service
-      // For development, we'll use the mock service
-      return await analyticsService.getMetricChartData(campaignId, metricId, timeframe as any);
-    } catch (error) {
-      console.error("Error fetching metric chart data:", error);
-      return { 
-        metricId,
-        metric: { id: '', name: '', description: '' }, 
-        data: [] 
-      };
-    }
-  };
-
-  const getMilestonesWithProposals = async (campaignId: string): Promise<MilestoneProgress[]> => {
-    try {
-      return await analyticsService.getMilestonesWithProposals(campaignId);
-    } catch (error) {
-      console.error('Error getting milestones with proposals:', error);
-      toast.error('Failed to fetch milestone data');
-      return [];
-    }
-  };
-
-  const getCampaignAnalytics = async (campaignId: string): Promise<CampaignAnalytics> => {
-    try {
-      return await analyticsService.getCampaignAnalytics(campaignId);
-    } catch (error) {
-      console.error('Error getting campaign analytics:', error);
-      toast.error('Failed to fetch campaign analytics');
-      return {
-        campaignId,
-        performance: {
-          contributionsTotal: 0,
-          contributorsTotal: 0,
-          contributorChangePercent: 0,
-          averageContribution: 0,
-          recentActivity: 0
-        },
-        funding: {
-          totalRaised: 0,
-          fundingGoal: 0,
-          percentFunded: 0,
-          fundingRate: 0,
-          fundingLeft: 0,
-          daysLeft: 0
-        },
-        tiers: {
-          popularTiers: [],
-          tiersDistribution: []
-        },
-        governance: {
-          totalProposals: 0,
-          activeProposals: 0,
-          averageParticipation: 0,
-          voterCount: 0
-        },
-        milestones: {
-          total: 0,
-          completed: 0,
-          inProgress: 0,
-          delayed: 0,
-          percentComplete: 0,
-          onTrack: false
-        }
-      };
-    }
-  };
-
-  const linkProposalToMilestone = async (
-    campaignId: string,
-    milestoneId: string,
-    proposalId: string
-  ): Promise<boolean> => {
-    try {
-      return await analyticsService.linkProposalToMilestone(campaignId, milestoneId, proposalId);
-    } catch (error) {
-      console.error('Error linking proposal to milestone:', error);
-      toast.error('Failed to link proposal to milestone');
-      return false;
-    }
-  };
-
-  const unlinkProposalFromMilestone = async (
-    campaignId: string,
-    milestoneId: string,
-    proposalId: string
-  ): Promise<boolean> => {
-    try {
-      return await analyticsService.unlinkProposalFromMilestone(campaignId, milestoneId, proposalId);
-    } catch (error) {
-      console.error('Error unlinking proposal from milestone:', error);
-      toast.error('Failed to unlink proposal from milestone');
-      return false;
-    }
-  };
-
-  const getLinkableProposals = async (campaignId: string): Promise<LinkedProposal[]> => {
-    try {
-      return await analyticsService.getLinkableProposals(campaignId);
-    } catch (error) {
-      console.error('Error getting linkable proposals:', error);
-      toast.error('Failed to fetch available proposals');
-        return [];
-      }
-  };
-  
-  // Add fetchCampaigns function
-  const fetchCampaigns = async (forceRefresh: boolean = false) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // In a real implementation, you would fetch campaigns from an API or blockchain
-      // For now, we'll simulate with mock data
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock campaigns data
-      const mockCampaigns = [
-        {
-          id: '1',
-          creator: '0x1234567890123456789012345678901234567890',
-          title: 'Decentralized Education Platform',
-          description: 'A platform to make education accessible to everyone through blockchain technology',
-          category: '11', // Education
-          goalAmount: '5000000000000000000000', // 5000 TLOS in wei
-          totalFunded: '2000000000000000000000', // 2000 TLOS in wei (40% funded)
-          duration: '30', // 30 days
-          createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-          isActive: true,
-          media: ['/images/campaign-1.jpg'],
-          donors: ['0xabc1', '0xabc2', '0xabc3'],
-          milestones: [
-            {
-              name: 'Initial Planning',
-              targetAmount: '1000000000000000000000',
-              isCompleted: true,
-              isFunded: true,
-              proofOfCompletion: '',
-              fundsReleased: '1000000000000000000000',
-              isUnderReview: false
-            },
-            {
-              name: 'MVP Development',
-              targetAmount: '2000000000000000000000',
-              isCompleted: false,
-              isFunded: false,
-              proofOfCompletion: '',
-              fundsReleased: '0',
-              isUnderReview: false
-            },
-            {
-              name: 'Platform Launch',
-              targetAmount: '2000000000000000000000',
-              isCompleted: false,
-              isFunded: false,
-              proofOfCompletion: '',
-              fundsReleased: '0',
-              isUnderReview: false
-            }
-          ],
-          currentMilestone: '0',
-          proofOfWork: '',
-          beneficiaries: '0x1234567890123456789012345678901234567890',
-          stakeholders: ['0x1234567890123456789012345678901234567890'],
-          campaignType: '0'
-        },
-        {
-          id: '2',
-          creator: '0x0987654321098765432109876543210987654321',
-          title: 'Green Energy Blockchain Solution',
-          description: 'Revolutionizing renewable energy trading using smart contracts',
-          category: '12', // Environment
-          goalAmount: '10000000000000000000000', // 10000 TLOS in wei
-          totalFunded: '8000000000000000000000', // 8000 TLOS in wei (80% funded)
-          duration: '45', // 45 days
-          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-          isActive: true,
-          media: ['/images/campaign-2.jpg'],
-          donors: ['0xdef1', '0xdef2', '0xdef3', '0xdef4'],
-          milestones: [
-            {
-              name: 'Research Phase',
-              targetAmount: '2000000000000000000000',
-              isCompleted: true,
-              isFunded: true,
-              proofOfCompletion: '',
-              fundsReleased: '2000000000000000000000',
-              isUnderReview: false
-            },
-            {
-              name: 'Prototype Development',
-              targetAmount: '4000000000000000000000',
-              isCompleted: true,
-              isFunded: true,
-              proofOfCompletion: '',
-              fundsReleased: '4000000000000000000000',
-              isUnderReview: false
-            },
-            {
-              name: 'Full Production',
-              targetAmount: '4000000000000000000000',
-              isCompleted: false,
-              isFunded: false,
-              proofOfCompletion: '',
-              fundsReleased: '0',
-              isUnderReview: false
-            }
-          ],
-          currentMilestone: '1',
-          proofOfWork: '',
-          beneficiaries: '0x0987654321098765432109876543210987654321',
-          stakeholders: ['0x0987654321098765432109876543210987654321'],
-          campaignType: '0'
-        },
-        {
-          id: '3',
-          creator: '0xabcdef1234567890abcdef1234567890abcdef12',
-          title: 'Community-Owned Marketplace',
-          description: 'Building a decentralized marketplace that gives power back to the community',
-          category: '9', // Commerce
-          goalAmount: '7500000000000000000000', // 7500 TLOS in wei
-          totalFunded: '3000000000000000000000', // 3000 TLOS in wei (40% funded)
-          duration: '60', // 60 days
-          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-          isActive: true,
-          media: ['/images/campaign-3.jpg'],
-          donors: ['0xghi1', '0xghi2'],
-          milestones: [
-            {
-              name: 'Design Phase',
-              targetAmount: '1500000000000000000000',
-              isCompleted: true,
-              isFunded: true,
-              proofOfCompletion: '',
-              fundsReleased: '1500000000000000000000',
-              isUnderReview: false
-            },
-            {
-              name: 'Core Development',
-              targetAmount: '3000000000000000000000',
-              isCompleted: false,
-              isFunded: false,
-              proofOfCompletion: '',
-              fundsReleased: '0',
-              isUnderReview: false
-            },
-            {
-              name: 'Security Audit',
-              targetAmount: '1500000000000000000000',
-              isCompleted: false,
-              isFunded: false,
-              proofOfCompletion: '',
-              fundsReleased: '0',
-              isUnderReview: false
-            },
-            {
-              name: 'Launch & Marketing',
-              targetAmount: '1500000000000000000000',
-              isCompleted: false,
-              isFunded: false,
-              proofOfCompletion: '',
-              fundsReleased: '0',
-              isUnderReview: false
-            }
-          ],
-          currentMilestone: '0',
-          proofOfWork: '',
-          beneficiaries: '0xabcdef1234567890abcdef1234567890abcdef12',
-          stakeholders: ['0xabcdef1234567890abcdef1234567890abcdef12'],
-          campaignType: '0'
-        }
-      ];
-      
-      setCampaigns(mockCampaigns);
-    } catch (error: any) {
-      console.error('Error fetching campaigns:', error);
-      setError(error.message || 'Failed to fetch campaigns');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Verification functions
-  const startVerification = async (level: VerificationLevel): Promise<boolean> => {
-    try {
-      // Implementation would call an API endpoint
-      toast.success(`Verification started at level ${level}`);
-      return true;
-    } catch (error) {
-      console.error('Error starting verification:', error);
-      toast.error('Failed to start verification');
-      return false;
-    }
-  };
-
-  const getVerificationStatus = async (): Promise<{level: VerificationLevel, inProgress: boolean, pendingLevel?: VerificationLevel}> => {
-    try {
-      // Implementation would call an API endpoint
-      return {
-        level: VerificationLevel.NONE,
-        inProgress: false,
-        pendingLevel: undefined
-      };
-    } catch (error) {
-      console.error('Error getting verification status:', error);
-      toast.error('Failed to fetch verification status');
-      return {
-        level: VerificationLevel.NONE,
-        inProgress: false,
-        pendingLevel: undefined
-      };
-    }
-  };
-  
-  // New functions
-  const releaseMilestoneFunds = async (
-    campaignId: string,
-    milestoneId: string
-  ): Promise<boolean> => {
-    // Implementation
-    return true;
-  };
-
-  // Get user's contributions to campaigns
-  const getUserContributions = async (campaignId?: string): Promise<any[]> => {
-    try {
-      if (!account) return [];
-      
-      // If campaignId is provided, get specific campaign contributions
-      if (campaignId) {
-        const result = await blockchainService.getUserContributionsToCampaign(account, campaignId);
-        return result;
-      }
-      
-      // Otherwise get all user contributions
-      const result = await blockchainService.getUserContributions(account);
-      return result;
-    } catch (error) {
-      console.error('Error getting user contributions:', error);
-      return [];
-    }
-  };
-
-  // Fetch campaigns created by the current user
-  const fetchUserCampaigns = async () => {
-    if (account) {
-      console.log('Fetching user campaigns...');
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const userCreatedCampaigns = campaigns?.filter(campaign => 
-        campaign.creator_address.toLowerCase() === account.toLowerCase()
-      ) || [];
-      
-      console.log('User campaigns:', userCreatedCampaigns);
-      setUserCampaigns(userCreatedCampaigns);
-    } else {
-      console.log('No account connected');
-      setUserCampaigns([]);
-    }
-  };
-
-  // Get campaigns created by a user
-  const getUserCampaigns = async (address?: string): Promise<any[]> => {
-    // Add a unique identifier to know which call is which
-    const callId = Math.random().toString(36).substring(2, 8);
-    const userAddress = address || account;
     
-    if (!userAddress) {
-      console.warn(`[${callId}] getUserCampaigns: No user address provided`);
-      return [];
+    // Call blockchain service disconnect if available
+    if (blockchainService) {
+      // Check if disconnect method exists before calling it
+      if (typeof blockchainService.disconnect === 'function') {
+        blockchainService.disconnect();
+      } else if (typeof blockchainService.resetWalletConnection === 'function') {
+        blockchainService.resetWalletConnection();
+      }
+      // If neither method exists, continue without calling anything
     }
     
-    // Limit console spam by reducing logging
-    if (userAddress === account) {
-      console.log(`[${callId}] getUserCampaigns for current user: ${userAddress.substring(0, 8)}...`);
-    }
-    
+    // Clear local storage if needed
+    localStorage.removeItem('WowzaRush_wallet_connected');
+  };
+
+  // Function to synchronize wallet state with blockchain service
+  const synchronizeWalletState = async () => {
     try {
-      // Mock implementation: In a real app, this would be an API call
-      return mockUserCampaigns || [];
+      if (!blockchainService) {
+        setIsWalletConnected(false);
+        setUserAddress(null);
+        setChainId(null);
+      } else {
+        // Update context state based on blockchain service state
+        const walletState = blockchainService.getWalletState();
+        setIsWalletConnected(walletState.isConnected);
+        setUserAddress(walletState.address);
+        setChainId(walletState.chainId);
+      }
     } catch (error) {
-      console.error(`[${callId}] Error getting user campaigns:`, error);
-      return [];
+      console.error('Error during wallet synchronization:', error);
+      setIsWalletConnected(false);
+      setUserAddress(null);
+      setChainId(null);
     }
   };
+
+  // Initialize the context
+  useEffect(() => {
+    initWeb3Storage()
+      .then(() => console.log('Web3Storage initialized'))
+      .catch(error => console.error('Failed to initialize web3Storage:', error));
+      
+    checkConnection()
+      .then(() => console.log('Wallet connection checked'))
+      .catch(error => console.error('Error checking wallet connection:', error));
+  }, []);
   
-  // Get campaigns backed by a user
-  const getUserBackedCampaigns = async (address?: string): Promise<any[]> => {
-    // Add a unique identifier to know which call is which
-    const callId = Math.random().toString(36).substring(2, 8);
-    const userAddress = address || account;
+  // Get creator profile with robust error handling
+  const getCreatorProfile = async (address?: string): Promise<CreatorProfile | null> => {
+    console.log('getCreatorProfile called for address:', address);
     
-    if (!userAddress) {
-      console.warn(`[${callId}] getUserBackedCampaigns: No user address provided`);
-      return [];
-    }
-    
-    // Limit console spam by reducing logging
-    if (userAddress === account) {
-      console.log(`[${callId}] getUserBackedCampaigns for current user: ${userAddress.substring(0, 8)}...`);
-    }
-    
-    try {
-      // Mock implementation: In a real app, this would be an API call
-      return mockBackedCampaigns || [];
-    } catch (error) {
-      console.error(`[${callId}] Error getting user backed campaigns:`, error);
-      return [];
-    }
-  };
-  
-  // Alias for getUserBackedCampaigns for backward compatibility
-  const getUserContributedCampaigns = async (address?: string) => {
-    return getUserBackedCampaigns(address);
-  };
-  
-  // Trust score calculation
-  const calculateTrustScore = async (address: string): Promise<number> => {
+    // Handle undefined or null address
     if (!address) {
-      console.warn("No address provided for trust score calculation");
-      return 50; // Default score for missing address
+      console.warn('getCreatorProfile called with no address, returning null');
+      return null;
     }
     
     try {
-      console.log("Calculating trust score for address:", address);
-      // This is a mock implementation - in a real app, this would use actual on-chain and off-chain data
-      const userProfile = await getCreatorProfile(address);
-      if (!userProfile) {
-        console.warn("No user profile found for address:", address);
-        return 50;
-      }
+      // Normalize address
+      const normalizedAddress = address.toLowerCase();
+      console.log('Getting profile for normalized address:', normalizedAddress);
       
-      // Base score components
-      let verificationScore = 0;
-      let activityScore = 0;
-      let contributionScore = 0;
-      let campaignSuccessScore = 0;
-      
-      // Verification level affects score
-      switch(userProfile.verificationLevel) {
-        case VerificationLevel.ESTABLISHED:
-          verificationScore = 40;
-          break;
-        case VerificationLevel.VERIFIED:
-          verificationScore = 30;
-          break;
-        case VerificationLevel.BASIC:
-          verificationScore = 15;
-          break;
-        default:
-          verificationScore = 0;
-      }
-      
+      // First attempt: Try to get from web3Storage
       try {
-        // Get campaigns created by user - handle potential errors separately
-        const userCreatedCampaigns = await getUserCampaigns(address) || [];
-        
-        // Activity score based on campaign count
-        activityScore = Math.min(20, userCreatedCampaigns.length * 5);
-        
-        // Success score based on campaign success rate
-        const successfulCampaigns = userCreatedCampaigns.filter(c => c && (c.status === 'completed' || c.status === 'successful'));
-        if (userCreatedCampaigns.length > 0) {
-          campaignSuccessScore = Math.floor((successfulCampaigns.length / userCreatedCampaigns.length) * 20);
+        if (web3Storage?.getUserProfile) {
+          console.log('Fetching profile from web3Storage');
+          const profile = await web3Storage.getUserProfile(normalizedAddress);
+          
+          if (profile) {
+            console.log('Found profile in web3Storage:', profile);
+            
+            // Create stats object if it doesn't exist
+            const stats = profile.stats || {};
+
+            // If profile exists in storage but doesn't have campaigns count, get from blockchain
+            if (!stats.campaignsCreated && blockchainService?.getUserCampaigns) {
+              try {
+                console.log('Fetching campaign count from blockchain');
+                const campaigns = await blockchainService.getUserCampaigns(normalizedAddress);
+                if (Array.isArray(campaigns)) {
+                  stats.campaignsCreated = campaigns.length;
+                  
+                  // Count successful campaigns
+                  stats.successfulCampaigns = campaigns.filter(
+                    c => c.status === 'completed' || c.totalFunded >= c.goalAmount
+                  ).length;
+                  
+                  // Calculate total funds raised
+                  const totalRaised = campaigns.reduce((sum, campaign) => {
+                    const fundedAmount = campaign.totalFunded ? 
+                      (typeof campaign.totalFunded === 'object' && campaign.totalFunded.toString) ? 
+                        campaign.totalFunded.toString() : 
+                        String(campaign.totalFunded) 
+                      : '0';
+                    return sum + (parseFloat(fundedAmount) || 0);
+                  }, 0);
+                  
+                  stats.totalFundsRaised = totalRaised.toString();
+                }
+              } catch (campaignErr) {
+                console.warn('Error fetching campaigns for stats:', campaignErr);
+              }
+            }
+            
+            // Return the profile with updated stats
+            return {
+              ...profile,
+              address: normalizedAddress,
+              stats
+            };
+          }
         }
-      } catch (error) {
-        console.error("Error calculating activity and success scores:", error);
-        // Use default values if there's an error
-        activityScore = 10;
-        campaignSuccessScore = 10;
+      } catch (storageErr) {
+        console.warn('Error fetching profile from web3Storage:', storageErr);
       }
       
-      try {
-        // Get contributions - handle potential errors separately
-        const backedCampaigns = await getUserBackedCampaigns(address) || [];
-        contributionScore = Math.min(20, (backedCampaigns.length || 0) * 4);
-      } catch (error) {
-        console.error("Error calculating contribution score:", error);
-        // Use default value if there's an error
-        contributionScore = 10;
+      // Second attempt: Build minimal profile from blockchain data
+      console.log('No profile found in storage, building minimal profile from blockchain');
+      if (blockchainService) {
+        try {
+          const campaigns = await blockchainService.getUserCampaigns(normalizedAddress);
+          
+          // Create minimal profile
+          const minimalProfile: CreatorProfile = {
+            address: normalizedAddress,
+            displayName: `${normalizedAddress.substring(0, 6)}...${normalizedAddress.substring(normalizedAddress.length - 4)}`,
+            stats: {
+              campaignsCreated: Array.isArray(campaigns) ? campaigns.length : 0,
+              successfulCampaigns: 0,
+              totalFundsRaised: '0'
+            }
+          };
+          
+          // Calculate successful campaigns and total funds
+          if (Array.isArray(campaigns) && campaigns.length > 0) {
+            minimalProfile.stats.successfulCampaigns = campaigns.filter(
+              c => c.status === 'completed' || c.totalFunded >= c.goalAmount
+            ).length;
+            
+            const totalRaised = campaigns.reduce((sum, campaign) => {
+              const fundedAmount = campaign.totalFunded ? 
+                (typeof campaign.totalFunded === 'object' && campaign.totalFunded.toString) ? 
+                  campaign.totalFunded.toString() : 
+                  String(campaign.totalFunded) 
+                : '0';
+              return sum + (parseFloat(fundedAmount) || 0);
+            }, 0);
+            
+            minimalProfile.stats.totalFundsRaised = totalRaised.toString();
+          }
+          
+          // Store this minimal profile for future use
+          if (web3Storage?.updateUserProfile) {
+            try {
+              await web3Storage.updateUserProfile(normalizedAddress, minimalProfile);
+              console.log('Stored minimal profile for future use');
+            } catch (updateErr) {
+              console.warn('Could not store minimal profile:', updateErr);
+            }
+          }
+          
+          return minimalProfile;
+        } catch (blockchainErr) {
+          console.warn('Error building profile from blockchain:', blockchainErr);
+        }
       }
       
-      // Sum all components for total score
-      const totalScore = verificationScore + activityScore + contributionScore + campaignSuccessScore;
-      console.log("Trust score components:", {
-        verificationScore,
-        activityScore,
-        contributionScore,
-        campaignSuccessScore,
-        totalScore
-      });
-      
-      // Add small random factor to prevent all scores looking the same
-      const randomFactor = Math.floor(Math.random() * 5);
-      
-      return Math.min(100, totalScore + randomFactor);
+      // Final fallback: Return minimal profile with just the address
+      console.log('Creating fallback minimal profile');
+      return {
+        address: normalizedAddress,
+        displayName: `${normalizedAddress.substring(0, 6)}...${normalizedAddress.substring(normalizedAddress.length - 4)}`,
+        stats: {
+          campaignsCreated: 0,
+          successfulCampaigns: 0,
+          totalFundsRaised: '0'
+        }
+      };
     } catch (error) {
-      console.error("Error calculating trust score:", error);
-      return 50; // Default fallback score
+      console.error('Error in getCreatorProfile:', error);
+      
+      // Last resort error fallback
+      return {
+        address: address.toLowerCase(),
+        displayName: `${address.substring(0, 6)}...${address.substring(address.length - 4)}`,
+        stats: {
+          campaignsCreated: 0,
+          successfulCampaigns: 0,
+          totalFundsRaised: '0'
+        }
+      };
     }
   };
-  
-  // Context value
-  const contextValue: WowzaRushContextType = {
+
+  // Update the getCampaign method with better initialization and error handling
+  const getCampaign = async (campaignId: string) => {
+    try {
+      if (!blockchainService) {
+        console.error('Blockchain service is not available');
+        throw new Error('Blockchain service is not available');
+      }
+      
+      console.log(`Getting campaign with ID: ${campaignId}`);
+      
+      // Explicitly initialize the blockchain service first
+      try {
+        await blockchainService.initialize();
+        
+        // Check if connected properly
+        if (!blockchainService.isConnected()) {
+          console.warn('Blockchain service connected but not ready');
+          throw new Error('Blockchain service not ready');
+        }
+      } catch (initError) {
+        console.error('Failed to initialize blockchain service:', initError);
+        throw new Error(`Blockchain initialization failed: ${initError instanceof Error ? initError.message : 'Unknown error'}`);
+      }
+      
+      const numericId = parseInt(campaignId);
+      
+      // Ensure we pass the ID as a string to the blockchain service
+      const campaign = await blockchainService.getCampaign(numericId.toString());
+      
+      console.log(`Successfully retrieved campaign: ${campaign?.title}`);
+      return campaign;
+    } catch (error) {
+      console.error(`Error in context getCampaign for ID ${campaignId}:`, error);
+      // Provide more detailed error information
+      if (error instanceof Error) {
+        throw new Error(`Failed to get campaign: ${error.message}`);
+      } else {
+        throw new Error(`Failed to get campaign: Unknown error`);
+      }
+    }
+  };
+
+  // Create context value with all required properties
+  const contextValue = {
     // Wallet connection
-    account,
+    userAddress,
     isWalletConnected,
     connectWallet,
     disconnectWallet,
+    chainId,
+    
+    // Blockchain service
+    blockchainService,
     
     // User profile
     userProfile,
     
-    // Campaign functions
-    getCampaign,
-    getCampaignDetails,
-    createCampaign,
-    contributeToCampaign,
-    followCampaign,
-    isFollowing,
-    likeCampaign,
-    isUserLiked,
-    reportCampaign,
-    fetchCampaigns,
-    fetchUserCampaigns,
-    getUserCampaigns,
-    getUserBackedCampaigns,
-    getUserContributedCampaigns,
+    // Creator profile functions
     getCreatorProfile,
-    updateCreatorProfile,
-    followCreator,
     
-    // State
-    campaigns,
-    userCampaigns,
-    userContributedCampaigns,
-    loading,
-    error,
+    // Fetch user campaigns
+    fetchUserCampaigns: async (forceRefresh = false, page = 1, limit = 10) => {
+      if (!userAddress) {
+        console.warn('Cannot fetch user campaigns: No user address');
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        console.log('Fetching user campaigns for address:', userAddress);
+        
+        // Try to get from blockchain service if available
+        if (blockchainService?.getUserCampaigns) {
+          const campaigns = await blockchainService.getUserCampaigns(userAddress);
+          if (Array.isArray(campaigns)) {
+            setUserCampaigns(campaigns);
+            console.log(`Fetched ${campaigns.length} user campaigns`);
+          }
+        } else {
+          // Use empty array instead of mock data
+          console.log('No campaigns available from blockchain service');
+          setUserCampaigns([]);
+        }
+      } catch (error) {
+        console.error('Error fetching user campaigns:', error);
+        // Set to empty array on error
+        setUserCampaigns([]);
+      } finally {
+        setLoading(false);
+      }
+    },
     
-    // Verification functions
-    startVerification,
-    getVerificationStatus,
+    // Other functions and properties needed by the context
+    // Include mock implementations for required interface methods
+    getCampaign,
+    getCampaignDetails: async () => ({}),
+    createCampaign: async () => "",
+    updateCampaign: async () => true,
+    contributeToCampaign: async (campaignId: string, amount: number, tierId?: string) => {
+      try {
+        if (!blockchainService) {
+          console.error("Blockchain service not available");
+          toast.error("Blockchain service not available");
+          throw new Error("Blockchain service not available");
+        }
+
+        // If tierId is provided, use the contributeWithTier method
+        if (tierId && blockchainService.contributeWithTier) {
+          console.log(`Contributing ${amount} ETH to campaign ${campaignId} with tier ${tierId}`);
+          
+          try {
+            const result = await blockchainService.contributeWithTier(campaignId, tierId, amount);
+            if (result) {
+              toast.success(`Successfully contributed ${amount} ETH with selected tier!`);
+            }
+            return result;
+          } catch (error) {
+            console.error("Error contributing with tier:", error);
+            toast.error(`Failed to contribute with tier: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw error;
+          }
+        } 
+        // Otherwise, use the regular contribute method
+        else if (blockchainService.contributeToCampaign) {
+          console.log(`Contributing ${amount} ETH to campaign ${campaignId}`);
+          
+          try {
+            const result = await blockchainService.contributeToCampaign(campaignId, amount);
+            if (result) {
+              toast.success(`Successfully contributed ${amount} ETH to the campaign!`);
+            }
+            return result;
+          } catch (error) {
+            console.error("Error contributing to campaign:", error);
+            toast.error(`Failed to contribute: ${error instanceof Error ? error.message : "Unknown error"}`);
+            throw error;
+          }
+        } else {
+          console.error("Blockchain service method contributeToCampaign is not available");
+          toast.error("Contribution functionality is not available");
+          throw new Error("Contribution functionality not available");
+        }
+      } catch (error) {
+        console.error("Error contributing to campaign:", error);
+        toast.error(`Failed to contribute: ${error instanceof Error ? error.message : "Unknown error"}`);
+        throw error;
+      }
+    },
+    followCampaign: async () => true,
+    isFollowing: async () => false,
+    likeCampaign: async () => true,
+    isUserLiked: async () => false,
     
-    // Comments and Q&A functions
-    getComments,
-    addComment,
-    likeComment,
-    reportComment,
-    getQuestions,
-    addQuestion,
-    answerQuestion,
-    likeQuestion,
+    // Implement risk assessment functions
+    getCampaignRiskScore: async (campaignId: string) => {
+      try {
+        return await riskAssessmentService.getCampaignRiskScore(campaignId);
+      } catch (error) {
+        console.error('Error getting campaign risk score:', error);
+        throw error;
+      }
+    },
+    getCampaignReports: async (campaignId: string, adminOnly: boolean = true) => {
+      try {
+        return await riskAssessmentService.getCampaignReports(campaignId, adminOnly);
+      } catch (error) {
+        console.error('Error getting campaign reports:', error);
+        return [];
+      }
+    },
+    resolveReport: async (reportId: string, resolution: string) => {
+      try {
+        return await riskAssessmentService.resolveReport(reportId, resolution);
+      } catch (error) {
+        console.error('Error resolving report:', error);
+        return false;
+      }
+    },
+    flagCampaign: async (campaignId: string, reason?: string) => {
+      try {
+        return await riskAssessmentService.flagCampaign(campaignId, 'admin', reason);
+      } catch (error) {
+        console.error('Error flagging campaign:', error);
+        return false;
+      }
+    },
+    unflagCampaign: async (campaignId: string, reason: string) => {
+      if (!userAddress) return false;
+      try {
+        return await riskAssessmentService.unflagCampaign(campaignId, userAddress, reason);
+      } catch (error) {
+        console.error('Error unflagging campaign:', error);
+        return false;
+      }
+    },
+    reportCampaign: async (campaignId: string, reason: string, details: string, evidence?: string[]) => {
+      if (!userAddress) return false;
+      try {
+        return await riskAssessmentService.reportCampaign(
+          campaignId,
+          userAddress, // Using address as ID
+          userAddress,
+          reason,
+          details,
+          evidence
+        );
+      } catch (error) {
+        console.error('Error reporting campaign:', error);
+        return false;
+      }
+    },
     
-    // Reward tiers functions
-    getCampaignTiers,
-    createTier,
-    updateTier,
-    deleteTier,
-    contributeWithTier,
+    // Implement reward tiers functions
+    getCampaignTiers: async (campaignId: string) => {
+      try {
+        console.log('Getting campaign tiers for campaign:', campaignId);
+        if (!blockchainService) {
+          const error = new Error("Blockchain service not available");
+          console.error(error);
+          toast.error("Blockchain service not available");
+          throw error;
+        }
+
+        try {
+          const tiers = await blockchainService.getCampaignTiers(campaignId);
+          console.log('Received tiers:', tiers);
+          return tiers;
+        } catch (error) {
+          console.error("Error getting campaign tiers:", error);
+          toast.error(`Error getting campaign tiers: ${error instanceof Error ? error.message : "Unknown error"}`);
+          throw error;
+        }
+      } catch (error) {
+        console.error("Error in getCampaignTiers:", error);
+        toast.error(`Failed to get campaign tiers: ${error instanceof Error ? error.message : "Unknown error"}`);
+        throw error;
+      }
+    },
     
-    // NFT badge functions
-    getUserNFTBadges,
-    getCampaignNFTBadges,
-    mintNFTBadge,
+    createTier: async (campaignId: string, tierData: any) => {
+      try {
+        if (!blockchainService?.createRewardTier) {
+          toast.error("Tier creation functionality unavailable. Please check your connection.");
+          console.error("Blockchain service method createRewardTier is not available");
+          throw new Error("Tier creation functionality unavailable");
+        }
+        
+        const result = await blockchainService.createRewardTier(campaignId, tierData);
+        if (result) {
+          toast.success("Reward tier created successfully");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error creating reward tier:", error);
+        toast.error("Failed to create reward tier. Please try again later.");
+        throw error;
+      }
+    },
     
-    // Governance functions
-    getCampaignProposals,
-    createProposal,
-    castVote,
-    getUserVotingPower,
+    updateTier: async (tierId: string, tierData: any) => {
+      try {
+        if (!blockchainService?.updateRewardTier) {
+          toast.error("Tier update functionality unavailable. Please check your connection.");
+          console.error("Blockchain service method updateRewardTier is not available");
+          throw new Error("Tier update functionality unavailable");
+        }
+        
+        const result = await blockchainService.updateRewardTier(tierId, tierData);
+        if (result) {
+          toast.success("Reward tier updated successfully");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error updating reward tier:", error);
+        toast.error("Failed to update reward tier. Please try again later.");
+        throw error;
+      }
+    },
     
-    // Notification functions
-    getUserNotifications,
-    getUnreadNotificationsCount,
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
-    deleteNotification,
-    updateNotificationPreferences,
-    getNotificationPreferences,
+    deleteTier: async (tierId: string) => {
+      try {
+        if (!blockchainService?.deleteRewardTier) {
+          toast.error("Tier deletion functionality unavailable. Please check your connection.");
+          console.error("Blockchain service method deleteRewardTier is not available");
+          throw new Error("Tier deletion functionality unavailable");
+        }
+        
+        const result = await blockchainService.deleteRewardTier(tierId);
+        if (result) {
+          toast.success("Reward tier deleted successfully");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error deleting reward tier:", error);
+        toast.error("Failed to delete reward tier. Please try again later.");
+        throw error;
+      }
+    },
     
-    // Campaign updates functions
-    getCampaignUpdates,
-    createCampaignUpdate,
-    updateCampaignUpdate,
-    deleteCampaignUpdate,
+    contributeWithTier: async (campaignId: string, tierId: string, amount: number) => {
+      try {
+        if (!blockchainService) {
+          const error = new Error("Blockchain service not available");
+          console.error(error);
+          toast.error("Blockchain service not available");
+          throw error;
+        }
+
+        if (!blockchainService.contributeWithTier) {
+          const error = new Error("contributeWithTier method not available");
+          console.error(error);
+          toast.error("Contribution functionality not available");
+          throw error;
+        }
+
+        console.log(`Contributing ${amount} ETH to campaign ${campaignId} with tier ${tierId}`);
+        
+        try {
+          const result = await blockchainService.contributeWithTier(campaignId, tierId, amount);
+          if (result) {
+            toast.success(`Successfully contributed ${amount} ETH with selected tier!`);
+          }
+          return result;
+        } catch (error) {
+          console.error("Error contributing with tier:", error);
+          toast.error(`Failed to contribute with tier: ${error instanceof Error ? error.message : "Unknown error"}`);
+          throw error;
+        }
+      } catch (error) {
+        console.error("Error in contributeWithTier:", error);
+        toast.error(`Failed to contribute: ${error instanceof Error ? error.message : "Unknown error"}`);
+        throw error;
+      }
+    },
     
-    // Delivery tracking functions
-    getDeliveryStatus,
-    updateDeliveryStatus,
-    updateMilestone,
+    // Implement governance functions
+    getCampaignProposals: async (campaignId: string) => {
+      try {
+        console.log(`Getting proposals for campaign: ${campaignId}`);
+        if (!blockchainService || !blockchainService.getCampaignProposals) {
+          const error = new Error("Blockchain service method getCampaignProposals is not available");
+          console.error(error);
+          toast.error('Failed to load proposals. Service unavailable.');
+          throw error;
+        }
+        const proposals = await blockchainService.getCampaignProposals(campaignId);
+        console.log('Received proposals:', proposals);
+        return proposals;
+      } catch (error) {
+        console.error('Error fetching campaign proposals:', error);
+        toast.error(`Failed to load proposals: ${error instanceof Error ? error.message : "Unknown error"}`);
+        throw error;
+      }
+    },
     
-    // Risk assessment functions
-    getCampaignRiskScore,
-    getCampaignReports,
-    resolveReport,
-    flagCampaign,
-    unflagCampaign,
+    createProposal: async (proposalData: any) => {
+      try {
+        if (!blockchainService?.createProposal) {
+          toast.error("Proposal creation functionality unavailable. Please check your connection.");
+          console.error("Blockchain service method createProposal is not available");
+          throw new Error("Proposal creation functionality unavailable");
+        }
+        
+        const result = await blockchainService.createProposal(proposalData);
+        if (result) {
+          toast.success("Proposal created successfully");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error creating proposal:", error);
+        toast.error("Failed to create proposal. Please try again later.");
+        throw error;
+      }
+    },
     
-    // Anti-spam functions
-    canPerformAction,
-    getSpamRules,
-    updateSpamRules,
+    castVote: async (proposalId: string, optionId: string, votingPower: number) => {
+      try {
+        if (!blockchainService?.castVote) {
+          toast.error("Voting functionality unavailable. Please check your connection.");
+          console.error("Blockchain service method castVote is not available");
+          throw new Error("Voting functionality unavailable");
+        }
+        
+        const result = await blockchainService.castVote(proposalId, optionId, votingPower);
+        if (result) {
+          toast.success("Vote cast successfully");
+        }
+        return result;
+      } catch (error) {
+        console.error("Error casting vote:", error);
+        toast.error("Failed to cast vote. Please try again later.");
+        throw error;
+      }
+    },
     
-    // Analytics functions
-    getCampaignMetrics,
-    getMetricChartData,
-    getMilestonesWithProposals,
-    getCampaignAnalytics,
-    linkProposalToMilestone,
-    unlinkProposalFromMilestone,
-    getLinkableProposals,
+    getUserVotingPower: async (address: string, campaignId: string) => {
+      try {
+        console.log(`Getting voting power for user: ${address} in campaign: ${campaignId}`);
+        if (!blockchainService || !blockchainService.getUserVotingPower) {
+          console.error('Blockchain service method getUserVotingPower is not available');
+          toast.error('Failed to load voting power. Service unavailable.');
+          return '0';
+        }
+        const votingPower = await blockchainService.getUserVotingPower(address, campaignId);
+        console.log('Received voting power:', votingPower);
+        return votingPower || '0';
+      } catch (error) {
+        console.error('Error fetching user voting power:', error);
+        toast.error('Failed to load voting power');
+        return '0';
+      }
+    },
     
-    // New functions
-    releaseMilestoneFunds,
-    getUserContributions,
-    calculateTrustScore,
+    fetchCampaigns: async () => {},
+    campaigns: [],
+    userCampaigns: [],
+    userContributedCampaigns: [],
+    allCampaigns: [],
+    totalUserCampaigns: 0,
+    loading: false,
+    error: null,
+    startVerification: async () => false,
+    getVerificationStatus: async () => ({ level: VerificationLevel.UNVERIFIED, inProgress: false }),
+    updateCreatorProfile: async () => true,
+    followCreator: async () => true,
+    getComments: async () => [],
+    addComment: async (campaignId: string, content: string, parentId?: string) => {
+      if (!userAddress) {
+        toast.error('Please connect your wallet to add a comment');
+        throw new Error('Wallet not connected');
+      }
+      
+      try {
+        // Generate a unique ID for the comment
+        const commentId = `comment_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        
+        // Check if user is the creator
+        let isCreator = false;
+        try {
+          if (blockchainService && campaignId) {
+            const campaign = await blockchainService.getCampaign(campaignId);
+            if (campaign && campaign.creator) {
+              isCreator = campaign.creator.toLowerCase() === userAddress.toLowerCase();
+            }
+          }
+        } catch (error) {
+          console.warn('Error checking if user is creator:', error);
+        }
+        
+        // Create the comment object
+        const newComment: Comment = {
+          id: commentId,
+          campaignId,
+          userId: userAddress,
+          content,
+          timestamp: Date.now(),
+          likes: 0,
+          isCreator
+        };
+        
+        if (parentId) {
+          newComment.parentId = parentId;
+        }
+        
+        // Store the comment in web3Storage if available
+        if (web3Storage?.addComment) {
+          await web3Storage.addComment(campaignId, newComment);
+        }
+        
+        return newComment;
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        toast.error(`Failed to add comment: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw error;
+      }
+    },
+    getOnboardingStatus: async () => ({ completed: false }),
+    completeOnboardingStep: async () => true,
+    web3Storage: web3Storage,
+    tryConnectWallet: async () => false,
+    isWalletConnecting,
+    setIsWalletConnecting,
+    walletConnectError,
+    setWalletConnectError,
+    getUserContributedCampaigns: async (address?: string) => {
+      const userAddr = address || userAddress;
+      if (!userAddr) {
+        console.warn('Cannot fetch contributed campaigns: No user address');
+        return [];
+      }
+      
+      try {
+        console.log('Fetching contributed campaigns for address:', userAddr);
+        
+        // Try to use blockchain service if available
+        if (blockchainService?.getUserContributions) {
+          const contributions = await blockchainService.getUserContributions(userAddr);
+          if (Array.isArray(contributions)) {
+            setUserContributedCampaigns(contributions);
+            return contributions;
+          }
+        }
+        
+        // Return empty array instead of mock data
+        console.log('No contributions available from blockchain service');
+        setUserContributedCampaigns([]);
+        return [];
+      } catch (error) {
+        console.error('Error fetching contributed campaigns:', error);
+        setUserContributedCampaigns([]);
+        return [];
+      }
+    },
+    getUserBackedCampaigns: async (address?: string, page = 1, limit = 10) => {
+      const userToFetch = address || userAddress;
+      
+      if (!userToFetch) {
+        console.warn('Cannot fetch backed campaigns: No user address');
+        return [];
+      }
+      
+      try {
+        console.log('Fetching backed campaigns for address:', userToFetch);
+        
+        // Try to get from blockchain service if available
+        if (blockchainService?.getUserBackedCampaigns) {
+          const campaigns = await blockchainService.getUserBackedCampaigns(userToFetch);
+          if (Array.isArray(campaigns)) {
+            console.log(`Fetched ${campaigns.length} backed campaigns`);
+            return campaigns;
+          }
+        }
+        
+        // Return empty array instead of mock data
+        console.log('No backed campaigns available from blockchain service');
+        return [];
+      } catch (error) {
+        console.error('Error fetching backed campaigns:', error);
+        // Return empty array on error
+        return [];
+      }
+    },
+    calculateTrustScore: async () => 0,
+    getUserReputation: async () => ({}),
+    getCategories: async () => [],
+    getFundingStats: async () => ({}),
+    getQuestions: async (campaignId: string) => {
+      try {
+        console.log(`Getting questions for campaign: ${campaignId}`);
+        
+        // Try to get questions from web3Storage if available
+        if (web3Storage?.getQuestions) {
+          try {
+            const questions = await web3Storage.getQuestions(campaignId);
+            if (Array.isArray(questions) && questions.length > 0) {
+              console.log(`Found ${questions.length} questions in web3Storage`);
+              return questions;
+            }
+          } catch (storageError) {
+            console.warn('Error fetching questions from web3Storage:', storageError);
+            // Continue to other methods
+          }
+        }
+        
+        // Return empty array instead of failing
+        return [];
+      } catch (error) {
+        console.error('Error getting questions:', error);
+        // Return empty array on error rather than throwing
+        return [];
+      }
+    },
+    addQuestion: async (campaignId: string, title: string, content: string) => {
+      if (!userAddress) {
+        toast.error('Please connect your wallet to ask a question');
+        throw new Error('Wallet not connected');
+      }
+      
+      try {
+        console.log(`Adding question to campaign ${campaignId}`);
+        
+        // Generate a unique question ID
+        const questionId = `question_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        
+        // Check if user is the creator
+        let isCreator = false;
+        try {
+          if (blockchainService) {
+            const campaign = await blockchainService.getCampaign(campaignId);
+            if (campaign && campaign.creator) {
+              isCreator = campaign.creator.toLowerCase() === userAddress.toLowerCase();
+            }
+          }
+        } catch (error) {
+          console.warn('Error checking if user is creator:', error);
+          // Don't throw here - we'll assume the user is not a creator
+        }
+        
+        // If user is creator, don't allow question submission
+        if (isCreator) {
+          toast.error('As the creator, you cannot ask questions on your own campaign');
+          throw new Error('Creator cannot ask questions on their own campaign');
+        }
+        
+        // Create the new question object with proper type
+        const newQuestion = {
+          id: questionId,
+          campaignId,
+          title,
+          content,
+          createdAt: Date.now(),
+          creatorAddress: userAddress,
+          creatorName: userProfile?.displayName || `${userAddress.substring(0, 6)}...`,
+          isAnswered: false,
+          isPinned: false,
+          answerCount: 0,
+          upvotes: 0,
+          tags: [] as string[]
+        };
+        
+        // Store the question in web3Storage if available
+        if (web3Storage?.addQuestion) {
+          try {
+            await web3Storage.addQuestion(campaignId, newQuestion);
+            console.log('Question added to web3Storage');
+          } catch (storageError) {
+            console.warn('Error adding question to web3Storage:', storageError);
+            // Continue - this is just a backup
+          }
+        } else {
+          console.warn('web3Storage.addQuestion not available');
+        }
+        
+        // Return the new question
+        return newQuestion;
+      } catch (error) {
+        console.error('Error adding question:', error);
+        toast.error(`Failed to add question: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw error;
+      }
+    },
+    answerQuestion: async () => true,
+    getCampaignUpdates: async (campaignId: string, includePrivate: boolean = false) => {
+      try {
+        console.log(`Getting updates for campaign: ${campaignId}, includePrivate: ${includePrivate}`);
+        
+        // Try to get campaign updates from web3Storage if available
+        try {
+          const updates = await getStorageUpdates(campaignId, includePrivate);
+          if (Array.isArray(updates)) {
+            return updates;
+          }
+        } catch (storageError) {
+          console.warn('Error fetching updates from web3Storage:', storageError);
+        }
+        
+        // If the blockchain service has this method, try it
+        if (blockchainService?.getCampaignUpdates) {
+          try {
+            const updates = await blockchainService.getCampaignUpdates(campaignId, includePrivate);
+            if (Array.isArray(updates)) {
+              return updates;
+            }
+          } catch (error) {
+            console.warn('Error fetching updates from blockchain service:', error);
+          }
+        }
+        
+        // Return empty array as fallback
+        return [];
+      } catch (error) {
+        console.error('Error in getCampaignUpdates:', error);
+        toast.error(`Failed to load campaign updates: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return [];
+      }
+    },
+    createCampaignUpdate: async (updateData: any) => {
+      try {
+        console.log('Creating campaign update:', updateData);
+        
+        // Validate the user is connected
+        if (!userAddress) {
+          toast.error('Please connect your wallet to create an update');
+          throw new Error('Wallet not connected');
+        }
+        
+        // Check if the user is the creator of the campaign
+        let isCreator = false;
+        try {
+          if (blockchainService && updateData.campaignId) {
+            const campaign = await blockchainService.getCampaign(updateData.campaignId);
+            if (campaign?.creator) {
+              isCreator = campaign.creator.toLowerCase() === userAddress.toLowerCase();
+            }
+          }
+        } catch (error) {
+          console.warn('Error checking if user is creator:', error);
+        }
+        
+        if (!isCreator) {
+          toast.error('Only the campaign creator can post updates');
+          throw new Error('Not authorized to post campaign updates');
+        }
+        
+        // Generate a unique ID for the update
+        const updateId = `update_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        
+        // Create the update object
+        const newUpdate = {
+          id: updateId,
+          campaignId: updateData.campaignId,
+          creatorId: userAddress,
+          title: updateData.title,
+          content: updateData.content,
+          isPublic: updateData.isPublic !== false, // Default to true if not specified
+          isPinned: updateData.isPinned === true, // Default to false if not specified
+          attachments: updateData.attachments || [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          likes: 0,
+          comments: []
+        };
+        
+        // Store in web3Storage if available
+        try {
+          await addStorageUpdate(newUpdate);
+          console.log('Update stored in web3Storage');
+        } catch (storageError) {
+          console.warn('Error storing update in web3Storage:', storageError);
+          // Continue - this is just a backup storage
+        }
+        
+        return newUpdate;
+      } catch (error) {
+        console.error('Error creating campaign update:', error);
+        toast.error(`Failed to create update: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw error;
+      }
+    },
+    updateCampaignUpdate: async (updateId: string, updateData: any) => {
+      try {
+        console.log(`Updating campaign update ${updateId}:`, updateData);
+        
+        if (!userAddress) {
+          toast.error('Please connect your wallet to update a campaign update');
+          throw new Error('Wallet not connected');
+        }
+        
+        // Try to load the existing update from web3Storage
+        let existingUpdate = null;
+        if (web3Storage?.getCampaignUpdate) {
+          existingUpdate = await web3Storage.getCampaignUpdate(updateId);
+        }
+        
+        if (!existingUpdate) {
+          toast.error('Failed to find the update to edit');
+          throw new Error('Update not found');
+        }
+        
+        // Verify the user is the creator of the update
+        if (existingUpdate.creatorId.toLowerCase() !== userAddress.toLowerCase()) {
+          toast.error('You can only edit your own updates');
+          throw new Error('Not authorized to edit this update');
+        }
+        
+        // Create updated object
+        const updatedUpdate = {
+          ...existingUpdate,
+          title: updateData.title !== undefined ? updateData.title : existingUpdate.title,
+          content: updateData.content !== undefined ? updateData.content : existingUpdate.content,
+          isPublic: updateData.isPublic !== undefined ? updateData.isPublic : existingUpdate.isPublic,
+          isPinned: updateData.isPinned !== undefined ? updateData.isPinned : existingUpdate.isPinned,
+          attachments: updateData.attachments !== undefined ? updateData.attachments : existingUpdate.attachments,
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Update in web3Storage
+        if (web3Storage?.updateCampaignUpdate) {
+          await web3Storage.updateCampaignUpdate(updateId, updatedUpdate);
+          return true;
+        }
+        
+        toast.error('Update storage functionality not available');
+        return false;
+      } catch (error) {
+        console.error(`Error updating campaign update ${updateId}:`, error);
+        toast.error(`Failed to update campaign update: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return false;
+      }
+    },
+    deleteCampaignUpdate: async (updateId: string) => {
+      try {
+        console.log(`Deleting campaign update ${updateId}`);
+        
+        if (!userAddress) {
+          toast.error('Please connect your wallet to delete an update');
+          throw new Error('Wallet not connected');
+        }
+        
+        // Try to load the existing update
+        let existingUpdate = null;
+        if (web3Storage?.getCampaignUpdate) {
+          existingUpdate = await web3Storage.getCampaignUpdate(updateId);
+        }
+        
+        if (!existingUpdate) {
+          toast.error('Failed to find the update to delete');
+          throw new Error('Update not found');
+        }
+        
+        // Verify the user is the creator of the update
+        if (existingUpdate.creatorId.toLowerCase() !== userAddress.toLowerCase()) {
+          toast.error('You can only delete your own updates');
+          throw new Error('Not authorized to delete this update');
+        }
+        
+        // Delete from web3Storage
+        if (web3Storage?.deleteCampaignUpdate) {
+          await web3Storage.deleteCampaignUpdate(updateId);
+          return true;
+        }
+        
+        toast.error('Delete functionality not available');
+        return false;
+      } catch (error) {
+        console.error(`Error deleting campaign update ${updateId}:`, error);
+        toast.error(`Failed to delete campaign update: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return false;
+      }
+    },
   };
   
   return (
@@ -1997,6 +1757,19 @@ export const WowzaRushProvider: React.FC<WowzaRushProviderProps> = ({ children, 
       {children}
     </WowzaRushContext.Provider>
   );
+}
+
+// Export the hook
+export const useWowzaRush = () => {
+  const context = useContext(WowzaRushContext);
+  if (!context) {
+    throw new Error('useWowzaRush must be used within a WowzaRushProvider');
+  }
+  return context;
 };
 
-export default WowzaRushProvider;
+// Keep the old name as an alias for backward compatibility
+export const useWowzaRushContext = useWowzaRush;
+
+export default WowzaRushContext;
+

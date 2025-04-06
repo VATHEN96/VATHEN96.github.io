@@ -8,7 +8,7 @@ import { Progress } from '@/components/ui/progress';
 import { CheckIcon, ClockIcon, AlertCircleIcon, CheckCircle2, Clock, AlertCircle, CalendarIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 
 export interface MilestoneTimelineProps {
@@ -133,77 +133,79 @@ export default function MilestoneTimeline({
       </div>
 
       {/* Visual Timeline */}
-      <div className="relative py-10">
-        {/* Timeline line */}
-        <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 transform -translate-y-1/2"></div>
-        
-        {/* Show empty state if no milestones */}
-        {(!milestones || !Array.isArray(milestones) || milestones.length === 0) && (
-          <div className="text-center py-4 text-gray-500">
-            No milestones available
-          </div>
-        )}
-        
-        {/* Milestone markers positioned along the timeline */}
-        {Array.isArray(milestones) && milestones.map((milestone, index) => {
-          const left = getMilestonePosition(milestone, index);
-          const isCompleted = milestone.completed || milestone.isCompleted;
-          const isReview = milestone.isUnderReview;
-          const isAtRisk = isMilestoneAtRisk(milestone);
-          const isOverdue = milestone.dueDate && isBefore(milestone.dueDate, new Date()) && !isCompleted && !isReview;
+      <TooltipProvider>
+        <div className="relative py-10">
+          {/* Timeline line */}
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-gray-200 transform -translate-y-1/2"></div>
           
-          return (
-            <Tooltip key={milestone.id || index}>
-              <TooltipTrigger asChild>
-                <div 
-                  className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
-                  style={{ left }}
-                  onClick={() => onMilestoneClick?.(milestone, index)}
-                >
+          {/* Show empty state if no milestones */}
+          {(!milestones || !Array.isArray(milestones) || milestones.length === 0) && (
+            <div className="text-center py-4 text-gray-500">
+              No milestones available
+            </div>
+          )}
+          
+          {/* Milestone markers positioned along the timeline */}
+          {Array.isArray(milestones) && milestones.map((milestone, index) => {
+            const left = getMilestonePosition(milestone, index);
+            const isCompleted = milestone.completed || milestone.isCompleted;
+            const isReview = milestone.isUnderReview;
+            const isAtRisk = isMilestoneAtRisk(milestone);
+            const isOverdue = milestone.dueDate && isBefore(milestone.dueDate, new Date()) && !isCompleted && !isReview;
+            
+            return (
+              <Tooltip key={milestone.id || index}>
+                <TooltipTrigger asChild>
                   <div 
-                    className={cn(
-                      "flex items-center justify-center rounded-full border-2 p-1 transition-colors",
-                      isCompleted ? "bg-green-100 border-green-500 text-green-700" :
-                      isReview ? "bg-yellow-100 border-yellow-500 text-yellow-700" :
-                      isOverdue ? "bg-red-100 border-red-500 text-red-700" :
-                      isAtRisk ? "bg-amber-100 border-amber-500 text-amber-700" :
-                      "bg-blue-100 border-blue-500 text-blue-700"
-                    )}
+                    className="absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer"
+                    style={{ left }}
+                    onClick={() => onMilestoneClick?.(milestone, index)}
                   >
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-5 w-5" />
-                    ) : isReview ? (
-                      <Clock className="h-5 w-5" />
-                    ) : isOverdue ? (
-                      <AlertCircle className="h-5 w-5" />
-                    ) : (
-                      <Clock className="h-5 w-5" />
-                    )}
-                  </div>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="space-y-1 max-w-xs">
-                  <p className="font-medium">{milestone?.name}</p>
-                  {milestone?.dueDate && (
-                    <p className="text-xs">
-                      Due: {format(milestone.dueDate, 'MMM d, yyyy')}
-                      {(isOverdue || isAtRisk) && !isCompleted && (
-                        <span className={isOverdue ? "text-red-500 ml-1" : "text-amber-500 ml-1"}>
-                          ({isOverdue ? 'Overdue' : 'Due soon'})
-                        </span>
+                    <div 
+                      className={cn(
+                        "flex items-center justify-center rounded-full border-2 p-1 transition-colors",
+                        isCompleted ? "bg-green-100 border-green-500 text-green-700" :
+                        isReview ? "bg-yellow-100 border-yellow-500 text-yellow-700" :
+                        isOverdue ? "bg-red-100 border-red-500 text-red-700" :
+                        isAtRisk ? "bg-amber-100 border-amber-500 text-amber-700" :
+                        "bg-blue-100 border-blue-500 text-blue-700"
                       )}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-1">
-                    {getMilestoneStatusBadge(milestone)}
+                    >
+                      {isCompleted ? (
+                        <CheckCircle2 className="h-5 w-5" />
+                      ) : isReview ? (
+                        <Clock className="h-5 w-5" />
+                      ) : isOverdue ? (
+                        <AlertCircle className="h-5 w-5" />
+                      ) : (
+                        <Clock className="h-5 w-5" />
+                      )}
+                    </div>
                   </div>
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          );
-        })}
-      </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="space-y-1 max-w-xs">
+                    <p className="font-medium">{milestone?.name}</p>
+                    {milestone?.dueDate && (
+                      <p className="text-xs">
+                        Due: {format(milestone.dueDate, 'MMM d, yyyy')}
+                        {(isOverdue || isAtRisk) && !isCompleted && (
+                          <span className={isOverdue ? "text-red-500 ml-1" : "text-amber-500 ml-1"}>
+                            ({isOverdue ? 'Overdue' : 'Due soon'})
+                          </span>
+                        )}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1">
+                      {getMilestoneStatusBadge(milestone)}
+                    </div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
 
       {/* Milestone Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

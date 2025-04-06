@@ -1,4 +1,5 @@
-import { BlockchainService } from './blockchainService';
+import { BlockchainServiceFixed as BlockchainService } from './blockchainServiceFixedV3';
+import BlockchainServiceFixedV3Instance from './blockchainServiceFixedV3';
 import { toast } from 'sonner';
 
 // Risk assessment types
@@ -53,12 +54,12 @@ export interface SpamPreventionRules {
   minimumWalletBalance: number; // in ETH
 }
 
-class RiskAssessmentService {
+export default class RiskAssessmentService {
   private blockchainService: BlockchainService;
   private spamRules: SpamPreventionRules;
   
-  constructor(blockchainService: BlockchainService) {
-    this.blockchainService = blockchainService;
+  constructor() {
+    this.blockchainService = BlockchainServiceFixedV3Instance;
     // Default spam prevention rules
     this.spamRules = {
       campaignsPerDay: 3,
@@ -164,35 +165,9 @@ class RiskAssessmentService {
   // Get reports for a campaign
   async getCampaignReports(campaignId: string, adminOnly: boolean = true): Promise<CampaignReport[]> {
     try {
-      // In a real implementation, this would fetch reports from a database
-      // For demo purposes, returning mock data
-      
-      const mockReports: CampaignReport[] = [
-        {
-          id: 'rep_1',
-          campaignId,
-          reporterId: 'user_1',
-          reporterAddress: '0x1234...abcd',
-          reason: 'Suspicious activity',
-          details: 'Campaign goals seem unrealistic and the creator has no history.',
-          resolved: false,
-          createdAt: Date.now() - 86400000 // 1 day ago
-        },
-        {
-          id: 'rep_2',
-          campaignId,
-          reporterId: 'user_2',
-          reporterAddress: '0x5678...efgh',
-          reason: 'Potential scam',
-          details: 'Similar campaign was reported as scam on another platform.',
-          evidence: ['https://example.com/evidence1', 'https://example.com/evidence2'],
-          resolved: true,
-          resolution: 'Campaign verified with creator. No evidence of scam found.',
-          createdAt: Date.now() - 172800000 // 2 days ago
-        }
-      ];
-      
-      return mockReports;
+      // Return empty array instead of mock data
+      console.log('No campaign reports available');
+      return [];
     } catch (error) {
       console.error('Error getting campaign reports:', error);
       throw error;
@@ -318,6 +293,4 @@ class RiskAssessmentService {
     
     return description;
   }
-}
-
-export default RiskAssessmentService; 
+} 

@@ -1,0 +1,99 @@
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:452 IPFS Metadata Hash: bafkreihxd2nqudfegjzzzihaz3jhzhk65j3di3wvwrfmxh7oz4bonkw2du
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:531 Creating campaign with params: {title: 'NEW Llama 4 AI Update (FREE!)', description: 'Want the SOP? Join me in the AI Profit Boardroom: …ount! 😍 https://streamyard.com/pal/d/49349121...', category: '0', goalAmount: 30000000000000000000n, duration: 2592000, …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:485 Raw campaign params: {title: 'NEW Llama 4 AI Update (FREE!)', description: 'Want the SOP? Join me in the AI Profit Boardroom: ...', category: '0', goalAmount: '30000000000000000000', duration: 2592000, …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:501 Creating regular campaign with params:
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:502 {title: 'NEW Llama 4 AI Update (FREE!)', category: '0', goalAmount: '30000000000000000000', duration: 2592000, metadataJSON: '{"description":"Want the SOP? Join me in the AI Pr… Boardroom: \\n\\nhttps://go.juliangoldie.com/ai...'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 1: {name: 'Initial Milestone', target: '7500000000000000000', description: 'Complete first phase of the project'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 2: {name: 'Halfway Point', target: '7500000000000000000', description: 'Complete halfway point of the project'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 3: {name: 'Beta Release', target: '7500000000000000000', description: 'Release a beta version for testing'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 4: {name: 'Final Release', target: '7500000000000000000', description: 'Deliver the completed project'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 0 structure: {"title":"Initial Milestone","description":"Complete first phase of the project","targetAmount":"7500000000000000000","dueDate":1744433226}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 1 structure: {"title":"Halfway Point","description":"Complete halfway point of the project","targetAmount":"7500000000000000000","dueDate":1745038026}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 2 structure: {"title":"Beta Release","description":"Release a beta version for testing","targetAmount":"7500000000000000000","dueDate":1745642826}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 3 structure: {"title":"Final Release","description":"Deliver the completed project","targetAmount":"7500000000000000000","dueDate":1746506826}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:417 Contract already initialized, using existing instance
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:573 Contract call parameters: {title: 'NEW Llama 4 AI Update (FREE!)', category: '0', goalAmount: '30000000000000000000', duration: 2592000, metadataIPFSHash: 'bafkreihxd2nqudfegjzzzihaz3jhzhk65j3di3wvwrfmxh7oz4bonkw2du', …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:582 Testing parameter encoding before contract call
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:583 Parameter types: {title: 'string', category: 'string', goalAmount: 'bigint', duration: 'number', metadataJSON: 'string', …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:596 [Debug] Using hardcoded gasPrice for Telos: 600000000000
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:604 Final sanitized milestones (4):
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 0 structure: ["Initial Milestone","Complete first phase of the project","7500000000000000000",1744433226]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 1 structure: ["Halfway Point","Complete halfway point of the project","7500000000000000000",1745038026]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 2 structure: ["Beta Release","Release a beta version for testing","7500000000000000000",1745642826]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 3 structure: ["Final Release","Deliver the completed project","7500000000000000000",1746506826]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:622 Milestone objects for contract call (5-field): [{"title":"Initial Milestone","description":"Complete first phase of the project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1744433226"},{"title":"Halfway Point","description":"Complete halfway point of the project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1745038026"},{"title":"Beta Release","description":"Release a beta version for testing","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1745642826"},{"title":"Final Release","description":"Deliver the completed project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1746506826"}]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:668 Final parameter types: {title: 'string', category: 'string', goalAmount: 'bigint', duration: 'number', metadataJSON: 'string', …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1130 Returning active signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1130 Returning active signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:708 [DEBUG] Calculating deadline. params.duration (should be seconds): 2592000, type: number
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:713 [DEBUG] Calling createCampaign with deadline: 1746507402
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:726 [Debug] Final Args for createCampaign: {arg1_title: 'NEW Llama 4 AI Update (FREE!)', type1: 'string', arg2_category: '0', type2: 'string', arg3_goalAmount: 30000000000000000000n, …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:737 Transaction sent: 0xd6ef8f159102ef4627c3153c062278ffa07b36fb93268be036fc577b27182fd5
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:745 Transaction confirmed in block 354266448
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:750 Searching for topic 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b in 0 logs.
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:791 No log found with CampaignCreated topic hash: 0xbc7cd75a20ee27fd9adebab32041f755214dbc6bffa90cc0225b39da2e5c2d3b
+createCampaign @ E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:791
+await in createCampaign
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:535
+await in handleSubmit
+onSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:878
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignReviewForm.tsx:164
+processDispatchQueue @ react-dom-client.development.js:16146
+eval @ react-dom-client.development.js:16749
+batchedUpdates$1 @ react-dom-client.development.js:3130
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16305
+dispatchEvent @ react-dom-client.development.js:20400
+dispatchDiscreteEvent @ react-dom-client.development.js:20368
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:797 DETAILED LOG: CampaignId not found in receipt, attempting explicit event query...
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1130 Returning active signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:804 DETAILED LOG: Found 0 CampaignCreated events in block 354266448 for creator 0xDDd61ea891B740C9c9397C0c2797013688ea31cd.
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:818 DETAILED LOG: Explicit queryFilter returned no matching CampaignCreated events.
+createCampaign @ E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:818
+await in createCampaign
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:535
+await in handleSubmit
+onSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:878
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignReviewForm.tsx:164
+processDispatchQueue @ react-dom-client.development.js:16146
+eval @ react-dom-client.development.js:16749
+batchedUpdates$1 @ react-dom-client.development.js:3130
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16305
+dispatchEvent @ react-dom-client.development.js:20400
+dispatchDiscreteEvent @ react-dom-client.development.js:20368
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:831 Campaign ID could not be extracted from logs, but returning successful receipt.
+createCampaign @ E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:831
+await in createCampaign
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:535
+await in handleSubmit
+onSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:878
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignReviewForm.tsx:164
+processDispatchQueue @ react-dom-client.development.js:16146
+eval @ react-dom-client.development.js:16749
+batchedUpdates$1 @ react-dom-client.development.js:3130
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16305
+dispatchEvent @ react-dom-client.development.js:20400
+dispatchDiscreteEvent @ react-dom-client.development.js:20368
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:567 Could not extract campaignId from successful transaction receipt: ContractTransactionReceipt {provider: BrowserProvider, to: '0x15493F1ae7D556e0150D76528dd06d76050caf43', from: '0xDDd61ea891B740C9c9397C0c2797013688ea31cd', #logs: Array(0), #iface: Interface, …}
+error @ intercept-console-error.js:51
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:567
+await in handleSubmit
+onSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:878
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignReviewForm.tsx:164
+processDispatchQueue @ react-dom-client.development.js:16146
+eval @ react-dom-client.development.js:16749
+batchedUpdates$1 @ react-dom-client.development.js:3130
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16305
+dispatchEvent @ react-dom-client.development.js:20400
+dispatchDiscreteEvent @ react-dom-client.development.js:20368
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider

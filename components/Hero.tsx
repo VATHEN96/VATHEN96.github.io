@@ -64,7 +64,7 @@ export default function Hero() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Rocket className="w-6 h-6" /> Explore Campaigns
+                  Find Campaign
                 </motion.button>
               </Link>
               <Link href="/create-campaign">
@@ -73,7 +73,7 @@ export default function Hero() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  Create Campaign <ArrowRight className="w-6 h-6" />
+                  <Rocket className="w-6 h-6" /> Create Campaign
                 </motion.button>
               </Link>
             </motion.div>

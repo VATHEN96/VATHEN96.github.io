@@ -1,14 +1,15 @@
-import abi from "../web3/artifacts/contracts/wowzarush.sol/wowzarush.json";
+import { getWowzaRushABI, WOWZA_RUSH_CONTRACT_ADDRESS } from './contractHelpers';
 
-export const contractAddress = "0x62A3c86214FF8dB0Af199CEd98b0cF21adE2cb97";
+export const contractAddress = WOWZA_RUSH_CONTRACT_ADDRESS;
 export const chainIdHex = "0x29";
-export const rpcUrl = "https://testnet.telos.net/evm";
+export const rpcUrl = "https://rpc.testnet.telos.net";
 export const backupRpcUrl = "https://telos-testnet.rpc.thirdweb.com";
 export const blockScannerUrl = "https://testnet.teloscan.io/";
 export const currency = {
     name: "Telos EVM",
     symbol: "TLOS"
 };
-export const contractABI = abi.abi;
+export const contractABI = getWowzaRushABI();
+export const blockExplorerUrl = "https://testnet.teloscan.io";
 
 

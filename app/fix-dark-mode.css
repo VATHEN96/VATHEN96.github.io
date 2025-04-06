@@ -1,0 +1,147 @@
+/* Fix Dark Mode Issues */
+
+/* Override anything with dark: prefix in classnames */
+[class*="dark:"] {
+  background-color: white !important;
+  color: black !important;
+  border-color: black !important;
+  box-shadow: none !important;
+}
+
+/* Force white background for all major elements in the navbar */
+.sticky.top-0.z-50 {
+  background-color: white !important;
+  color: black !important;
+}
+
+.sticky.top-0.z-50 * {
+  color: black !important;
+}
+
+/* Navigation specific elements */
+[class*="NavigationMenu"] {
+  background-color: white !important;
+  color: black !important;
+}
+
+[class*="NavigationMenu"] * {
+  color: black !important;
+}
+
+/* Navigation Menu Styling */
+.NavigationMenuTrigger,
+.NavigationMenuLink,
+.NavigationMenuList,
+.NavigationMenuItem,
+[class*="navigationMenuTriggerStyle"] {
+  background-color: transparent !important;
+  color: black !important;
+}
+
+/* Force black text on NavigationMenuContent */
+.NavigationMenuContent {
+  background-color: white !important;
+  color: black !important;
+  border: 1px solid black !important;
+}
+
+.NavigationMenuContent * {
+  color: black !important;
+}
+
+/* Fix navigation menu item backgrounds */
+a.NavigationMenuLink {
+  background-color: transparent !important;
+}
+
+/* Style dropdown sheets properly */
+.SheetContent {
+  background-color: white !important;
+  color: black !important;
+  border-color: black !important;
+}
+
+/* Fix navigation items styling */
+.navigationMenuTriggerStyle\(\) {
+  background-color: transparent !important;
+  color: black !important;
+}
+
+/* Ensure all navigation triggers are visible */
+[role="menuitem"] button,
+[role="menuitem"] a {
+  background-color: transparent !important;
+  color: black !important;
+}
+
+/* Fix for the horizontal main navigation */
+nav:has(a[href]) {
+  background-color: transparent !important;
+}
+
+nav:has(a[href]) a {
+  color: black !important;
+}
+
+/* Force white background on buttons */
+button {
+  background-color: white !important;
+  color: black !important;
+  border-color: black !important;
+}
+
+/* Button exceptions for primary buttons */
+button.bg-black {
+  background-color: black !important;
+  color: white !important;
+}
+
+/* Force body/html to light mode */
+html, body {
+  background-color: white !important;
+  color: black !important;
+}
+
+/* Add specific fixes for the Basic Info heading and tabs */
+
+/* Ensure proper Card styling */
+.Card,
+[class*="Card"] {
+  background-color: white !important;
+  color: black !important;
+  border: 2px solid #e5e7eb !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Fix Card header and title styling */
+.CardHeader,
+[class*="CardHeader"] {
+  border-bottom: 1px solid #e5e7eb !important;
+  padding-bottom: 1rem !important;
+}
+
+.CardTitle,
+[class*="CardTitle"] {
+  color: black !important;
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+}
+
+/* Fix tabs appearance */
+.TabsList,
+[class*="TabsList"] {
+  background-color: #f3f4f6 !important;
+  border: 2px solid #e5e7eb !important;
+}
+
+.TabsTrigger,
+[class*="TabsTrigger"] {
+  color: black !important;
+  background-color: transparent !important;
+}
+
+.TabsTrigger[data-state="active"],
+[class*="TabsTrigger"][data-state="active"] {
+  background-color: #2563eb !important;
+  color: white !important;
+} 

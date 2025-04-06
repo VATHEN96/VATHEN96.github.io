@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, AlertCircle, ArrowRight, Link as LinkIcon, UnlinkIcon, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
-import { OnChainMetric, MetricChartData, MilestoneProgress, LinkedProposal, CampaignAnalytics } from '@/services/AnalyticsService';
+import AnalyticsService, { OnChainMetric, MetricChartData, MilestoneProgress, LinkedProposal, CampaignAnalytics } from '@/services/AnalyticsService';
 import { ResponsiveContainer, LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 interface AnalyticsDashboardProps {
@@ -245,7 +245,7 @@ export function AnalyticsDashboard({ campaignId }: AnalyticsDashboardProps) {
                     <CardDescription>Current total</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold">{analytics.performance.fundingAmount || "0"} ETH</div>
+                    <div className="text-3xl font-bold">{analytics.performance.fundingAmount || "0"} TLOS</div>
                     <div className="flex items-center mt-2">
                       <Progress value={analytics.performance.fundingProgress} className="h-2" />
                       <span className="ml-2 text-sm">{analytics.performance.fundingProgress}%</span>

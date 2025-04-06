@@ -11,13 +11,33 @@ const nextConfig = {
     ],
   },
   experimental: {
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'localhost:3001'],
+      bodySizeLimit: '2mb',
+    },
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
   typescript: {
     ignoreBuildErrors: true,
+  },
+  webpack: (config, { isServer }) => {
+    config.resolve.plugins = config.resolve.plugins || [];
+    
+    config.module.rules.push({
+      test: /WowzaRush\.json$/,
+      use: [
+        {
+          loader: 'cache-loader',
+          options: {
+            cacheIdentifier: 'WowzaRush-v1',
+          },
+        },
+      ],
+    });
+    
+    return config;
   },
 };
 

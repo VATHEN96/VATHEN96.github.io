@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useWowzaRush } from '@/context/wowzarushContext';
 import { Bell, Settings, Eye, Trash2, Check, X } from 'lucide-react';
-import { Notification, NotificationPreferences } from '@/services/NotificationService';
+import NotificationService, { Notification, NotificationPreferences } from '@/services/NotificationService';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -44,7 +44,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
-export function NotificationCenter() {
+export function NotificationCenter({ onClose }: { onClose?: () => void }) {
   const { account, isWalletConnected, getUserNotifications, getUnreadNotificationsCount, markNotificationAsRead, markAllNotificationsAsRead, deleteNotification, updateNotificationPreferences, getNotificationPreferences } = useWowzaRush();
   
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -209,7 +209,11 @@ export function NotificationCenter() {
   });
   
   return (
-    <Sheet>
+    <Sheet onOpenChange={(open) => {
+      if (!open && onClose) {
+        onClose();
+      }
+    }}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />

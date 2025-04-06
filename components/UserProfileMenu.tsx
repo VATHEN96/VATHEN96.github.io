@@ -14,11 +14,9 @@ import { Button } from '@/components/ui/button';
 import { 
   User, 
   LogOut, 
-  Settings, 
   Plus, 
   Heart, 
   History, 
-  Medal, 
   Shield,
   Wallet
 } from 'lucide-react';
@@ -51,15 +49,25 @@ export function UserProfileMenu() {
   };
 
   // Format wallet address for display
-  const formatAddress = (address: string) => {
-    if (!address) return '';
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  const formatAddress = (address: string | null | undefined): string => {
+    if (!address || typeof address !== 'string') return '';
+    
+    // Ensure the address is a string and has the correct format
+    const cleanAddress = address.toString().toLowerCase();
+    if (cleanAddress.length < 10) return cleanAddress;
+    
+    return `${cleanAddress.slice(0, 6)}...${cleanAddress.slice(-4)}`;
   };
 
   // Generate avatar fallback from address
-  const getAvatarFallback = (address: string) => {
-    if (!address) return 'WR';
-    return address.slice(2, 4).toUpperCase();
+  const getAvatarFallback = (address: string | null | undefined): string => {
+    if (!address || typeof address !== 'string') return 'WR';
+    
+    // Ensure the address is a string and has the correct format
+    const cleanAddress = address.toString().replace('0x', '');
+    if (cleanAddress.length < 2) return 'WR';
+    
+    return cleanAddress.slice(0, 2).toUpperCase();
   };
 
   return (
@@ -101,13 +109,6 @@ export function UserProfileMenu() {
           </DropdownMenuItem>
           
           <DropdownMenuItem asChild>
-            <Link href="/profile/badges" className="flex items-center cursor-pointer">
-              <Medal className="h-4 w-4 mr-2" />
-              My NFT Badges
-            </Link>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem asChild>
             <Link href="/dashboard" className="flex items-center cursor-pointer">
               <Shield className="h-4 w-4 mr-2" />
               Governance
@@ -136,13 +137,6 @@ export function UserProfileMenu() {
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Campaign
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem asChild>
-            <Link href="/profile/edit" className="flex items-center cursor-pointer">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Link>
           </DropdownMenuItem>
           
           <DropdownMenuSeparator />

@@ -66,83 +66,18 @@ export interface NotificationPreferences {
   pushNotifications: boolean;
 }
 
-// Convert from class to object with methods
-const NotificationService = {
+export class NotificationService {
   // Campaign updates methods
   async getCampaignUpdates(campaignId: string, includePrivate: boolean = false): Promise<CampaignUpdate[]> {
     try {
-      // In a real implementation, this would fetch from a database or API
-      // For now, return mock data
-      const mockUpdates: CampaignUpdate[] = [
-        {
-          id: 'update-1',
-          campaignId,
-          title: 'Project Kickoff',
-          content: 'We\'re excited to announce that our project has officially kicked off! Thanks to all our backers for your support.',
-          createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000, // 30 days ago
-          isPublic: true,
-          isPinned: true,
-          attachments: [
-            {
-              type: 'image',
-              url: 'https://via.placeholder.com/800x450?text=Kickoff+Event',
-              name: 'Kickoff Event Photo'
-            }
-          ],
-          likes: 120,
-          comments: 45
-        },
-        {
-          id: 'update-2',
-          campaignId,
-          title: 'Development Update - Week 2',
-          content: 'We\'ve made significant progress on the first milestone. Here\'s what we\'ve accomplished so far...',
-          createdAt: Date.now() - 15 * 24 * 60 * 60 * 1000, // 15 days ago
-          isPublic: true,
-          isPinned: false,
-          likes: 95,
-          comments: 23
-        },
-        {
-          id: 'update-3',
-          campaignId,
-          title: 'Exclusive Backer Preview',
-          content: 'As a special thank you to our backers, here\'s an exclusive preview of the upcoming features!',
-          createdAt: Date.now() - 7 * 24 * 60 * 60 * 1000, // 7 days ago
-          isPublic: false,
-          isPinned: false,
-          attachments: [
-            {
-              type: 'video',
-              url: 'https://example.com/preview-video.mp4',
-              name: 'Feature Preview'
-            }
-          ],
-          likes: 210,
-          comments: 86
-        },
-        {
-          id: 'update-4',
-          campaignId,
-          title: 'First Milestone Completed!',
-          content: 'We\'re thrilled to announce that we\'ve reached our first production milestone ahead of schedule!',
-          createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
-          isPublic: true,
-          isPinned: true,
-          likes: 156,
-          comments: 32
-        }
-      ];
-
-      // Filter private updates if needed
-      return includePrivate 
-        ? mockUpdates 
-        : mockUpdates.filter(update => update.isPublic);
+      // Return empty array instead of mock data
+      console.log('No campaign updates available');
+      return [];
     } catch (error) {
       console.error(`Error getting updates for campaign ${campaignId}:`, error);
       return [];
     }
-  },
+  }
 
   async createCampaignUpdate(updateData: Omit<CampaignUpdate, 'id' | 'createdAt' | 'likes' | 'comments'>): Promise<CampaignUpdate | null> {
     try {
@@ -167,7 +102,7 @@ const NotificationService = {
       toast.error('Failed to publish campaign update');
       return null;
     }
-  },
+  }
 
   async updateCampaignUpdate(updateId: string, updateData: Partial<CampaignUpdate>): Promise<boolean> {
     try {
@@ -179,7 +114,7 @@ const NotificationService = {
       toast.error('Failed to edit campaign update');
       return false;
     }
-  },
+  }
 
   async deleteCampaignUpdate(updateId: string): Promise<boolean> {
     try {
@@ -191,123 +126,20 @@ const NotificationService = {
       toast.error('Failed to delete campaign update');
       return false;
     }
-  },
+  }
 
   // Delivery tracking methods
   async getDeliveryStatus(campaignId: string, rewardTierId?: string): Promise<DeliveryStatus[]> {
     try {
       // In a real implementation, this would fetch from a database or API
-      // For now, return mock data
-      const mockDeliveryStatuses: DeliveryStatus[] = [
-        {
-          id: 'delivery-1',
-          campaignId,
-          rewardTierId: 'tier-2',
-          rewardTierName: 'Silver Supporter',
-          estimatedDeliveryDate: Date.now() + 60 * 24 * 60 * 60 * 1000, // 60 days from now
-          updatedAt: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 days ago
-          shippingStarted: false,
-          shippingCompleted: false,
-          trackingAvailable: false,
-          milestones: [
-            {
-              id: 'milestone-1',
-              title: 'Design Phase',
-              description: 'Finalizing the product design',
-              targetDate: Date.now() - 15 * 24 * 60 * 60 * 1000, // 15 days ago
-              completedDate: Date.now() - 10 * 24 * 60 * 60 * 1000, // 10 days ago
-              status: 'completed'
-            },
-            {
-              id: 'milestone-2',
-              title: 'Production',
-              description: 'Manufacturing the product',
-              targetDate: Date.now() + 15 * 24 * 60 * 60 * 1000, // 15 days from now
-              completedDate: null,
-              status: 'in-progress'
-            },
-            {
-              id: 'milestone-3',
-              title: 'Quality Assurance',
-              description: 'Testing the product for quality',
-              targetDate: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days from now
-              completedDate: null,
-              status: 'pending'
-            },
-            {
-              id: 'milestone-4',
-              title: 'Shipping',
-              description: 'Shipping the product to backers',
-              targetDate: Date.now() + 45 * 24 * 60 * 60 * 1000, // 45 days from now
-              completedDate: null,
-              status: 'pending'
-            }
-          ]
-        },
-        {
-          id: 'delivery-2',
-          campaignId,
-          rewardTierId: 'tier-3',
-          rewardTierName: 'Gold Supporter',
-          estimatedDeliveryDate: Date.now() + 45 * 24 * 60 * 60 * 1000, // 45 days from now
-          updatedAt: Date.now() - 2 * 24 * 60 * 60 * 1000, // 2 days ago
-          shippingStarted: false,
-          shippingCompleted: false,
-          trackingAvailable: false,
-          milestones: [
-            {
-              id: 'milestone-5',
-              title: 'Design Phase',
-              description: 'Finalizing the product design',
-              targetDate: Date.now() - 15 * 24 * 60 * 60 * 1000, // 15 days ago
-              completedDate: Date.now() - 12 * 24 * 60 * 60 * 1000, // 12 days ago
-              status: 'completed'
-            },
-            {
-              id: 'milestone-6',
-              title: 'Premium Material Sourcing',
-              description: 'Sourcing premium materials for Gold tier',
-              targetDate: Date.now() - 5 * 24 * 60 * 60 * 1000, // 5 days ago
-              completedDate: Date.now() - 7 * 24 * 60 * 60 * 1000, // 7 days ago (ahead of schedule)
-              status: 'completed'
-            },
-            {
-              id: 'milestone-7',
-              title: 'Production',
-              description: 'Manufacturing the premium version',
-              targetDate: Date.now() + 10 * 24 * 60 * 60 * 1000, // 10 days from now
-              completedDate: null,
-              status: 'in-progress'
-            },
-            {
-              id: 'milestone-8',
-              title: 'Quality Assurance',
-              description: 'Extensive testing for premium version',
-              targetDate: Date.now() + 25 * 24 * 60 * 60 * 1000, // 25 days from now
-              completedDate: null,
-              status: 'pending'
-            },
-            {
-              id: 'milestone-9',
-              title: 'Shipping',
-              description: 'Priority shipping for Gold tier backers',
-              targetDate: Date.now() + 35 * 24 * 60 * 60 * 1000, // 35 days from now
-              completedDate: null,
-              status: 'pending'
-            }
-          ]
-        }
-      ];
-
-      // Filter by reward tier if specified
-      return rewardTierId 
-        ? mockDeliveryStatuses.filter(status => status.rewardTierId === rewardTierId) 
-        : mockDeliveryStatuses;
+      // Return empty array instead of mock data
+      console.log('No delivery status data available');
+      return [];
     } catch (error) {
       console.error(`Error getting delivery status for campaign ${campaignId}:`, error);
       return [];
     }
-  },
+  }
 
   async updateDeliveryStatus(deliveryId: string, updates: Partial<DeliveryStatus>): Promise<boolean> {
     try {
@@ -323,7 +155,7 @@ const NotificationService = {
       toast.error('Failed to update delivery status');
       return false;
     }
-  },
+  }
 
   async updateMilestone(deliveryId: string, milestoneId: string, updates: Partial<DeliveryMilestone>): Promise<boolean> {
     try {
@@ -339,7 +171,7 @@ const NotificationService = {
       toast.error('Failed to update milestone');
       return false;
     }
-  },
+  }
 
   // Notification methods
   async getUserNotifications(userId: string): Promise<Notification[]> {
@@ -396,7 +228,7 @@ const NotificationService = {
       console.error(`Error getting notifications for user ${userId}:`, error);
       return [];
     }
-  },
+  }
 
   async markNotificationAsRead(notificationId: string): Promise<boolean> {
     try {
@@ -406,7 +238,7 @@ const NotificationService = {
       console.error(`Error marking notification ${notificationId} as read:`, error);
       return false;
     }
-  },
+  }
 
   async markAllNotificationsAsRead(userId: string): Promise<boolean> {
     try {
@@ -416,7 +248,7 @@ const NotificationService = {
       console.error(`Error marking all notifications as read for user ${userId}:`, error);
       return false;
     }
-  },
+  }
 
   async deleteNotification(notificationId: string): Promise<boolean> {
     try {
@@ -426,7 +258,7 @@ const NotificationService = {
       console.error(`Error deleting notification ${notificationId}:`, error);
       return false;
     }
-  },
+  }
 
   async updateNotificationPreferences(userId: string, preferences: Partial<NotificationPreferences>): Promise<boolean> {
     try {
@@ -438,7 +270,7 @@ const NotificationService = {
       toast.error('Failed to update notification preferences');
       return false;
     }
-  },
+  }
 
   async getNotificationPreferences(userId: string): Promise<NotificationPreferences> {
     try {
@@ -470,24 +302,24 @@ const NotificationService = {
         pushNotifications: false
       };
     }
-  },
+  }
 
   // Private helper methods
-  notifyBackersAboutUpdate(update: CampaignUpdate): void {
+  private notifyBackersAboutUpdate(update: CampaignUpdate): void {
     // In a real implementation, this would create notifications for all backers
     // and potentially send emails/push notifications based on preferences
     console.log(`Notifying backers about update: ${update.title}`);
-  },
+  }
 
-  notifyBackersAboutDeliveryUpdate(deliveryId: string, updates: Partial<DeliveryStatus>): void {
+  private notifyBackersAboutDeliveryUpdate(deliveryId: string, updates: Partial<DeliveryStatus>): void {
     // In a real implementation, this would create notifications for relevant backers
     console.log(`Notifying backers about delivery update for ${deliveryId}`);
-  },
+  }
 
-  notifyBackersAboutMilestoneUpdate(deliveryId: string, milestoneId: string, updates: Partial<DeliveryMilestone>): void {
+  private notifyBackersAboutMilestoneUpdate(deliveryId: string, milestoneId: string, updates: Partial<DeliveryMilestone>): void {
     // In a real implementation, this would create notifications for relevant backers
     console.log(`Notifying backers about milestone update: ${milestoneId} for delivery ${deliveryId}`);
   }
-};
+}
 
 export default NotificationService; 

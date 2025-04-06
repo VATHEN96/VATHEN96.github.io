@@ -1,0 +1,103 @@
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+create-campaign:1 The resource http://localhost:3000/_next/static/css/app/layout.css?v=1743917392615 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:452 IPFS Metadata Hash: bafkreia4nownfjeicl3e72ezsam6icjekpgvuxxl27ugn2pqxytxzx2le4
+E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:531 Creating campaign with params: {title: 'I Tried the Laziest Ways of Making Money Online', description: '\n💸 I Tried the Laziest Ways of Making Money Onlin…were, and which ones are worth trying this year.\n', category: '4', goalAmount: 30000000000000000000n, duration: 2592000, …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:485 Raw campaign params: {title: 'I Tried the Laziest Ways of Making Money Online', description: '\n💸 I Tried the Laziest Ways of Making Money Onlin...', category: '4', goalAmount: '30000000000000000000', duration: 2592000, …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:501 Creating regular campaign with params:
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:502 {title: 'I Tried the Laziest Ways of Making Money Online', category: '4', goalAmount: '30000000000000000000', duration: 2592000, metadataJSON: '{"description":"\\n💸 I Tried the Laziest Ways of M…g Money Online – What Actually Worked? 🤔\\nEve...'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 1: {name: 'Initial Milestone', target: '7500000000000000000', description: 'Complete first phase of the project'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 2: {name: 'Halfway Point', target: '7500000000000000000', description: 'Complete halfway point of the project'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 3: {name: 'Beta Release', target: '7500000000000000000', description: 'Release a beta version for testing'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:522 Milestone 4: {name: 'Final Release', target: '7500000000000000000', description: 'Deliver the completed project'}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 0 structure: {"title":"Initial Milestone","description":"Complete first phase of the project","targetAmount":"7500000000000000000","dueDate":1744435549}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 1 structure: {"title":"Halfway Point","description":"Complete halfway point of the project","targetAmount":"7500000000000000000","dueDate":1745040349}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 2 structure: {"title":"Beta Release","description":"Release a beta version for testing","targetAmount":"7500000000000000000","dueDate":1745645149}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:552 Full milestone 3 structure: {"title":"Final Release","description":"Deliver the completed project","targetAmount":"7500000000000000000","dueDate":1746509149}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:417 Contract already initialized, using existing instance
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:573 Contract call parameters: {title: 'I Tried the Laziest Ways of Making Money Online', category: '4', goalAmount: '30000000000000000000', duration: 2592000, metadataIPFSHash: 'bafkreia4nownfjeicl3e72ezsam6icjekpgvuxxl27ugn2pqxytxzx2le4', …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:582 Testing parameter encoding before contract call
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:583 Parameter types: {title: 'string', category: 'string', goalAmount: 'bigint', duration: 'number', metadataJSON: 'string', …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:596 [Debug] Using hardcoded gasPrice for Telos: 600000000000
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:604 Final sanitized milestones (4):
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 0 structure: ["Initial Milestone","Complete first phase of the project","7500000000000000000",1744435549]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 1 structure: ["Halfway Point","Complete halfway point of the project","7500000000000000000",1745040349]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 2 structure: ["Beta Release","Release a beta version for testing","7500000000000000000",1745645149]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:607 Milestone 3 structure: ["Final Release","Deliver the completed project","7500000000000000000",1746509149]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:622 Milestone objects for contract call (5-field): [{"title":"Initial Milestone","description":"Complete first phase of the project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1744435549"},{"title":"Halfway Point","description":"Complete halfway point of the project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1745040349"},{"title":"Beta Release","description":"Release a beta version for testing","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1745645149"},{"title":"Final Release","description":"Deliver the completed project","amount":"7500000000000000000","completed":false,"fundsClaimed":false,"dueDate":"1746509149"}]
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:668 Final parameter types: {title: 'string', category: 'string', goalAmount: 'bigint', duration: 'number', metadataJSON: 'string', …}
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1130 Returning active signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:1130 Returning active signer
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:708 [DEBUG] Calculating deadline. params.duration (should be seconds): 2592000, type: number
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:713 [DEBUG] Calling createCampaign with deadline: 1746509457
+inpage.js:1 MetaMask - RPC Error: Internal JSON-RPC error. {code: -32603, message: 'Internal JSON-RPC error.', data: {…}, stack: '{\n  "code": -32603,\n  "message": "Internal JSON-RP…hfbeogaeaoehlefnkodbefgpgknn/common-1.js:1:466733'}
+(anonymous) @ inpage.js:1
+(anonymous) @ inpage.js:1
+p @ inpage.js:1
+d @ inpage.js:1
+await in d
+l @ inpage.js:1
+handle @ inpage.js:1
+_rpcRequest @ inpage.js:1
+(anonymous) @ inpage.js:1
+request @ inpage.js:1
+BrowserProvider.#request @ provider-browser.js:30
+_send @ provider-browser.js:51
+eval @ provider-jsonrpc.js:300
+eval @ provider-jsonrpc.js:335
+setTimeout
+#scheduleDrain @ provider-jsonrpc.js:277
+send @ provider-jsonrpc.js:778
+send @ provider-browser.js:46
+await in send
+_perform @ provider-jsonrpc.js:409
+#perform @ abstract-provider.js:278
+estimateGas @ abstract-provider.js:662
+eval @ provider-jsonrpc.js:132
+sendUncheckedTransaction @ provider-jsonrpc.js:133
+sendTransaction @ provider-jsonrpc.js:153
+await in sendTransaction
+send @ contract.js:239
+await in send
+createCampaign @ contract.js:272
+createCampaign @ E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:716
+await in createCampaign
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:535
+await in handleSubmit
+onSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:878
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignReviewForm.tsx:164
+processDispatchQueue @ react-dom-client.development.js:16146
+eval @ react-dom-client.development.js:16749
+batchedUpdates$1 @ react-dom-client.development.js:3130
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16305
+dispatchEvent @ react-dom-client.development.js:20400
+dispatchDiscreteEvent @ react-dom-client.development.js:20368
+E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:840 Error during contract call or receipt processing: Error: missing revert data (action="estimateGas", data=null, reason=null, transaction={ "data": "0x65cdb46000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000001a055690d9db800000000000000000000000000000000000000000000000000000000000068199e9100000000000000000000000000000000000000000000000000000000000003a0000000000000000000000000000000000000000000000000000000000000002f4920547269656420746865204c617a696573742057617973206f66204d616b696e67204d6f6e6579204f6e6c696e650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000027a0af09f92b8204920547269656420746865204c617a696573742057617973206f66204d616b696e67204d6f6e6579204f6e6c696e6520e2809320576861742041637475616c6c7920576f726b65643f20f09fa4940a457665722077616e74656420746f206d616b65206d6f6e6579206f6e6c696e652077697468206173206c6974746c65206566666f727420617320706f737369626c653f20496e207468697320766964656f2c20492074657374656420736f6d65206f6620746865206c617a69657374207369646520687573746c657320796f752063616e20737461727420696e203230323520e280942066726f6d2041492d67656e65726174656420626f6f6b73206f6e20416d617a6f6e204b44502c20746f20654261792064726f707368697070696e672077697468204175746f44532c2072656e74696e67206d792063617273206f7574206f6e205475726f2c2072756e6e696e672076656e64696e67206d616368696e65732c20696e76657374696e67202431322c3030302b20696e746f20426974636f696e206d696e696e672c20616e64206576656e20646162626c696e6720696e207265616c206573746174652e0a0a536f6d65206f66207468657365207369646520687573746c657320726571756972656420757066726f6e7420696e766573746d656e742c206f7468657273206a7573742074696d652e204920627265616b20646f776e2065786163746c7920686f77206d7563682049206d61646520286f72206c6f7374292c20686f7720706173736976652074686579207265616c6c7920776572652c20616e64207768696368206f6e65732061726520776f72746820747279696e67207468697320796561722e0a0000000000000000000000000000000000000000000000000000000000000000000000000000", "from": "0xDDd61ea891B740C9c9397C0c2797013688ea31cd", "to": "0x15493F1ae7D556e0150D76528dd06d76050caf43" }, invocation=null, revert=null, code=CALL_EXCEPTION, version=6.13.5)
+    at makeError (errors.js:137:21)
+    at getBuiltinCallException (abi-coder.js:120:70)
+    at AbiCoder.getBuiltinCallException (abi-coder.js:221:16)
+    at BrowserProvider.getRpcError (provider-jsonrpc.js:695:76)
+    at BrowserProvider.getRpcError (provider-browser.js:73:22)
+    at eval (provider-jsonrpc.js:321:45)
+error @ intercept-console-error.js:51
+createCampaign @ E:\wowzarush.io-main\services\blockchainServiceFixedV3.ts:840
+await in createCampaign
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:535
+await in handleSubmit
+onSubmit @ E:\wowzarush.io-main\components\campaign\CampaignWizard.tsx:878
+handleSubmit @ E:\wowzarush.io-main\components\campaign\CampaignReviewForm.tsx:164
+processDispatchQueue @ react-dom-client.development.js:16146
+eval @ react-dom-client.development.js:16749
+batchedUpdates$1 @ react-dom-client.development.js:3130
+dispatchEventForPluginEventSystem @ react-dom-client.development.js:16305
+dispatchEvent @ react-dom-client.development.js:20400
+dispatchDiscreteEvent @ react-dom-client.development.js:20368
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+create-campaign:1 The resource http://localhost:3000/_next/static/css/app/layout.css?v=1743917392615 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider
+E:\wowzarush.io-main\context\wowzarushContext.tsx:415 Provider has active account: 0xddd61e...
+E:\wowzarush.io-main\context\wowzarushContext.tsx:422 Updating wallet connection state from provider

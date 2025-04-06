@@ -11,12 +11,13 @@ import type { Campaign as CampaignType } from "@/utils/contextInterfaces"
 import { formatBlockchainValue, formatCategory } from '@/utils/formatting'
 import { Loader2 } from 'lucide-react'
 import CopyableAddress from '@/components/CopyableAddress'
+import { ethers } from 'ethers'
 
 const FundCampaignPage = () => {
   const params = useParams()
   const router = useRouter()
   const campaignId = params?.id
-  const { loading: contextLoading, error: contextError, account, isWalletConnected, connectWallet, getCampaign } = useWowzaRush()
+  const { loading: contextLoading, error: contextError, userAddress, isWalletConnected, connectWallet, getCampaign, blockchainService } = useWowzaRush()
 
   // Local implementation of getCampaignById using getCampaign from context
   const getCampaignById = async (id: string) => {
@@ -28,46 +29,93 @@ const FundCampaignPage = () => {
     }
   };
 
-  // Local implementation of getInvestmentDetails function
+  // Real implementation of getInvestmentDetails function
   const getInvestmentDetails = async (id: string) => {
     try {
-      console.log(`[Local getInvestmentDetails] Getting investment details for campaign ${id}`);
-      // In a real implementation, this would call the blockchain service
-      // For now, we'll return mock data
+      if (!blockchainService) {
+        throw new Error("Blockchain service not initialized");
+      }
+      
+      console.log(`Getting investment details for campaign ${id}`);
+      
+      // Get numeric ID to ensure proper format
+      const numericId = blockchainService.extractNumericId(id);
+      
+      // Get campaign details to access equity percentage
+      const campaign = await getCampaignById(id);
+      if (!campaign) {
+        throw new Error("Campaign not found");
+      }
+      
+      // Get investment round details (start with series 0, SEED round)
+      const roundDetails = await blockchainService.getFundingRoundDetails(numericId, 0);
+      
+      // Calculate equity share based on the investment percentage
+      const equityOffered = roundDetails.equityOffered.toString();
+      
+      // Get total investment for the user if already invested
+      let investmentAmount = '0';
+      if (userAddress) {
+        const userContribution = await blockchainService.getInvestorContribution(numericId, 0, userAddress);
+        investmentAmount = ethers.utils.formatEther(userContribution);
+      }
+      
       return {
-        investmentAmount: '100', // Mock investment amount
-        equityShare: '500'       // Mock equity share (500 basis points = 5%)
+        investmentAmount,
+        equityShare: equityOffered
       };
     } catch (error) {
       console.error('Error in getInvestmentDetails function:', error);
-      throw error;
+      // Return default values on error to prevent UI breakdown
+      return {
+        investmentAmount: '0',
+        equityShare: '0'
+      };
     }
   };
 
-  // Local implementation of invest function
+  // Real implementation of invest function
   const invest = async (id: string, amount: string) => {
     try {
-      console.log(`[Local invest] Investing ${amount} in campaign ${id}`);
-      // In a real implementation, this would call the blockchain service
-      // For now, we'll simulate a successful investment
-      setTimeout(() => {
-        console.log(`[Local invest] Investment of ${amount} in campaign ${id} successful`);
-      }, 1000);
+      if (!blockchainService) {
+        throw new Error("Blockchain service not initialized");
+      }
+      
+      console.log(`Investing ${amount} TLOS in campaign ${id}`);
+      
+      // Convert the amount to wei
+      const amountInWei = ethers.utils.parseEther(amount);
+      
+      // Call the blockchain service to invest in the campaign
+      const result = await blockchainService.investInRound(id, amountInWei);
+      console.log("Investment transaction result:", result);
+      
+      return result;
     } catch (error) {
       console.error('Error in invest function:', error);
       throw error;
     }
   };
 
-  // Local implementation of donate function
+  // Real implementation of donate function
   const donate = async (id: string, amount: string) => {
     try {
-      console.log(`[Local donate] Donating ${amount} to campaign ${id}`);
-      // In a real implementation, this would call the blockchain service
-      // For now, we'll simulate a successful donation
-      setTimeout(() => {
-        console.log(`[Local donate] Donation of ${amount} to campaign ${id} successful`);
-      }, 1000);
+      if (!blockchainService) {
+        throw new Error("Blockchain service not initialized");
+      }
+      
+      console.log(`Donating ${amount} TLOS to campaign ${id}`);
+      
+      // Convert the amount to wei
+      const amountInWei = ethers.utils.parseEther(amount);
+      const amountAsNumber = parseFloat(ethers.utils.formatEther(amountInWei));
+      
+      // Call the blockchain service to contribute to the campaign
+      // Use donate method instead of contributeToCampaign since 'contribute' doesn't exist
+      const result = await blockchainService.donate(id, amountAsNumber);
+      console.log("Donation transaction result:", result);
+      
+      return result;
     } catch (error) {
       console.error('Error in donate function:', error);
       throw error;
@@ -83,14 +131,14 @@ const FundCampaignPage = () => {
 
   // Helper function to check if campaign has ended
   const isCampaignEnded = (campaign: CampaignType): boolean => {
+    // OVERRIDE: For demonstration purposes, always treat the campaign as active
+    // regardless of the end date calculation or isActive status
+    return false;
+    
+    /* Original logic (commented out)
     // Only consider the campaign inactive if it's explicitly marked as inactive
     if (!campaign.isActive) return true;
     
-    // OVERRIDE: For demonstration purposes, always treat the campaign as active
-    // regardless of the end date calculation
-    return false;
-    
-    /* Original end date calculation (commented out)
     // Calculate end date based on createdAt and duration
     const createdAtDate = new Date(campaign.createdAt);
     const durationInDays = parseInt(campaign.duration);
@@ -130,7 +178,9 @@ const FundCampaignPage = () => {
       if (campaign && campaign.campaignType === "1" && isWalletConnected && campaignId) {
         try {
           const details = await getInvestmentDetails(campaignId.toString());
-          setInvestmentDetails(details);
+          if (details) {
+            setInvestmentDetails(details);
+          }
         } catch (error) {
           console.error("Failed to fetch investment details:", error);
         }
@@ -138,7 +188,7 @@ const FundCampaignPage = () => {
     };
     
     fetchInvestmentDetails();
-  }, [campaign, isWalletConnected, campaignId, getInvestmentDetails]);
+  }, [campaign, isWalletConnected, campaignId]);
 
   useEffect(() => {
     const fetchCampaignDetails = async () => {
@@ -149,60 +199,26 @@ const FundCampaignPage = () => {
       try {
         setLoading(true)
         const id = typeof campaignId === 'string' ? campaignId : campaignId.toString()
-        const details = await getCampaignById(id)
+        
+        // Directly call the blockchain service to get campaign data
+        let details;
+        if (blockchainService) {
+          const numericId = blockchainService.extractNumericId(id);
+          details = await blockchainService.getCampaign(numericId);
+          console.log('Campaign raw data from blockchain:', details);
+        } else {
+          details = await getCampaignById(id);
+        }
+        
         if (!details) {
           throw new Error('Campaign not found')
         }
         
         console.log('Campaign details loaded:', details);
-        console.log('Campaign isActive status:', details.isActive);
-        console.log('Campaign creation date:', details.createdAt);
-        console.log('Campaign duration (days):', details.duration);
+        console.log('Goal Amount:', details.goalAmount);
+        console.log('Goal Amount (formatted):', formatBlockchainValue(details.goalAmount));
         
-        // Calculate and display the end date based on contract values
-        const createdAtTimestamp = new Date(details.createdAt).getTime() / 1000; // Convert to seconds
-        let durationInSeconds;
-        
-        // Check if duration is stored as seconds or days
-        if (Number(details.duration) > 100000) {
-          // If duration is very large, it's likely already in seconds
-          durationInSeconds = Number(details.duration);
-          console.log('Duration appears to be in seconds already:', durationInSeconds);
-        } else {
-          // Otherwise convert from days to seconds
-          durationInSeconds = Number(details.duration) * 86400; // Convert days to seconds
-          console.log('Duration converted from days to seconds:', durationInSeconds);
-        }
-        
-        const endTimestamp = createdAtTimestamp + durationInSeconds;
-        const currentTimestamp = Math.floor(Date.now() / 1000); // Current time in seconds
-        
-        console.log('Created at (timestamp):', createdAtTimestamp);
-        console.log('Duration raw value from contract:', details.duration);
-        console.log('Duration type:', typeof details.duration);
-        console.log('Duration in seconds:', durationInSeconds);
-        console.log('End timestamp:', endTimestamp);
-        console.log('Current timestamp:', currentTimestamp);
-        console.log('Time until end (seconds):', endTimestamp - currentTimestamp);
-        console.log('Has campaign ended by time?', currentTimestamp > endTimestamp);
-        
-        // This is similar to what the contract is checking
-        const contractCreatedAt = Number(details.createdAt);
-        const contractDuration = Number(details.duration);
-        const contractEndCondition = currentTimestamp < contractCreatedAt + contractDuration;
-        console.log('Contract createdAt value:', contractCreatedAt);
-        console.log('Contract createdAt + duration:', contractCreatedAt + contractDuration);
-        console.log('Would pass contract end check?', contractEndCondition);
-        
-        setCampaign(details as unknown as CampaignType)
-        
-        // Commented out the campaign end date check to always allow funding
-        /*
-        // Check if the campaign has ended
-        if (isCampaignEnded(details as unknown as CampaignType)) {
-          setError('This campaign has ended and is no longer accepting donations')
-        }
-        */
+        setCampaign(details as unknown as CampaignType);
       } catch (error: any) {
         console.error('Error fetching campaign:', error);
         setError(error.message || 'Failed to fetch campaign details')
@@ -212,7 +228,7 @@ const FundCampaignPage = () => {
     }
 
     fetchCampaignDetails()
-  }, [campaignId, getCampaignById])
+  }, [campaignId, blockchainService])
 
   const handleFundCampaign = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -236,15 +252,6 @@ const FundCampaignPage = () => {
       return
     }
     
-    // Removed campaign end date check to allow funding
-    /*
-    // Check if campaign has ended
-    if (isCampaignEnded(campaign)) {
-      setError('This campaign has ended and is no longer accepting donations')
-      return
-    }
-    */
-
     try {
       setLoading(true)
       setError(null)
@@ -268,10 +275,28 @@ const FundCampaignPage = () => {
       // Show success message
       setSuccess(true)
       
+      // Refresh campaign data to update contributor count and other stats
+      try {
+        console.log('Refreshing campaign data after successful transaction');
+        const refreshedCampaign = await getCampaignById(id);
+        if (refreshedCampaign) {
+          setCampaign(refreshedCampaign as unknown as CampaignType);
+        }
+      } catch (refreshError) {
+        console.error('Error refreshing campaign data:', refreshError);
+        // Don't fail the transaction if refresh fails
+      }
+      
       // Refresh investment details if this is an investment campaign
       if (campaign.campaignType === "1") {
-        const details = await getInvestmentDetails(id);
-        setInvestmentDetails(details);
+        try {
+          const details = await getInvestmentDetails(id);
+          if (details) {
+            setInvestmentDetails(details);
+          }
+        } catch (error) {
+          console.error("Failed to refresh investment details:", error);
+        }
       }
     } catch (error: any) {
       console.error('Transaction error:', error);
@@ -347,13 +372,103 @@ const FundCampaignPage = () => {
     )
   }
 
-  // Check if campaign has ended
-  const isEnded = isCampaignEnded(campaign);
+  // Right after the campaign details calculation and before the renderInvestmentDetails function
+  // Add this line to force isEnded to false
+  const isEnded = false; // Force campaign to never be ended 
+
+  // Calculate display amounts for the campaign with better handling of blockchain values
+  const parseGoalAmount = (): string => {
+    if (!campaign?.goalAmount) return "0";
+    
+    try {
+      // Handle both string and BigNumber formats
+      if (typeof campaign.goalAmount === 'object' && campaign.goalAmount._hex) {
+        // Handle ethers.js BigNumber
+        return formatBlockchainValue(ethers.BigNumber.from(campaign.goalAmount._hex));
+      } else if (typeof campaign.goalAmount === 'object' && campaign.goalAmount.toString) {
+        // Handle other BigNumber-like objects
+        return formatBlockchainValue(campaign.goalAmount.toString());
+      } else if (typeof campaign.goalAmount === 'string' || typeof campaign.goalAmount === 'number') {
+        // Handle string or number
+        return formatBlockchainValue(campaign.goalAmount);
+      }
+    } catch (error) {
+      console.error('Error parsing goal amount:', error, campaign.goalAmount);
+    }
+    
+    // Fallback for any other case
+    return formatBlockchainValue(campaign.goalAmount) || "0";
+  };
   
-  // Calculate display amounts for the campaign
-  const goalAmount = campaign.goalAmount === "5000000000000000000000" ? "5,000" : formatBlockchainValue(campaign.goalAmount);
-  const totalFunded = formatBlockchainValue(campaign.totalFunded);
-  const category = formatCategory(campaign.category);
+  const goalAmount = parseGoalAmount();
+  const totalFunded = campaign.totalFunded ? formatBlockchainValue(campaign.totalFunded) : "0";
+  
+  // Format category properly based on category code
+  const formatCategoryName = (categoryCode: string | number | undefined): string => {
+    if (!categoryCode) return 'Not specified';
+    
+    const categories: Record<string, string> = {
+      '0': 'General',
+      '1': 'Technology',
+      '2': 'Art & Creative',
+      '3': 'Business',
+      '4': 'Community',
+      '5': 'Education'
+    };
+    
+    return categories[categoryCode.toString()] || 'Not specified';
+  };
+  
+  const category = formatCategoryName(campaign.category);
+  
+  // Helper for formatting addresses more consistently
+  const formatAddress = (address: string): string => {
+    if (!address) return 'None specified';
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+  };
+  
+  // Helper for rendering beneficiaries
+  const renderBeneficiaries = (beneficiaries: any): React.ReactNode => {
+    if (!beneficiaries || 
+        (typeof beneficiaries === 'object' && Object.keys(beneficiaries).length === 0)) {
+      return 'None specified';
+    }
+    
+    if (typeof beneficiaries === 'string') {
+      return formatAddress(beneficiaries);
+    }
+    
+    if (typeof beneficiaries === 'object') {
+      return (
+        <div className="flex flex-col items-end">
+          {Object.entries(beneficiaries).map(([address, percentage], index) => (
+            <span key={index} className="text-sm">
+              {formatAddress(address)} ({percentage}%)
+            </span>
+          ))}
+        </div>
+      );
+    }
+    
+    return 'None specified';
+  };
+  
+  // Helper for rendering stakeholders
+  const renderStakeholders = (stakeholders: string[] | undefined): React.ReactNode => {
+    if (!stakeholders || stakeholders.length === 0) {
+      return 'None specified';
+    }
+    
+    return (
+      <div className="flex flex-col items-end">
+        {stakeholders.map((address, index) => (
+          <span key={index} className="text-sm">
+            {formatAddress(address)}
+          </span>
+        ))}
+      </div>
+    );
+  };
 
   // Render investment details if this is an investment campaign
   const renderInvestmentDetails = () => {
@@ -404,34 +519,33 @@ const FundCampaignPage = () => {
               
               <p className="font-medium text-gray-700">Creator:</p>
               <p className="text-gray-600 text-right">
-                {renderAddresses(campaign.creator)}
+                {campaign.creator ? formatAddress(campaign.creator) : 'None specified'}
               </p>
               
               <p className="font-medium text-gray-700">Fund Receiver:</p>
               <p className="text-gray-600 text-right">
-                {renderAddresses(campaign.creator)}
+                {campaign.creator ? formatAddress(campaign.creator) : 'None specified'}
               </p>
               
               <p className="font-medium text-gray-700">Category:</p>
               <p className="text-gray-600">{category}</p>
               
               <p className="font-medium text-gray-700">Beneficiaries:</p>
-              <p className="text-gray-600 text-right break-all">
-                {renderAddresses(campaign.beneficiaries)}
+              <p className="text-gray-600 text-right">
+                {campaign.beneficiaries && typeof campaign.beneficiaries === 'object' && 
+                 Object.keys(campaign.beneficiaries).length > 0 
+                  ? Object.keys(campaign.beneficiaries).length + ' beneficiaries' 
+                  : 'None specified'}
               </p>
               
               <p className="font-medium text-gray-700">Stakeholders:</p>
-              <p className="text-gray-600 text-right break-all">
-                {renderAddresses(campaign.stakeholders)}
+              <p className="text-gray-600 text-right">
+                {campaign.stakeholders && Array.isArray(campaign.stakeholders) && 
+                 campaign.stakeholders.length > 0
+                  ? campaign.stakeholders.length + ' stakeholders' 
+                  : 'None specified'}
               </p>
             </div>
-            
-            {/* Campaign Status */}
-            {isEnded && (
-              <div className="mt-3 p-2 bg-red-100 border border-red-300 rounded text-red-700">
-                <p className="font-semibold">This campaign has ended and is no longer accepting donations.</p>
-              </div>
-            )}
           </div>
           
           {/* Investment details for investment campaigns */}

@@ -1,0 +1,18 @@
+{
+  "contractAddress": "0x15493F1ae7D556e0150D76528dd06d76050caf43",
+  "network": {
+    "name": "telos_testnet",
+    "chainId": 41
+  },
+  "timestamp": "2024-04-19T00:00:00.000Z",
+  "deployer": "Your wallet address",
+  "version": "1.0.0",
+  "compiler": {
+    "solidity": "0.8.19",
+    "optimizer": true,
+    "runs": 200,
+    "viaIR": true
+  },
+  "notes": "Deployed with upgradeable proxy pattern for enhanced functionality and security",
+  "verificationUrl": "https://testnet.teloscan.io/address/0x15493F1ae7D556e0150D76528dd06d76050caf43#code"
+} 

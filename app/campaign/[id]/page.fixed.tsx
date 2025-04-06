@@ -1,184 +1,268 @@
-'use client'
+"use client";
 
-export const runtime = 'edge';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import Image from 'next/image';
+import { format } from 'date-fns';
+import { 
+  CalendarDays, 
+  Clock, 
+  Users, 
+  Target, 
+  Award, 
+  Share2, 
+  AlertTriangle,
+  ArrowLeft,
+  RefreshCw
+} from 'lucide-react';
+import Link from 'next/link';
 
-import React, { useEffect, useState } from 'react'
-import { useRouter, useParams, useSearchParams } from 'next/navigation'
-import { useWowzaRush } from '@/context/wowzarushContext'
-import Link from 'next/link'
-import NavBar from '@/components/navbar'
-import type { Campaign as CampaignType } from "@/utils/contextInterfaces"
-import { formatBlockchainValue, formatCategory, truncateAddress } from '@/utils/formatting'
-import { Loader2, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ethers } from 'ethers'
-import CopyableAddress from '@/components/CopyableAddress'
-import MilestoneManagement from '@/app/components/MilestoneManagement'
-import ShareButton from '@/components/ShareButton'
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 
-// Simple milestone interface for display purposes
-interface SimpleMilestone {
-  id?: string;
-  name: string;
-  target?: number;
-  targetAmount?: string;
-  completed?: boolean;
-  isCompleted?: boolean;
-  isUnderReview?: boolean;
-  proofOfCompletion?: string;
-}
+import ContributionTiers from '@/components/campaign/ContributionTiers';
+import MilestoneTimeline from '@/components/campaign/MilestoneTimeline';
+import { CommentsSection } from '@/components/campaign/CommentsSection';
+import QASection from '@/components/campaign/QASection';
+import { GovernanceRights } from '@/components/campaign/GovernanceRights';
+import { CampaignUpdates } from '@/components/campaign/CampaignUpdates';
+import { RiskAssessment } from '@/components/campaign/RiskAssessment';
+import BlockchainServiceFixedV3Instance from '@/services/blockchainServiceFixedV3';
 
-// Extended campaign details interface to include our formatted values
-interface CampaignDetails {
-  formattedGoalAmount?: string;
-  formattedTotalFunded?: string;
-  formattedCategory?: string;
-  formattedCreator?: string;
-  deadline?: string;
-  beneficiaries?: string;
-  stakeholders?: string;
-  isInvestment?: boolean;
-  formattedEquityPercentage?: string;
-  formattedMinInvestment?: string;
-  estimatedValuation?: string;
-}
-
-export default function CampaignDetailPage({ params }: { params: { id: string } }) {
-  const { id: campaignId } = params;
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export default function CampaignDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
   
-  const { 
-    getCampaign, 
-    loading, 
-    error, 
-    account,
-    isWalletConnected,
-    connectWallet
-  } = useWowzaRush();
-  
+  const [activeTab, setActiveTab] = useState('about');
+  const [loading, setLoading] = useState(true);
   const [campaign, setCampaign] = useState<any>(null);
-  const [mediaFiles, setMediaFiles] = useState<string[]>([]);
-  const [campaignDetails, setCampaignDetails] = useState<CampaignDetails>({});
-  const [loadingState, setLoadingState] = useState(false);
-  const [errorState, setErrorState] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  
+  useEffect(() => {
+    fetchCampaign();
+  }, [id]);
 
-  // Calculate estimated valuation for investment campaigns
-  const calculateValuation = (campaign: CampaignType): string => {
-    if (campaign.campaignType !== "1" || !campaign.equityPercentage || !campaign.goalAmount) {
-      return 'N/A';
+  const fetchCampaign = async () => {
+    if (!id) {
+      setError('Campaign ID is missing');
+      setLoading(false);
+      return;
     }
     
-    // Convert equity percentage from basis points (e.g., 550 = 5.5%) to decimal (0.055)
-    const equityDecimal = parseFloat(campaign.equityPercentage) / 10000;
+    setLoading(true);
+    setError(null);
     
-    if (equityDecimal === 0) return 'N/A';
-    
-    // Calculate valuation: goalAmount / equityDecimal
-    const goalAmountValue = parseFloat(campaign.goalAmount);
-    const valuation = goalAmountValue / equityDecimal;
-    
-    // Format as currency
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(valuation);
+    try {
+      const campaignData = await BlockchainServiceFixedV3Instance.getCampaign(Number(id));
+      setCampaign(campaignData);
+    } catch (error: any) {
+      console.error(`Error fetching campaign ${id}:`, error);
+      setError(`Failed to load campaign: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Fetch campaign data
-  useEffect(() => {
-    const fetchCampaignDetails = async () => {
-      try {
-        setLoadingState(true);
-        if (getCampaign && campaignId) {
-          const fetchedCampaign = await getCampaign(campaignId.toString());
-          setCampaign(fetchedCampaign);
-        }
-        setLoadingState(false);
-      } catch (err) {
-        setErrorState(String(err));
-        setLoadingState(false);
-      }
-    };
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
 
-    fetchCampaignDetails();
-  }, [campaignId, getCampaign]);
+  const calculateProgress = () => {
+    if (!campaign) return 0;
+    
+    const target = parseFloat(campaign.target);
+    const amountCollected = parseFloat(campaign.amountCollected);
+    
+    if (isNaN(target) || target === 0 || isNaN(amountCollected)) return 0;
+    
+    const progress = (amountCollected / target) * 100;
+    return Math.min(progress, 100);
+  };
 
-  // Loading state
-  if (loadingState) {
-    return (
-      <div className="container mx-auto py-12 flex justify-center">
-        <Loader2 className="w-10 h-10 animate-spin text-black" />
-      </div>
-    );
-  }
+  const calculateDaysRemaining = () => {
+    if (!campaign?.deadline) return 0;
+    
+    const deadline = new Date(campaign.deadline);
+    const now = new Date();
+    
+    const diffTime = deadline.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return Math.max(0, diffDays);
+  };
 
-  // Error state
-  if (errorState || !campaign) {
-    return (
-      <div className="container mx-auto py-12">
-        <NavBar />
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">Error</h1>
-          <p>{errorState || "Campaign not found"}</p>
-          <Button onClick={() => router.back()}>Go Back</Button>
-        </div>
-      </div>
-    );
-  }
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: campaign?.title,
+        text: campaign?.description,
+        url: window.location.href,
+      }).catch((error) => console.error('Error sharing:', error));
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => alert('Link copied to clipboard!'))
+        .catch((error) => console.error('Error copying link:', error));
+    }
+  };
 
-  // Main render
   return (
-    <div className="min-h-screen bg-[#FFFDF6]">
-      <NavBar />
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="max-w-4xl mx-auto">
-          {/* Campaign header and actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-            <Link href="/campaigns" className="inline-flex items-center text-blue-500 hover:text-blue-700 mb-4 sm:mb-0">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Campaigns
-            </Link>
-            <div className="flex space-x-2">
-              <Button 
-                onClick={() => router.push(`/fund-campaign/${campaignId}`)}
-                className="bg-green-500 hover:bg-green-600 text-white"
-              >
-                {campaign?.campaignType === "1" ? "Invest Now" : "Support Now"}
-              </Button>
-              <ShareButton campaignId={campaignId} />
-            </div>
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-6">
+        <Link href="/campaigns" className="flex items-center text-sm text-muted-foreground hover:text-primary">
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Back to Campaigns
+        </Link>
+      </div>
+
+      {loading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-12 w-3/4" />
+          <Skeleton className="h-64 w-full" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
+            <Skeleton className="h-32" />
           </div>
+        </div>
+      ) : error ? (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4 mr-2" />
+          <AlertDescription>{error}</AlertDescription>
+          <Button variant="outline" size="sm" className="ml-auto" onClick={fetchCampaign}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Retry
+          </Button>
+        </Alert>
+      ) : campaign ? (
+        <>
+          <h1 className="text-3xl font-bold mb-6">{campaign.title}</h1>
           
-          {/* Campaign title and details */}
-          <div className="bg-white p-6 rounded-lg border-2 border-black shadow-md mb-6">
-            <h1 className="text-2xl font-bold mb-4">{campaign.title}</h1>
-            <p className="text-gray-700 mb-4">{campaign.description}</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <div className="lg:col-span-2">
+              <div className="rounded-lg overflow-hidden mb-6 relative aspect-video">
+                {campaign.image ? (
+                  <Image 
+                    src={campaign.image} 
+                    alt={campaign.title}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="bg-muted h-full w-full flex items-center justify-center">
+                    <p className="text-muted-foreground">No image available</p>
+                  </div>
+                )}
+              </div>
+              
+              <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="mb-8">
+                <TabsList className="grid grid-cols-4 mb-4">
+                  <TabsTrigger value="about">About</TabsTrigger>
+                  <TabsTrigger value="milestones">Milestones</TabsTrigger>
+                  <TabsTrigger value="comments">Comments</TabsTrigger>
+                  <TabsTrigger value="qa">Q&A</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="about" className="space-y-4">
+                  <div className="prose max-w-none">
+                    <p>{campaign.description}</p>
+                  </div>
+                  
+                  <Separator className="my-6" />
+                  
+                  <CampaignUpdates campaignId={id} />
+                  
+                  <Separator className="my-6" />
+                  
+                  <RiskAssessment campaignId={id} />
+                </TabsContent>
+                
+                <TabsContent value="milestones">
+                  {campaign.milestones && campaign.milestones.length > 0 ? (
+                    <MilestoneTimeline milestones={campaign.milestones} />
+                  ) : (
+                    <p className="text-muted-foreground">No milestones available for this campaign.</p>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="comments">
+                  <CommentsSection campaignId={id} />
+                </TabsContent>
+                
+                <TabsContent value="qa">
+                  <QASection campaignId={id} />
+                </TabsContent>
+              </Tabs>
+            </div>
             
-            {/* Investment details section */}
-            {campaign.campaignType === "1" && (
-              <div className="bg-blue-50 p-4 rounded-lg my-4 border border-blue-200">
-                <h3 className="font-semibold text-lg mb-2">Investment Details</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Equity Offered</p>
-                    <p className="font-medium">{parseFloat(campaign.equityPercentage) / 100}%</p>
+            <div className="space-y-6">
+              <Card className="p-6">
+                <div className="mb-4">
+                  <div className="flex justify-between mb-2">
+                    <span className="text-muted-foreground">Raised</span>
+                    <span className="font-medium">{campaign.amountCollected} TLOS</span>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Minimum Investment</p>
-                    <p className="font-medium">{formatBlockchainValue(campaign.minInvestment || "0")}</p>
+                  <div className="flex justify-between mb-2">
+                    <span className="text-muted-foreground">Target</span>
+                    <span className="font-medium">{campaign.target} TLOS</span>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Valuation</p>
-                    <p className="font-medium">{calculateValuation(campaign)}</p>
+                  <Progress value={calculateProgress()} className="h-2 mt-2" />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-muted p-3 rounded-lg text-center">
+                    <CalendarDays className="h-5 w-5 mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Deadline</p>
+                    <p className="font-medium">{formatDate(campaign.deadline)}</p>
+                  </div>
+                  <div className="bg-muted p-3 rounded-lg text-center">
+                    <Clock className="h-5 w-5 mx-auto mb-1" />
+                    <p className="text-xs text-muted-foreground">Remaining</p>
+                    <p className="font-medium">{calculateDaysRemaining()} days</p>
                   </div>
                 </div>
-              </div>
-            )}
+                
+                <div className="space-y-3">
+                  <Link href={`/fund-campaign/${id}`} className="w-full">
+                    <Button className="w-full">Fund this Campaign</Button>
+                  </Link>
+                  <Button variant="outline" className="w-full" onClick={handleShare}>
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+              </Card>
+              
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Campaign Creator</h3>
+                <div className="flex items-center">
+                  <div className="bg-muted h-10 w-10 rounded-full flex items-center justify-center mr-3">
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-medium">Creator</p>
+                    <p className="text-sm text-muted-foreground truncate max-w-[200px]">
+                      {campaign.owner}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+              
+              <ContributionTiers campaignId={id} />
+              
+              <GovernanceRights campaignId={id} />
+            </div>
           </div>
-        </div>
-      </main>
+        </>
+      ) : null}
     </div>
   );
 } 

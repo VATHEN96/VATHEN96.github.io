@@ -58,7 +58,7 @@ async function activateContract() {
   }
 
   // First check if the contract is already activated
-  const readOnlyContract = new ethers.Contract('0x7144Da8697ec83F9f820460C6498DcA90fF20901', abi, provider);
+  const readOnlyContract = new ethers.Contract('0x5A753D7202444a8CbDa821aadc7E3743B8aE37E5', abi, provider);
 
   const isActivated = await readOnlyContract.getActivationStatus();
   if (isActivated) {
@@ -87,7 +87,7 @@ async function activateContract() {
     console.log('- Permissions: Wallet is the contract owner');
     console.log('- Contract status: Not activated\n');
 
-    const contract = new ethers.Contract('0x7144Da8697ec83F9f820460C6498DcA90fF20901', abi, wallet);
+    const contract = new ethers.Contract('0x5A753D7202444a8CbDa821aadc7E3743B8aE37E5', abi, wallet);
 
     // Add debug logging
     console.log('Debug info:');

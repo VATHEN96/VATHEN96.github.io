@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { shortenAddress } from '@/utils/format';
 
 interface CommentsSectionProps {
   campaignId: string;
@@ -23,7 +24,7 @@ interface CommentsSectionProps {
 }
 
 export const CommentsSection: React.FC<CommentsSectionProps> = ({ campaignId, creatorId }) => {
-  const { account, isWalletConnected, getComments, addComment, likeComment, reportComment, getCreatorProfile } = useWowzaRush();
+  const { userAddress, isWalletConnected, getComments, addComment, likeComment, reportComment, getCreatorProfile } = useWowzaRush();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -32,7 +33,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ campaignId, cr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
 
-  const isCreator = account?.toLowerCase() === creatorId?.toLowerCase();
+  const isCreator = userAddress?.toLowerCase() === creatorId?.toLowerCase();
 
   // Load comments from context
   useEffect(() => {
@@ -45,65 +46,23 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ campaignId, cr
         if (commentsData && commentsData.length > 0) {
           setComments(commentsData);
         } else {
-          // Otherwise use the mock data (just for demonstration)
-          const mockComments: Comment[] = [
-            {
-              id: '1',
-              campaignId,
-              userId: '0x1234567890abcdef1234567890abcdef12345678',
-              content: 'This project looks amazing! I love the concept and the team seems very capable. Looking forward to seeing how it develops.',
-              timestamp: Date.now() - 3600000 * 24 * 2, // 2 days ago
-              likes: 5,
-              isCreator: false,
-              replies: [
-                {
-                  id: '1-1',
-                  campaignId,
-                  parentId: '1',
-                  userId: creatorId || '0xcreator0000000000000000000000000000',
-                  content: 'Thank you for your support! We are working hard to deliver on our promises.',
-                  timestamp: Date.now() - 3600000 * 24, // 1 day ago
-                  likes: 2,
-                  isCreator: true
-                }
-              ]
-            },
-            {
-              id: '2',
-              campaignId,
-              userId: '0xabcdef1234567890abcdef1234567890abcdef12',
-              content: 'I have a question about the roadmap. When do you plan to release the beta version?',
-              timestamp: Date.now() - 3600000 * 36, // 36 hours ago
-              likes: 3,
-              isCreator: false,
-              replies: []
-            },
-            {
-              id: '3',
-              campaignId,
-              userId: creatorId || '0xcreator0000000000000000000000000000',
-              content: 'We just hit our first milestone! Thanks to all our supporters for making this possible. Stay tuned for more updates!',
-              timestamp: Date.now() - 3600000 * 48, // 48 hours ago
-              likes: 10,
-              isCreator: true,
-              replies: []
-            }
-          ];
-          
-          setComments(mockComments);
+          // No comments available - set empty array
+          setComments([]);
         }
       } catch (error) {
         console.error('Error loading comments:', error);
         toast.error('Failed to load comments');
+        // Set empty array on error
+        setComments([]);
       } finally {
         setIsLoading(false);
       }
     };
     
     const loadUserProfile = async () => {
-      if (account) {
+      if (userAddress) {
         try {
-          const profile = await getCreatorProfile(account);
+          const profile = await getCreatorProfile(userAddress);
           setUserProfile(profile);
         } catch (error) {
           console.error('Error loading user profile:', error);
@@ -113,7 +72,7 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ campaignId, cr
     
     loadComments();
     loadUserProfile();
-  }, [campaignId, account, getComments, getCreatorProfile, creatorId]);
+  }, [campaignId, userAddress, getComments, getCreatorProfile, creatorId]);
 
   const handleCommentSubmit = async () => {
     if (!isWalletConnected) {
@@ -250,16 +209,22 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ campaignId, cr
     return (
       <div key={comment.id} className={`${isReply ? 'ml-12 mt-4' : 'mb-6'}`}>
         <div className="flex gap-4">
-          <Link href={`/profile/view?address=${comment.userId}`}>
+          <Link href={`/profile/view?address=${comment.userId || ''}`}>
             <Avatar className="h-10 w-10">
-              <AvatarFallback>{comment.userId.substring(0, 2).toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {comment.userId 
+                  ? comment.userId.substring(2, 4).toUpperCase()
+                  : 'AN'}
+              </AvatarFallback>
             </Avatar>
           </Link>
           
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <Link href={`/profile/view?address=${comment.userId}`} className="font-semibold hover:underline">
-                User {comment.userId.substring(0, 6)}...
+              <Link href={`/profile/view?address=${comment.userId || ''}`} className="font-semibold hover:underline">
+                <p className="font-medium">{comment.userId 
+                  ? shortenAddress(comment.userId) 
+                  : 'Anonymous'}</p>
               </Link>
               
               {comment.isCreator && (
@@ -267,7 +232,9 @@ export const CommentsSection: React.FC<CommentsSectionProps> = ({ campaignId, cr
               )}
               
               <span className="text-sm text-gray-500">
-                {formatDistanceToNow(comment.timestamp, { addSuffix: true })}
+                {comment.timestamp && new Date(comment.timestamp).getTime() > 0 
+                  ? formatDistanceToNow(new Date(comment.timestamp), { addSuffix: true })
+                  : 'recently'}
               </span>
             </div>
             

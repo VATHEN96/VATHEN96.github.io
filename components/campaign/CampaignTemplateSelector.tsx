@@ -261,6 +261,41 @@ export default function CampaignTemplateSelector({ onSelect }: CampaignTemplateS
     }
   };
   
+  const handleTemplateSelected = (templateId: string) => {
+    console.log(`Selected template with ID: ${templateId}`);
+    const selectedTemplate = campaignTemplates.find(t => t.id === templateId);
+    
+    if (selectedTemplate) {
+      console.log('Selected template details:', selectedTemplate);
+      
+      // Deep clone the selected template milestones to avoid reference issues
+      const milestonesCopy = selectedTemplate.defaultValues?.suggestedMilestones ? 
+        JSON.parse(JSON.stringify(selectedTemplate.defaultValues.suggestedMilestones)) : [];
+      
+      // Ensure all milestone targets are strings to prevent numeric overflow
+      const formattedMilestones = milestonesCopy.map((milestone: any) => ({
+        ...milestone,
+        target: milestone.target !== undefined ? String(milestone.target) : "0.1"
+      }));
+      
+      console.log('Formatted milestones with string targets:', formattedMilestones);
+
+      // Create a properly formatted template with string values for numeric fields
+      const formattedTemplate = {
+        ...selectedTemplate,
+        defaultValues: {
+          ...selectedTemplate.defaultValues,
+          minGoalAmount: selectedTemplate.defaultValues?.minGoalAmount ? 
+            String(selectedTemplate.defaultValues.minGoalAmount) : "0",
+          suggestedMilestones: formattedMilestones
+        }
+      };
+      
+      console.log('Formatted template with string numeric values:', formattedTemplate);
+      onSelect(formattedTemplate);
+    }
+  };
+  
   return (
     <div className="space-y-6">
       <div className="text-center max-w-2xl mx-auto mb-8">
@@ -281,7 +316,7 @@ export default function CampaignTemplateSelector({ onSelect }: CampaignTemplateS
             <Card 
               key={template.id} 
               className="cursor-pointer hover:border-blue-400 transition-colors"
-              onClick={() => onSelect(template)}
+              onClick={() => handleTemplateSelected(template.id)}
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between mb-2">

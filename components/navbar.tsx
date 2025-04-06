@@ -3,10 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ModeToggle } from '@/components/mode-toggle';
 import { UserProfileMenu } from '@/components/UserProfileMenu';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { useWowzaRush } from '@/context/wowzarushContext';
@@ -21,7 +20,6 @@ import {
   NavigationMenuList,
   NavigationMenuLink,
   navigationMenuTriggerStyle,
-  ListItem,
 } from '@/components/ui/navigation-menu';
 
 import {
@@ -30,6 +28,10 @@ import {
   SheetTrigger,
   SheetClose,
 } from '@/components/ui/sheet';
+
+import { DEBUG_MODE } from '@/services/blockchainServiceFixedV3';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 // Define categories for the navigation menu
 const categories = [
@@ -65,20 +67,24 @@ const categories = [
   }
 ];
 
-// Function to render ListItem component for navigation menu
+// Define custom ListItem component for navigation dropdown
+interface ListItemProps {
+  title: string;
+  href: string;
+  children?: React.ReactNode;
+}
+
 const ListItem = React.forwardRef<
-  React.ElementRef<typeof Link>,
-  React.ComponentPropsWithoutRef<typeof Link>
->(({ className, title, children, ...props }, ref) => {
+  React.ElementRef<"a">,
+  ListItemProps
+>(({ title, href, children, ...props }, ref) => {
   return (
     <li>
       <NavigationMenuLink asChild>
         <Link
+          href={href}
           ref={ref}
-          className={cn(
-            "block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground",
-            className
-          )}
+          className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
           {...props}
         >
           <div className="text-sm font-medium leading-none">{title}</div>
@@ -93,13 +99,15 @@ const ListItem = React.forwardRef<
 ListItem.displayName = "ListItem";
 
 export default function Navbar() {
-  const pathname = usePathname();
+  const pathname = usePathname() || '';
+  const router = useRouter();
   const { isWalletConnected, connectWallet, userProfile } = useWowzaRush();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -122,9 +130,9 @@ export default function Navbar() {
 
   const routes = [
     {
-      href: '/explore',
-      label: 'Explore',
-      active: pathname === '/explore',
+      href: '/create',
+      label: 'Create',
+      active: pathname === '/create',
     },
     {
       href: '/how-it-works',
@@ -132,9 +140,9 @@ export default function Navbar() {
       active: pathname === '/how-it-works',
     },
     {
-      href: '/about',
-      label: 'About',
-      active: pathname === '/about',
+      href: '/my-campaigns',
+      label: 'My Campaigns',
+      active: pathname === '/my-campaigns',
     },
   ];
 
@@ -146,49 +154,45 @@ export default function Navbar() {
     setShowNotifications(!showNotifications);
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search-campaign?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
+
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        isScrolled ? 'bg-white/95 dark:bg-black/95 backdrop-blur-sm shadow-sm border-b border-black dark:border-white' : 'bg-white dark:bg-black'
+        isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-sm border-b border-black' : 'bg-white'
       }`}
     >
       <div className="w-full flex h-16 items-center justify-between px-4 md:px-6">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="mr-2 md:hidden text-black dark:text-white">
+            <Button variant="ghost" size="icon" className="mr-2 md:hidden text-black" aria-label="Open menu">
               {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               <span className="sr-only">Toggle menu</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="pr-0 bg-white dark:bg-black text-black dark:text-white border-r border-black dark:border-white">
+          <SheetContent side="left" className="pr-0 bg-white text-black border-r border-black">
             <MobileNav pathname={pathname} />
           </SheetContent>
         </Sheet>
         
         <Link href="/" className="flex items-center gap-2">
           <ClientImage src="/logo.svg" alt="WowZaRush Logo" width={32} height={32} />
-          <span className="font-bold text-lg hidden md:inline-block text-black dark:text-white">WowZaRush</span>
+          <span className="font-bold text-lg hidden md:inline-block text-black">WowZaRush</span>
+          {DEBUG_MODE && (
+            <div className="bg-amber-500 text-black font-medium px-3 py-1 text-xs rounded-full ml-2 flex items-center">
+              <span className="animate-pulse mr-1">⚠️</span>
+              DEBUG MODE
+            </div>
+          )}
         </Link>
         
         <NavigationMenu className="hidden md:flex">
           <NavigationMenuList>
-            <NavigationMenuItem>
-              <NavigationMenuTrigger>Discover</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-                  {categories.map((category) => (
-                    <ListItem
-                      key={category.title}
-                      title={category.title}
-                      href={category.href}
-                    >
-                      {category.description}
-                    </ListItem>
-                  ))}
-                </ul>
-              </NavigationMenuContent>
-            </NavigationMenuItem>
-            
             <NavigationMenuItem>
               <Link href="/create" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
@@ -198,60 +202,51 @@ export default function Navbar() {
             </NavigationMenuItem>
             
             <NavigationMenuItem>
-              <NavigationMenuTrigger>Learn</NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px]">
-                  <li className="row-span-3">
-                    <NavigationMenuLink asChild>
-                      <a
-                        className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-muted/50 to-muted p-6 no-underline outline-none focus:shadow-md"
-                        href="/about"
-                      >
-                        <div className="mb-2 mt-4 text-lg font-medium">
-                          About WowZaRush
-                        </div>
-                        <p className="text-sm leading-tight text-muted-foreground">
-                          Learn how our platform empowers creators and supports community-driven projects.
-                        </p>
-                      </a>
-                    </NavigationMenuLink>
-                  </li>
-                  <ListItem href="/help" title="Help Center">
-                    Find answers to common questions and learn how to use the platform.
-                  </ListItem>
-                  <ListItem href="/blog" title="Blog">
-                    Read the latest news and updates from the WowZaRush team.
-                  </ListItem>
-                  <ListItem href="/roadmap" title="Roadmap">
-                    See what's coming next for WowZaRush and our development plans.
-                  </ListItem>
-                </ul>
-              </NavigationMenuContent>
+              <Link href="/how-it-works" legacyBehavior passHref>
+                <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                  How it Works
+                </NavigationMenuLink>
+              </Link>
             </NavigationMenuItem>
             
             <NavigationMenuItem>
-              <Link href="/analytics" legacyBehavior passHref>
+              <Link href="/my-campaigns" legacyBehavior passHref>
                 <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                  Analytics
+                  My Campaigns
                 </NavigationMenuLink>
               </Link>
+            </NavigationMenuItem>
+            
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Series Funding</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <ul className="grid w-[400px] gap-3 p-4 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
+                  <ListItem
+                    title="Create Series Campaign"
+                    href="/create-series-funding"
+                  >
+                    Start your journey with series funding for your startup
+                  </ListItem>
+                  <ListItem
+                    title="Browse Series Funding"
+                    href="/discover?type=series-funding"
+                  >
+                    Explore startups raising Series A, B, and C funding
+                  </ListItem>
+                  <ListItem
+                    title="How Series Funding Works"
+                    href="/how-it-works#series-funding"
+                  >
+                    Learn about multi-tier funding rounds for different growth stages
+                  </ListItem>
+                </ul>
+              </NavigationMenuContent>
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
         
         <nav className="hidden md:flex items-center space-x-4 lg:space-x-6 mx-6">
-          {routes.map((route) => (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                "text-sm font-medium transition-colors hover:text-primary",
-                route.active ? "text-foreground" : "text-muted-foreground"
-              )}
-            >
-              {route.label}
-            </Link>
-          ))}
+          {/* Routes removed as per requirements */}
         </nav>
         
         <div className={cn(
@@ -259,13 +254,17 @@ export default function Navbar() {
           isSearchOpen ? "md:max-w-md lg:max-w-xl" : "md:max-w-xs"
         )}>
           <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search campaigns, creators..."
-              className="pl-8 w-full"
-              onFocus={() => setIsSearchOpen(true)}
-              onBlur={() => setIsSearchOpen(false)}
-            />
+            <form onSubmit={handleSearchSubmit}>
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search campaigns, creators..."
+                className="pl-8 w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchOpen(true)}
+                onBlur={() => setIsSearchOpen(false)}
+              />
+            </form>
           </div>
         </div>
         
@@ -278,8 +277,9 @@ export default function Navbar() {
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
+            className="relative touch-button"
             onClick={toggleNotifications}
+            aria-label={`Notifications ${notificationCount > 0 ? `(${notificationCount} unread)` : ''}`}
           >
             <Bell className="h-5 w-5" />
             {notificationCount > 0 && (
@@ -294,8 +294,6 @@ export default function Navbar() {
           ) : (
             <Button onClick={connectWallet} className="ml-4">Connect Wallet</Button>
           )}
-          
-          <ModeToggle />
         </div>
       </div>
 
@@ -304,12 +302,16 @@ export default function Navbar() {
         <div className="md:hidden border-t py-4 px-4 bg-background">
           {/* Search Input - Mobile */}
           <div className="relative w-full mb-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search campaigns..."
-              className="w-full pl-8 bg-muted/50"
-            />
+            <form onSubmit={handleSearchSubmit}>
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Search campaigns..."
+                className="w-full pl-8 bg-muted/50"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </form>
           </div>
 
           {/* Mobile Navigation Links */}
@@ -334,7 +336,7 @@ export default function Navbar() {
       {/* Notification Center */}
       {showNotifications && (
         <div className="absolute right-4 top-16 w-80 z-50">
-          <NotificationCenter onClose={() => setShowNotifications(false)} />
+          <NotificationCenter onClose={toggleNotifications} />
         </div>
       )}
     </header>
@@ -351,9 +353,9 @@ function MobileNav({ pathname }: { pathname: string }) {
       active: pathname === '/',
     },
     {
-      href: '/explore',
-      label: 'Explore',
-      active: pathname === '/explore',
+      href: '/create',
+      label: 'Create',
+      active: pathname === '/create',
     },
     {
       href: '/how-it-works',
@@ -361,9 +363,25 @@ function MobileNav({ pathname }: { pathname: string }) {
       active: pathname === '/how-it-works',
     },
     {
-      href: '/about',
-      label: 'About',
-      active: pathname === '/about',
+      href: '/my-campaigns',
+      label: 'My Campaigns',
+      active: pathname === '/my-campaigns',
+    },
+  ];
+
+  // Series funding navigation items
+  const seriesFundingLinks = [
+    {
+      href: '/create-series-funding',
+      label: 'Create Series Campaign',
+    },
+    {
+      href: '/discover?type=series-funding',
+      label: 'Browse Series Funding',
+    },
+    {
+      href: '/how-it-works#series-funding',
+      label: 'How Series Funding Works',
     },
   ];
   
@@ -387,6 +405,23 @@ function MobileNav({ pathname }: { pathname: string }) {
             </Link>
           </SheetClose>
         ))}
+        
+        {/* Series Funding Section */}
+        <div className="pt-2">
+          <div className="text-sm font-medium mb-2">Series Funding</div>
+          <div className="grid gap-2 pl-2">
+            {seriesFundingLinks.map((link) => (
+              <SheetClose asChild key={link.href}>
+                <Link
+                  href={link.href}
+                  className="text-sm text-muted-foreground transition-colors hover:text-primary"
+                >
+                  {link.label}
+                </Link>
+              </SheetClose>
+            ))}
+          </div>
+        </div>
       </div>
       
       <div className="flex flex-col gap-2 pt-6">

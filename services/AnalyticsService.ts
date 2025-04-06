@@ -1,4 +1,5 @@
-import { BlockchainService } from '../services/blockchainService';
+import { BlockchainServiceFixed as BlockchainService } from '../services/blockchainServiceFixedV3';
+import BlockchainServiceFixedV3Instance from '../services/blockchainServiceFixedV3';
 import { toast } from 'sonner';
 
 export interface OnChainMetric {
@@ -78,11 +79,28 @@ export interface CampaignAnalytics {
   };
 }
 
-class AnalyticsService {
+export interface UserEngagementData {
+  contributedAmount: number;
+  campaignsCreated: number;
+  campaignsBacked: number;
+  comments: number;
+  questionsAsked: number;
+  governanceVotes: number;
+  nftsBadgesOwned: number;
+  lastActive: string;
+}
+
+export interface Contributor {
+  id: string;
+  name: string;
+  contributedAmount: number;
+}
+
+export default class AnalyticsService {
   private blockchainService: BlockchainService;
   
   constructor() {
-    this.blockchainService = new BlockchainService();
+    this.blockchainService = BlockchainServiceFixedV3Instance;
   }
   
   // Get comprehensive on-chain metrics for a campaign
@@ -174,34 +192,10 @@ class AnalyticsService {
   // Get time series data for a specific metric
   async getMetricChartData(campaignId: string, metricId: string, timeframe?: 'daily' | 'weekly' | 'monthly' | 'all'): Promise<MetricChartData> {
     try {
-      // Default to 'daily' if timeframe is not provided
-      const resolvedTimeframe = timeframe || 'daily';
-      
-      // Generate 30 days of mock data
-      const timeline: ChartDataPoint[] = [];
-      const now = new Date();
-      const baseValue = metricId.includes('funding') ? 20 : metricId.includes('governance') ? 50 : 30;
-      const volatility = metricId.includes('funding') ? 2 : metricId.includes('governance') ? 5 : 3;
-      
-      // Generate data with a general upward trend
-      for (let i = 30; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        
-        // Create some volatility but with a general trend upward
-        const randomFactor = (Math.random() * volatility * 2) - volatility;
-        const trendFactor = (30 - i) / 10; // Creates an upward trend
-        const value = Math.max(0, baseValue + randomFactor + trendFactor);
-        
-        timeline.push({
-          date: date.toISOString().split('T')[0],
-          value: Math.round(value * 100) / 100
-        });
-      }
-      
+      // Return empty data instead of generating mock data
       return {
         metricId,
-        timeline,
+        timeline: [],
         metricName: this.getMetricNameFromId(metricId)
       };
     } catch (error) {
@@ -520,6 +514,37 @@ class AnalyticsService {
       throw error;
     }
   }
-}
 
-export default AnalyticsService; 
+  async getUserEngagementData(userId: string): Promise<UserEngagementData> {
+    try {
+      console.log('No engagement data available for user:', userId);
+      
+      // Return empty data instead of generating mock data
+      return {
+        contributedAmount: 0,
+        campaignsCreated: 0,
+        campaignsBacked: 0,
+        comments: 0,
+        questionsAsked: 0,
+        governanceVotes: 0,
+        nftsBadgesOwned: 0,
+        lastActive: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error getting user engagement data:', error);
+      throw error;
+    }
+  }
+
+  async getTopContributors(campaignId: string): Promise<Contributor[]> {
+    try {
+      console.log('No top contributors data available for campaign:', campaignId);
+      
+      // Return empty array instead of mock data
+      return [];
+    } catch (error) {
+      console.error('Error getting top contributors:', error);
+      throw error;
+    }
+  }
+} 

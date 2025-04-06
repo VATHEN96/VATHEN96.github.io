@@ -141,7 +141,10 @@ export default function AnalyticsPage() {
         
         // First, ensure we have the latest campaigns data
         if (!campaigns || campaigns.length === 0) {
+          console.log('No campaigns found, fetching data');
           await fetchCampaigns();
+        } else {
+          console.log('Using existing campaigns data', campaigns.length);
         }
         
         // Try to fetch from API

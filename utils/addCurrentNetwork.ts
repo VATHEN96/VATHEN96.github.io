@@ -72,9 +72,10 @@ export const switchNetwork = async () => {
                                 },
                                 rpcUrls: [rpcEndpoint],
                                 blockExplorerUrls: [blockScannerUrl],
-                                // Add Telos-specific parameters
+                                // Add Telos-specific parameters with lower gas price
+                                // 0x3B9ACA00 = 1 Gwei in hex
                                 gasPrice: "0x3B9ACA00", // 1 Gwei
-                                gasLimit: "0x7A1200", // 8,000,000
+                                gasLimit: "0x2DC6C0", // 3,000,000 in hex
                             },
                         ],
                     });

@@ -58,58 +58,83 @@ const safelyConvertToEther = (value: string | number): number => {
  * @param decimals - Number of decimal places to display (default: 2)
  * @returns Formatted string value
  */
-export const formatBlockchainValue = (value: string | number): string => {
+export const formatBlockchainValue = (value: any): string => {
   try {
     // Handle empty values
     if (value === null || value === undefined || value === '') {
       return '0';
     }
     
-    // HARDCODED SOLUTION: For the known problematic campaign value
-    // If we detect the large scientific notation value (5e+21), return 5000
-    if (typeof value === 'string' && (
-        value.includes('e+21') || 
-        value.includes('5000000000000000000000')
-    )) {
-      console.log('Detected known campaign value, returning 5000');
-      return '5,000';
-    }
-    
-    // For scientific notation
-    if (typeof value === 'string' && value.includes('e')) {
-      const num = Number(value);
-      if (!isNaN(num)) {
-        // If this is a large number like 1e+21, convert to a readable format
-        return Math.floor(num / 1e18).toLocaleString();
-      }
-    }
-    
-    // For long numeric strings (wei values)
-    if (typeof value === 'string' && value.length > 15 && /^\d+$/.test(value)) {
-      // For the specific case of milestone amounts like 1500 or 2000
-      if (value === "1500" || value === "2000") {
-        return value;
+    // Handle BigNumber objects from ethers.js
+    if (typeof value === 'object') {
+      // Handle ethers.js v5 BigNumber
+      if (value._hex !== undefined) {
+        return ethers.utils.formatEther(value);
       }
       
-      // Otherwise convert from wei to ether (divide by 10^18)
-      try {
-        const ether = Math.floor(Number(value) / 1e18);
-        return ether.toLocaleString();
-      } catch (e) {
-        return value;
+      // Handle ethers.js BigNumber with toString method
+      if (typeof value.toString === 'function') {
+        try {
+          return ethers.utils.formatEther(value.toString());
+        } catch (error) {
+          console.warn('Error formatting BigNumber with toString:', error);
+        }
       }
     }
     
-    // For regular numbers under 10000, return as is (for milestone amounts)
-    const num = Number(value);
-    if (!isNaN(num) && num < 10000) {
-      return num.toLocaleString();
+    // Convert to string for consistent handling
+    const stringValue = String(value);
+    
+    // For scientific notation or very large numbers (wei values)
+    if (stringValue.includes('e') || stringValue.length > 15) {
+      try {
+        // Use ethers.utils to properly format from wei to ether
+        const etherValue = Number(ethers.utils.formatEther(value));
+        
+        // Format with 2 decimal places for proper display
+        return etherValue.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        });
+      } catch (error) {
+        console.warn('Error using ethers.utils.formatEther:', error);
+        // If ethers formatting fails, try manual conversion
+        const num = Number(value);
+        if (!isNaN(num)) {
+          const etherValue = num / 1e18;
+          return etherValue.toLocaleString(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 2
+          });
+        }
+      }
     }
     
-    // For larger numbers, assume they're in wei
-    if (!isNaN(num) && num >= 10000) {
-      const ether = Math.floor(num / 1e18);
-      return ether.toLocaleString();
+    // For regular numbers that might already be in ether
+    const num = Number(value);
+    if (!isNaN(num)) {
+      // If number is very small, likely already in ether
+      if (num < 1000) {
+        return num.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        });
+      }
+      
+      // If number is moderate sized but not huge, it might still be in ether
+      if (num < 1e6) {
+        return num.toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2
+        });
+      }
+      
+      // For larger numbers, assume they're in wei
+      const etherValue = num / 1e18;
+      return etherValue.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
     }
     
     // Fallback
@@ -171,8 +196,30 @@ export const truncateAddress = (address: string): string => {
  */
 export const calculateDaysLeft = (deadline: Date | string): number => {
   try {
+    // Check for null/undefined/empty deadline
+    if (!deadline) {
+      console.warn('Missing deadline, returning 30 days as fallback');
+      return 30;
+    }
+    
     const now = new Date();
-    const deadlineDate = new Date(deadline);
+    let deadlineDate: Date;
+    
+    // Handle different deadline formats
+    if (deadline instanceof Date) {
+      deadlineDate = deadline;
+    } else if (typeof deadline === 'string') {
+      deadlineDate = new Date(deadline);
+    } else {
+      // Handle numeric timestamp
+      deadlineDate = new Date(Number(deadline));
+    }
+    
+    // Validate the parsed date
+    if (isNaN(deadlineDate.getTime())) {
+      console.warn('Invalid deadline date format, returning 30 days as fallback', deadline);
+      return 30;
+    }
     
     // Simple calculation of days between now and deadline
     const diffTime = deadlineDate.getTime() - now.getTime();

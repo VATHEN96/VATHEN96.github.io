@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, HelpCircle, Info } from 'lucide-react';
+import { ArrowRight, HelpCircle, Info, Calendar } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { 
   Tooltip,
@@ -26,6 +26,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { CampaignTemplate } from './CampaignTemplateSelector';
+import { addDays } from 'date-fns';
+import { Label } from '@/components/ui/label';
+import { CalendarIcon } from 'lucide-react';
 
 // Define the form schema with Zod
 const basicInfoSchema = z.object({
@@ -38,10 +41,16 @@ const basicInfoSchema = z.object({
   category: z.string(),
   campaignType: z.string(),
   duration: z.coerce.number()
-    .min(7, 'Duration must be at least 7 days')
-    .max(180, 'Duration must be less than 180 days'),
+    .positive('Duration must be a positive number'),
   goalAmount: z.coerce.number()
-    .min(0.1, 'Goal amount must be at least 0.1 ETH')
+    .min(0.1, 'Goal amount must be at least 0.1 TLOS'),
+  equityPercentage: z.coerce.number()
+    .min(0.01, 'Equity percentage must be at least 0.01%')
+    .max(100, 'Equity percentage cannot exceed 100%')
+    .optional(),
+  minInvestment: z.coerce.number()
+    .min(0.1, 'Minimum investment must be at least 0.1 TLOS')
+    .optional()
 });
 
 type BasicInfoFormValues = z.infer<typeof basicInfoSchema>;
@@ -83,20 +92,32 @@ export default function CampaignBasicInfoForm({
       category: defaultValues?.category?.toString() || '0',
       campaignType: defaultValues?.campaignType?.toString() || '0',
       duration: defaultValues?.duration || 30,
-      goalAmount: defaultValues?.goalAmount || 1
+      goalAmount: defaultValues?.goalAmount || 1,
+      equityPercentage: defaultValues?.equityPercentage || 5,
+      minInvestment: defaultValues?.minInvestment || 1
     }
   });
 
   // Handle form submission
   const onSubmit = (data: BasicInfoFormValues) => {
+    console.log('Campaign Basic Info Form Data:', data);
+    console.log('Campaign Duration:', data.duration, 'days');
+    
+    // Calculate the campaign end date
+    const startDate = new Date();
+    const endDate = addDays(startDate, data.duration);
+    console.log('Campaign Start Date:', startDate);
+    console.log('Campaign End Date:', endDate);
+    
+    // Pass the data to the parent component
     onNext(data);
   };
 
   return (
     <div className="max-w-3xl mx-auto">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">Campaign Basics</CardTitle>
+      <Card className="border-2 border-gray-200 rounded-lg shadow-sm">
+        <CardHeader className="border-b border-gray-200 pb-4">
+          <CardTitle className="text-xl font-semibold">Basic Info</CardTitle>
           <CardDescription>
             Provide the essential information about your campaign
           </CardDescription>
@@ -182,7 +203,23 @@ export default function CampaignBasicInfoForm({
                   name="category"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Category</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Category</FormLabel>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" type="button" className="h-6 w-6">
+                                <HelpCircle className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs">
+                                Choose the category that best represents your campaign.
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -257,29 +294,102 @@ export default function CampaignBasicInfoForm({
                   name="duration"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Campaign Duration (days)</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Campaign Duration</FormLabel>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" type="button" className="h-6 w-6">
+                                <HelpCircle className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs">
+                                The number of days your campaign will be active.
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <FormControl>
-                        <Input type="number" min="7" max="180" {...field} />
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            placeholder="30"
+                            {...field}
+                            value={field.value === 0 ? '' : field.value}
+                            onChange={(e) => {
+                              // Handle empty input case
+                              if (e.target.value === '') {
+                                console.log('Empty input - clearing to empty string');
+                                field.onChange(0); // Use 0 as internal value when empty
+                                return;
+                              }
+                              
+                              // Use the raw string value instead of parseInt to avoid issues
+                              const rawValue = e.target.value;
+                              const parsedValue = parseInt(rawValue, 10);
+                              
+                              // Only enforce minimum if we have a valid number
+                              if (!isNaN(parsedValue)) {
+                                const finalValue = Math.max(0, parsedValue);
+                                console.log(`Setting duration: ${finalValue} days (raw input: ${rawValue})`);
+                                field.onChange(finalValue);
+                              } else {
+                                // Keep field empty if not a valid number
+                                field.onChange(0);
+                              }
+                            }}
+                            className="pl-12"
+                          />
+                          <div className="absolute left-0 top-0 h-full flex items-center justify-center px-3 pointer-events-none text-gray-500 dark:text-gray-400">
+                            <Calendar className="h-5 w-5" />
+                          </div>
+                        </div>
                       </FormControl>
                       <FormDescription>
-                        How long your campaign will accept contributions
+                        How long your campaign will run
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="goalAmount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Funding Goal (ETH)</FormLabel>
+                      <div className="flex items-center gap-2">
+                        <FormLabel>Goal Amount (TLOS)</FormLabel>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" type="button" className="h-6 w-6">
+                                <HelpCircle className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="max-w-xs">
+                                Set your funding goal in TLOS. This is the amount you aim to raise.
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                       <FormControl>
-                        <Input type="number" step="0.1" min="0.1" {...field} />
+                        <div className="relative">
+                          <Input 
+                            type="number"
+                            min={0.1}
+                            step={0.1}
+                            placeholder="Enter goal amount in TLOS"
+                            {...field}
+                          />
+                        </div>
                       </FormControl>
                       <FormDescription>
-                        The amount you aim to raise in ETH
+                        The total amount of TLOS you want to raise
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
@@ -287,26 +397,105 @@ export default function CampaignBasicInfoForm({
                 />
               </div>
               
-              {tips && tips.length > 0 && (
-                <Card className="bg-blue-50 border-blue-200 shadow-none">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center">
-                      <Info className="h-4 w-4 mr-2 text-blue-500" />
-                      Tips for a successful campaign
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="text-sm space-y-1">
-                      {tips.map((tip, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="text-blue-500">•</span>
-                          <span>{tip}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+              {form.watch('campaignType') === '1' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border p-4 rounded-md border-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 dark:border-yellow-700">
+                  <h3 className="text-lg font-semibold col-span-2 text-yellow-800 dark:text-yellow-300">Investment Campaign Details</h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="equityPercentage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center gap-2">
+                          <FormLabel>Equity Percentage (%)</FormLabel>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" type="button" className="h-6 w-6">
+                                  <HelpCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">
+                                  The percentage of equity you're offering to investors. This is stored in basis points (e.g., 5% = 500 basis points).
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type="number"
+                              min={0.01}
+                              max={100}
+                              step={0.01}
+                              placeholder="Enter equity percentage"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Percentage of equity offered to investors
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="minInvestment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center gap-2">
+                          <FormLabel>Minimum Investment (TLOS)</FormLabel>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" type="button" className="h-6 w-6">
+                                  <HelpCircle className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p className="max-w-xs">
+                                  The minimum amount in TLOS that an investor must contribute.
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                        <FormControl>
+                          <div className="relative">
+                            <Input 
+                              type="number"
+                              min={0.1}
+                              step={0.1}
+                              placeholder="Enter minimum investment amount"
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormDescription>
+                          Minimum amount required to invest
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               )}
+              
+              <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg">
+                <h3 className="text-lg font-semibold mb-2 text-black dark:text-white">Tips for a successful campaign</h3>
+                <ul className="list-disc pl-5 space-y-2 text-black dark:text-white">
+                  <li>Be clear and specific about your goals and how funds will be used</li>
+                  <li>Include realistic milestones with achievable deadlines</li>
+                  <li>Add high-quality images to make your campaign stand out</li>
+                  <li>Explain why your project matters and how it benefits the community</li>
+                  <li>Set a reasonable funding goal based on your project needs</li>
+                </ul>
+              </div>
             </CardContent>
             
             <CardFooter className="flex justify-between">

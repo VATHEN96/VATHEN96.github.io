@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { initializeReminderSystem } from '@/utils/milestoneReminders';
 import ClientProviderWrapper from "@/components/ClientProviderWrapper";
 import ReminderSystemProvider from "@/components/ReminderSystemProvider";
-import { ThemeProvider } from "next-themes";
+import { WOWZA_RUSH_CONTRACT_ADDRESS } from '@/utils/contractHelpers';
 
 export default function ClientLayout({
     children,
@@ -20,6 +20,9 @@ export default function ClientLayout({
         if (typeof window !== 'undefined') {
             initializeReminderSystem();
             setIsMounted(true);
+            
+            // Force light mode by removing dark class if present
+            document.documentElement.classList.remove('dark');
         }
     }, []);
 
@@ -28,17 +31,13 @@ export default function ClientLayout({
     }
 
     return (
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-            <WowzaRushProvider>
-                <ClientProviderWrapper contractAddress="0xf97cB339e663EB826093e44baFd1383615C48Ae1">
-                    <ReminderSystemProvider>
-                        <div className="w-full min-h-screen">
-                            {children}
-                        </div>
-                    </ReminderSystemProvider>
-                </ClientProviderWrapper>
-                <Toaster position="top-right" richColors closeButton />
-            </WowzaRushProvider>
-        </ThemeProvider>
+        <ClientProviderWrapper contractAddress={WOWZA_RUSH_CONTRACT_ADDRESS}>
+            <ReminderSystemProvider>
+                <div className="w-full min-h-screen">
+                    {children}
+                </div>
+            </ReminderSystemProvider>
+            <Toaster position="top-right" richColors closeButton />
+        </ClientProviderWrapper>
     );
 } 

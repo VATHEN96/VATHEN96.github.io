@@ -9,7 +9,7 @@ const abi = [{
   type: 'function'
 }];
 
-const contract = new ethers.Contract('0x7144Da8697ec83F9f820460C6498DcA90fF20901', abi, provider);
+const contract = new ethers.Contract('0x5A753D7202444a8CbDa821aadc7E3743B8aE37E5', abi, provider);
 
 async function checkActivation() {
   try {

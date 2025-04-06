@@ -1,0 +1,30 @@
+{
+  "timestamp": "20250313_220916",
+  "scenario": "Connect wallet and verify connection status",
+  "error_description": "no Ethereum provider available for wallet connection",
+  "console_logs": [
+    "webpack-internal:///(app-pages-browser)/./node_modules/framer-motion/dist/es/utils/warn-once.mjs 8:12 \"Please ensure that the container has a non-static position, like 'relative', 'fixed', or 'absolute' to ensure scroll offset is calculated correctly.\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"No Ethereum provider available for wallet connection\"",
+    "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/components/globals/intercept-console-error.js 50:31 \"Wallet connection failed - no address returned\""
+  ]
+}

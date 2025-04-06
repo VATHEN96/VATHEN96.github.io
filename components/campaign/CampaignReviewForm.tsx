@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Check, Clock, ListChecks, AlertTriangle, ChevronDown, ChevronUp, Image as ImageIcon, Film, Edit, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Check, Clock, ListChecks, AlertTriangle, ChevronDown, ChevronUp, Image as ImageIcon, Film, Edit, RotateCcw, ArrowRight, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
@@ -12,6 +12,8 @@ import { ethers } from 'ethers';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { categoryOptions, campaignTypeOptions } from './CampaignWizard';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useWowzaRush } from '@/context/wowzarushContext';
+import { toast } from 'sonner';
 
 interface CampaignReviewFormProps {
   campaignData: {
@@ -52,8 +54,8 @@ export default function CampaignReviewForm({
   const endDate = addDays(startDate, campaignData.duration);
   
   // Format currency
-  const formatEth = (amount: number) => {
-    return `${amount} ETH`;
+  const formatTlos = (amount: number) => {
+    return `${amount} TLOS`;
   };
 
   // Get category and campaign type labels
@@ -108,6 +110,63 @@ export default function CampaignReviewForm({
   const hasErrors = validationErrors.some(error => !error.isWarning && error.condition);
   const hasWarnings = validationErrors.some(error => error.isWarning && error.condition);
   const filteredErrors = validationErrors.filter(error => error.condition);
+
+  // Add wallet connection state
+  const { isWalletConnected, connectWallet } = useWowzaRush();
+  const [walletError, setWalletError] = useState<string | null>(null);
+  
+  // Add a function to handle wallet connection before submission
+  const handleSubmit = async (submittedData = campaignData) => {
+    if (!campaignData?.title || !campaignData?.description || !campaignData?.category || campaignData.goalAmount <= 0 || campaignData.duration <= 0 || campaignData.milestones?.length === 0) {
+      const missingFields = [
+        !campaignData.title && 'title',
+        !campaignData.description && 'description',
+        !campaignData.category && 'category',
+        campaignData.goalAmount <= 0 && 'funding goal',
+        campaignData.duration <= 0 && 'duration',
+        campaignData.milestones.length === 0 && 'milestones'
+      ].filter(Boolean);
+      setWalletError(`Missing required fields: ${missingFields.join(', ')}`);
+      toast.error(`Missing required fields: ${missingFields.join(', ')}`);
+      return;
+    }
+
+    if (!campaignData?.title) {
+      toast.error('Campaign title is required');
+      return;
+    }
+    
+    if (!isWalletConnected || !campaignData) {
+      setWalletError('Please connect your wallet to create a campaign');
+      try {
+        const connected = await connectWallet();
+        if (connected) {
+          setWalletError(null);
+          // Check connection again to make sure
+          if (isWalletConnected) {
+            onSubmit(submittedData);
+          } else {
+            toast.error('Wallet connection issue. Please refresh and try again.');
+          }
+        } else {
+          toast.error('Wallet connection required. Please connect your wallet to continue.');
+        }
+      } catch (error) {
+        console.error('Error connecting wallet:', error);
+        setWalletError('Failed to connect wallet. Please try again.');
+        toast.error('Failed to connect wallet. Please try again.', {
+          id: 'wallet-connection-error',
+          duration: 5000
+        });
+      }
+    } else {
+      if (campaignData && campaignData.title) {
+        onSubmit(submittedData);
+      } else {
+        toast.error('Invalid campaign data - please check your inputs');
+      }
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -173,6 +232,25 @@ export default function CampaignReviewForm({
             </div>
           )}
           
+          {/* Add wallet warning if not connected */}
+          {!isWalletConnected && (
+            <Alert variant="warning" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Wallet Connection Required</AlertTitle>
+              <AlertDescription>
+                You'll need to connect your wallet to create this campaign. You'll be prompted to connect when you submit.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {walletError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{walletError}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <div className="rounded-lg overflow-hidden border border-gray-200 aspect-video mb-4">
@@ -224,7 +302,7 @@ export default function CampaignReviewForm({
                 <CardContent className="pb-2 space-y-4">
                   <div>
                     <h3 className="text-sm font-medium text-gray-500">Goal Amount</h3>
-                    <p className="text-2xl font-bold">{formatEth(campaignData.goalAmount)}</p>
+                    <p className="text-2xl font-bold">{formatTlos(campaignData.goalAmount)}</p>
                   </div>
                   
                   <Separator />
@@ -387,7 +465,7 @@ export default function CampaignReviewForm({
         </CardContent>
         
         <CardFooter className="flex justify-between">
-          <Button variant="outline" type="button" onClick={onBack}>
+          <Button variant="outline" type="button" onClick={onBack} disabled={isSubmitting}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Button>
@@ -403,18 +481,19 @@ export default function CampaignReviewForm({
             </Button>
             <Button 
               type="button" 
-              onClick={onSubmit} 
-              disabled={hasErrors || isSubmitting}
+              onClick={handleSubmit} 
+              disabled={isSubmitting} 
+              className="relative"
             >
               {isSubmitting ? (
                 <>
-                  <div className="spinner h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Creating...
                 </>
               ) : (
                 <>
-                  <Check className="mr-2 h-4 w-4" />
                   Create Campaign
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
@@ -423,4 +502,4 @@ export default function CampaignReviewForm({
       </Card>
     </div>
   );
-} 
+}
